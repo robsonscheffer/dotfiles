@@ -1,0 +1,10 @@
+[data]
+    # Default values for personal context
+    git = { name = "Robson Scheffer", email = "personal@email.com" }
+    # Add other personal-specific data here
+
+[context]
+    # Gusto-specific overrides
+    [context.gusto]
+    git = { name = "Robson Scheffer", email = "robson.scheffer@gusto.com" }
+    # Add other gusto-specific data here

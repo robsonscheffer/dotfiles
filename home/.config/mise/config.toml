@@ -1,0 +1,30 @@
+# Core Language & Runtimes
+node = "lts"
+python = "latest"
+go = "latest"
+rust = "latest"
+
+# Infrastructure & Containers
+docker = "latest"
+docker-compose = "latest"
+terraform = "latest"
+ansible = "latest"
+"aqua:google-cloud-cli/gcloud" = "latest"
+"aqua:GoogleCloudPlatform/cloud-sql-proxy" = "latest"
+
+# Core Utilities
+"aqua:git-town/git-town" = "latest"
+"aqua:github/cli" = "latest"
+"aqua:junegunn/fzf" = "latest"
+"aqua:BurntSushi/ripgrep" = "latest"
+"aqua:jqlang/jq" = "latest"
+"aqua:mikefarah/yq" = "latest"
+"aqua:tmux/tmux" = "latest"
+"aqua:htop-dev/htop" = "latest"
+"aqua:dduan/tre" = "latest"
+"aqua:glebarez/wget" = "latest"
+
+# AI Tools
+"github:gemini-cli/cli" = "latest"
+"github:sst/opencode" = "latest"
+"aqua:openai/whisper-cli" = "latest"

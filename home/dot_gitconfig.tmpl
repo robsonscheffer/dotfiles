@@ -1,0 +1,20 @@
+[user]
+    name = "{{ .git.name }}"
+    email = "{{ .git.email }}"
+
+[init]
+	defaultBranch = main
+
+[core]
+	editor = nvim
+	excludesfile = ~/.config/git/ignore
+	autocrlf = input
+
+[pull]
+	rebase = true
+
+[push]
+	autoSetupRemote = true
+
+[rebase]
+	autoStash = true

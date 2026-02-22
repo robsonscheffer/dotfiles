@@ -1,0 +1,37 @@
+---
+- name: Setup macOS Workstation
+  hosts: localhost
+  connection: local
+  gather_facts: no
+
+  tasks:
+    - name: Ensure Homebrew is installed
+      stat:
+        path: /opt/homebrew/bin/brew
+      register: brew_check
+
+    - name: Fail if Homebrew is not installed
+      fail:
+        msg: "Homebrew not found. Please install it first from https://brew.sh/"
+      when: not brew_check.stat.exists
+
+    - name: Install GUI Applications with Homebrew Cask
+      community.general.homebrew_cask:
+        name:
+          - visual-studio-code
+          - docker
+          - cursor
+          - raycast
+          - insomnia
+          - tableplus
+          - figma
+          - slack
+          - google-chrome
+          - antigravity
+          - claude
+          - codex
+          - opencode-desktop
+          - betterdisplay
+          - moom
+          - ghostty
+        state: present
