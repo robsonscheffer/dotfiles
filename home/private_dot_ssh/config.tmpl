@@ -1,0 +1,16 @@
+# --- Personal GitHub Account ---
+Host github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519_personal
+  # Add other personal SSH settings here
+
+# --- Work Git Host ---
+# This block is only added to your SSH config when the 'gusto' context is active.
+{{ if eq .chezmoi.context "gusto" -}}
+Host gitlab.gusto.com
+  HostName gitlab.gusto.com
+  User git
+  IdentityFile ~/.ssh/id_ed25519_work
+  # Add other work-specific SSH settings here
+{{- end }}
