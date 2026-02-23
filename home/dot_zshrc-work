@@ -1,0 +1,25 @@
+# Gusto-specific aliases and environment variables
+
+# Environment variables
+export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+
+# Staging Flatfile - You can also manage these with context-specific chezmoi data
+export FLATFILE_ENVIRONMENT_ID="us_env_h2g3N3Q6"
+export FLATFILE_PUBLISHABLE_KEY="pk_7679ba82e68442e781b9288b0710f927"
+export FLATFILE_SECRET_KEY="{{ onepasswordRead "op://private/flatfile/staging-secret-key" }}" # SECURELY LOADED
+
+# Aliases
+alias dbclean="bundle exec rake db:drop db:create && bundle exec rake db:migrate db:seed"
+alias resetgenesis="bundle exec rails runner 'Sidekiq.redis(&:flushall) && Genesis.reset!'"
+alias js="cd ~/Documents/Apps/guideline/app && npm run start"
+alias api="cd ~/Documents/Apps/guideline/app && commonclone bash api.sh"
+alias workers="cd ~/Documents/Apps/guideline/app && commonclone bash workers.sh"
+alias c="cd ~/Documents/Apps/guideline/app && commonclone rails c"
+alias kill_notifs="sfltool resetbtm"
+alias tables="LIBMYSQL_ENABLE_CLEARTEXT_PLUGIN=1 open -a TablePlus"
+alias db="cd ~/Documents/Apps/guideline/app && bin/clone_proxy"
+alias commonclone="CLONE=1 LIBMYSQL_ENABLE_CLEARTEXT_PLUGIN=1"
+
+# Time Travel Aliases
+alias runTT='TZ=utc CI=true TIME_TRAVEL_TIME_ZONE="Eastern Time (US & Canada)" TIME_TRAVEL_TO="2025-10-01 12:00:00" SPEC_CLIENT_TIME_TRAVEL_TO="2025-10-01 13:00:00" bundle exec m'
+alias startTT='TZ=utc CI=true TIME_TRAVEL_TIME_ZONE="Eastern Time (US & Canada)" TIME_TRAVEL_TO="2025-10-01 12:00:00" SPEC_CLIENT_TIME_TRAVEL_TO="2025-10-01 13:00:00'
