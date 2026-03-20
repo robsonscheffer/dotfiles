@@ -13,5 +13,9 @@ brew "yq"
 brew "git-lfs"
 brew "shfmt"
 
+# Fonts
+cask "font-fira-code-nerd-font"
+
 # AI & Agents
 cask "cmux"
+brew "worktrunk"

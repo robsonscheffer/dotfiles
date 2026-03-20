@@ -15,12 +15,18 @@ fi
 
 # --- Brewfile ---
 echo "==> Installing Homebrew packages..."
-brew bundle --file="$DOTFILES_DIR/Brewfile" --no-lock
+brew bundle --file="$DOTFILES_DIR/Brewfile"
 
 # --- Chezmoi ---
 if ! command -v chezmoi &>/dev/null; then
   echo "==> Installing chezmoi..."
   brew install chezmoi
+fi
+
+# --- Worktrunk shell integration ---
+if command -v wt &>/dev/null; then
+  echo "==> Configuring worktrunk shell integration..."
+  wt config shell install
 fi
 
 # --- Git hooks ---
