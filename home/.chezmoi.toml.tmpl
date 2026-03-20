@@ -10,4 +10,4 @@
 [edit]
     command = "cursor"
 
-sourceDir = "~/apps/robsonscheffer/dotfiles/home"
+sourceDir = {{ joinPath .chezmoi.homeDir "apps/robsonscheffer/dotfiles/home" | quote }}
