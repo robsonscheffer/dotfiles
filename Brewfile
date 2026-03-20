@@ -5,6 +5,9 @@ brew "fzf"
 brew "zoxide"
 brew "direnv"
 
+# Editor
+brew "neovim"
+
 # Development
 brew "mise"
 brew "gh"
