@@ -5,3 +5,4 @@ install.sh
 .githooks
 .denied-patterns
 .github
+.config/gh-dash
