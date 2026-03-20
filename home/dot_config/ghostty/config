@@ -1,9 +1,8 @@
-theme = tokyonight
-# theme = "catppuccin-latte"
+theme = catppuccin-mocha
 window-decoration = false
 macos-titlebar-style = hidden
-window-padding-x = 4
-window-padding-y = 0,0
+window-padding-x = 16
+window-padding-y = 16,16
 macos-window-shadow = false
 custom-shader = cursor_smear.glsl
 

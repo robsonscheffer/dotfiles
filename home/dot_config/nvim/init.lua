@@ -36,11 +36,12 @@ vim.opt.splitbelow = true
 require("lazy").setup({
   -- Theme
   {
-    "folke/tokyonight.nvim",
+    "catppuccin/nvim",
+    name = "catppuccin",
     lazy = false,
     priority = 1000,
     config = function()
-      vim.cmd.colorscheme("tokyonight-night")
+      vim.cmd.colorscheme("catppuccin-mocha")
     end,
   },
 
@@ -100,7 +101,7 @@ require("lazy").setup({
     "nvim-lualine/lualine.nvim",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     opts = {
-      options = { theme = "tokyonight" },
+      options = { theme = "catppuccin" },
     },
   },
 
