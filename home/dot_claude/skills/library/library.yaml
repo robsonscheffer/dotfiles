@@ -1,0 +1,27 @@
+default_dirs:
+  skills:
+    - default: .claude/skills/
+    - global: ~/.claude/skills/
+  agents:
+    - default: .claude/agents/
+    - global: ~/.claude/agents/
+  prompts:
+    - default: .claude/commands/
+    - global: ~/.claude/commands/
+
+library:
+  skills:
+    - name: address-pr-feedback
+      description: Walk through PR review comments one by one, spawn a subagent per comment to validate the concern and propose fixes
+      source: https://github.com/robsonscheffer/dotfiles/blob/main/home/dot_claude/skills/address-pr-feedback/SKILL.md
+
+    - name: cmux
+      description: cmux terminal multiplexer - manage workspaces, spawn agents, restore sessions
+      source: https://github.com/robsonscheffer/dotfiles/blob/main/home/dot_claude/skills/cmux/SKILL.md
+
+    - name: dev-workflow-review-pr
+      description: Review GitHub pull requests - fetches diff, analyzes for code quality, security, tests, and posts inline comments
+      source: https://github.com/robsonscheffer/dotfiles/blob/main/home/dot_claude/skills/dev-workflow-review-pr/SKILL.md
+
+  agents: []
+  prompts: []

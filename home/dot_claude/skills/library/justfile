@@ -1,0 +1,42 @@
+# Library — Terminal shortcuts for catalog management
+# Usage: just <command> [args]
+
+# List all available commands
+default:
+    @just --list
+
+# Show the full catalog with install status
+list:
+    @echo "Run: /library list"
+
+# Pull a skill/agent/prompt from source
+use name:
+    @echo "Run: /library use {{name}}"
+
+# Register a new entry in the catalog
+add:
+    @echo "Run: /library add <details>"
+
+# Push local changes back to source
+push name:
+    @echo "Run: /library push {{name}}"
+
+# Remove an entry from the catalog
+remove name:
+    @echo "Run: /library remove {{name}}"
+
+# Re-pull all installed items from source
+sync:
+    @echo "Run: /library sync"
+
+# Search for entries by keyword
+search keyword:
+    @echo "Run: /library search {{keyword}}"
+
+# First-time setup
+install:
+    @echo "Run: /library install"
+
+# Show the raw catalog file
+catalog:
+    @cat ~/.claude/skills/library/library.yaml
