@@ -6,7 +6,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/). Focused on Cl
 
 | Config | Description |
 |--------|-------------|
-| `~/.zshrc` | Zsh shell config (Oh My Zsh, p10k, aliases) |
+| `~/.zshrc` | Zsh shell config (Oh My Zsh, aliases) |
 | `~/.gitconfig` | Git config (1Password signing, LFS, templated identity) |
 | `~/.config/git/ignore` | Global gitignore |
 | `~/.config/mise/config.toml` | Mise runtime versions |
@@ -22,7 +22,6 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/). Focused on Cl
 - `~/.claude/settings.local.json` — machine-specific overrides
 - `~/.claude/.credentials.json` — auth tokens
 - `~/.zshrc.secrets` — API keys and tokens
-- `~/.p10k.zsh` — Powerlevel10k theme config
 - `~/.agentic/` — agentic runtime state
 - `~/.workbench/` — workspace system state
 

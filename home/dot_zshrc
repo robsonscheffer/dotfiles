@@ -1,22 +1,13 @@
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
 
-# Silence direnv logging so it doesn't trigger p10k instant prompt warnings
+# Silence direnv logging
 export DIRENV_LOG_FORMAT=""
-
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
 
 # --- Oh My Zsh ---
 export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="powerlevel10k/powerlevel10k"
 plugins=(git zsh-autosuggestions z)
 source $ZSH/oh-my-zsh.sh
-
-# --- p10k ---
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 # --- Secrets (tokens, API keys) ---
 [[ -f ~/.zshrc.secrets ]] && source ~/.zshrc.secrets
@@ -38,7 +29,7 @@ alias cc='claude'
 alias dcc='claude --permission-mode bypassPermissions'
 alias fcc='claude --permission-mode bypassPermissions --print'
 alias jcc='claude --permission-mode bypassPermissions --output-format stream-json --include-partial-messages --verbose --print'
-alias editAlias='cursor ~/.zshrc'
+
 tmpd() { cd "$(mktemp -d)"; }
 
 # --- Tools ---
