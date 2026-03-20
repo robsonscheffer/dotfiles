@@ -8,15 +8,17 @@ The user provides a skill name or description.
 
 ## Steps
 
-### 1. Sync the Library Repo
-Pull the latest catalog before reading:
+### 1. Sync the Public Catalog
+Pull the latest dotfiles and apply:
 ```bash
-cd <LIBRARY_SKILL_DIR>
+cd <CHEZMOI_SOURCE_DIR>
 git pull
+chezmoi apply
 ```
 
 ### 2. Find the Entry
-- Read `library.yaml`
+- Read both `<LIBRARY_YAML_PATH>` and `<LIBRARY_LOCAL_YAML_PATH>` (if it exists)
+- Merge entries: append local entries to public ones; if a name appears in both, local wins
 - Search across `library.skills`, `library.agents`, and `library.prompts`
 - Match by name (exact) or description (fuzzy/keyword match)
 - If multiple matches, show them and ask the user to pick one
@@ -25,13 +27,13 @@ git pull
 ### 3. Resolve Dependencies
 If the entry has a `requires` field:
 - For each typed reference (`skill:name`, `agent:name`, `prompt:name`):
-  - Look it up in `library.yaml`
+  - Look it up in the merged catalog
   - If found, recursively run the `use` workflow for that dependency first
   - If not found, warn the user: "Dependency <ref> not found in library catalog"
 - Process all dependencies before the requested item
 
 ### 4. Determine Target Directory
-- Read `default_dirs` from `library.yaml`
+- Read `default_dirs` from `<LIBRARY_YAML_PATH>`
 - If user said "global" or "globally" -> use the `global` path
 - If user specified a custom path -> use that path
 - Otherwise -> use the `default` path

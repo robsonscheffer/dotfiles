@@ -8,11 +8,12 @@ The user provides: name, description, source, and optionally type and dependenci
 
 ## Steps
 
-### 1. Sync the Library Repo
-Pull the latest changes before modifying:
+### 1. Sync the Public Catalog
+Pull the latest dotfiles and apply:
 ```bash
-cd <LIBRARY_SKILL_DIR>
+cd <CHEZMOI_SOURCE_DIR>
 git pull
+chezmoi apply
 ```
 
 ### 2. Determine the Type
@@ -22,28 +23,27 @@ Figure out the type from the user's prompt or the source path:
 - If user says "prompt" -> type is `prompt`
 - If ambiguous, ask the user
 
-### 3. Validate the Source
+### 3. Determine Public or Private
+Ask the user: **"Public or private?"**
+
+- **Public**: Entry goes in `library.yaml` (chezmoi-managed, synced across devices, committed to dotfiles repo)
+- **Private**: Entry goes in `library.local.yaml` (local only, never committed)
+
+If the source points to a private/work repo or contains work-specific references, default to private.
+
+### 4. Validate the Source
 - **Local path**: Verify the file exists at the given path
 - **GitHub URL**: Verify the URL is well-formed (matches browser or raw URL patterns)
 - Confirm the source points to a specific file, not a directory
 
-### 4. Parse Dependencies
+### 5. Parse Dependencies
 Detect dependencies by looking through the skill/agent/prompt files, format them as typed references:
 - `skill:name`, `agent:name`, `prompt:name`
-- Verify each dependency already exists in `library.yaml` or warn the user
-  - If they don't exist add them to `library.yaml` first. If those files have dependencies, add them recursively.
+- Verify each dependency already exists in the merged catalog (both files) or warn the user
+  - If they don't exist add them to the appropriate catalog first. If those files have dependencies, add them recursively.
   - You can detect these sometimes by looking at the frontmatter, and then in the file content look for `/<prompt|agent|skill>:name` references. If you're not sure, ask the user if they have any dependencies.
 
-### 5. Add the Entry to library.yaml
-Read `library.yaml`, add the new entry under the correct section:
-
-```yaml
-# Under library.skills, library.agents, or library.prompts
-- name: <name>
-  description: <description>
-  source: <source>
-  requires: [<typed:refs>]  # omit if no dependencies
-```
+### 6. Add the Entry
 
 **YAML formatting rules:**
 - 2-space indentation
@@ -53,15 +53,41 @@ Read `library.yaml`, add the new entry under the correct section:
 - For skills reference the `.../<skill-name>/SKILL.md` file
 - For agents reference the `.../<agent name>.md` file
 - For prompts reference the `.../<prompt name>.md` file (installed to `.claude/commands/`)
-- Remember we'll be adding an absolute path or a GitHub URL (https or ssh)
 
-### 6. Commit and Push
-```bash
-cd <LIBRARY_SKILL_DIR>
-git add library.yaml
-git commit -m "library: added <type> <name>"
-git push
+**If public** — edit the chezmoi source:
+```yaml
+# Edit <CHEZMOI_SOURCE_DIR>/<LIBRARY_SOURCE_PATH>/library.yaml
+# Under library.skills, library.agents, or library.prompts
+- name: <name>
+  description: <description>
+  source: <source>
+  requires: [<typed:refs>]  # omit if no dependencies
 ```
 
-### 7. Confirm
-Tell the user the entry has been added and is now available for others to use via `/library use <name>`.
+**If private** — edit the local catalog directly:
+```yaml
+# Edit <LIBRARY_LOCAL_YAML_PATH>
+# Under library.skills, library.agents, or library.prompts
+- name: <name>
+  description: <description>
+  source: <source>
+  requires: [<typed:refs>]  # omit if no dependencies
+```
+
+### 7. Commit and Deploy
+
+**If public:**
+```bash
+cd <CHEZMOI_SOURCE_DIR>
+git add <LIBRARY_SOURCE_PATH>/library.yaml
+git commit -m "library: added <type> <name>"
+chezmoi apply
+```
+
+**If private:**
+No commit needed — the file is local only. Just confirm the entry was added.
+
+### 8. Confirm
+Tell the user the entry has been added and is now available via `/library use <name>`.
+- If public: mention it will sync to other devices via `chezmoi update`
+- If private: mention it stays on this machine only

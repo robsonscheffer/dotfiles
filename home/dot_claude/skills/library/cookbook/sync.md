@@ -5,19 +5,22 @@ Refresh every locally installed skill, agent, and prompt by re-pulling from its 
 
 ## Steps
 
-### 1. Sync the Library Repo
-Pull the latest catalog before reading:
+### 1. Sync the Public Catalog
+Pull the latest dotfiles and apply:
 ```bash
-cd <LIBRARY_SKILL_DIR>
+cd <CHEZMOI_SOURCE_DIR>
 git pull
+chezmoi apply
 ```
 
 ### 2. Read the Catalog
-- Read `library.yaml`
+- Read `<LIBRARY_YAML_PATH>`
+- If `<LIBRARY_LOCAL_YAML_PATH>` exists, read it too
+- Merge entries: append local entries to public ones; if a name appears in both, local wins
 - Parse all entries from `library.skills`, `library.agents`, and `library.prompts`
 
 ### 3. Find All Installed Items
-For each entry in the catalog:
+For each entry in the merged catalog:
 - Determine the type (skill, agent, prompt) and corresponding directories from `default_dirs`
 - Check if a directory or file matching the entry name exists in the **default** directory
 - Check if a directory or file matching the entry name exists in the **global** directory
@@ -70,11 +73,11 @@ Display a summary table:
 ```
 ## Sync Complete
 
-| Type | Name | Status |
-|------|------|--------|
-| skill | skill-name | refreshed |
-| agent | agent-name | refreshed |
-| skill | other-skill | failed: <reason> |
+| Type | Name | Catalog | Status |
+|------|------|---------|--------|
+| skill | skill-name | public | refreshed |
+| skill | work-skill | private | refreshed |
+| agent | agent-name | public | failed: <reason> |
 
 Synced: X items
 Failed: Y items

@@ -37,6 +37,10 @@ search keyword:
 install:
     @echo "Run: /library install"
 
-# Show the raw catalog file
+# Show the public catalog
 catalog:
     @cat ~/.claude/skills/library/library.yaml
+
+# Show the private catalog (if exists)
+catalog-local:
+    @test -f ~/.claude/skills/library/library.local.yaml && cat ~/.claude/skills/library/library.local.yaml || echo "No local catalog found. Run /library install to create one."

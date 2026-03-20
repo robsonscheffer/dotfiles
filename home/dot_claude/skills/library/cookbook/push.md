@@ -9,7 +9,8 @@ The user provides a skill name or description.
 ## Steps
 
 ### 1. Find the Entry
-- Read `library.yaml`
+- Read both `<LIBRARY_YAML_PATH>` and `<LIBRARY_LOCAL_YAML_PATH>` (if it exists)
+- Merge entries: local wins on name conflicts
 - Search across all sections for the matching entry
 - If no match, tell the user the item wasn't found in the catalog
 

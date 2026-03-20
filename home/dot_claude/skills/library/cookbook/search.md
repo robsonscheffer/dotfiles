@@ -8,15 +8,18 @@ The user provides a keyword or description.
 
 ## Steps
 
-### 1. Sync the Library Repo
-Pull the latest catalog before reading:
+### 1. Sync the Public Catalog
+Pull the latest dotfiles and apply:
 ```bash
-cd <LIBRARY_SKILL_DIR>
+cd <CHEZMOI_SOURCE_DIR>
 git pull
+chezmoi apply
 ```
 
 ### 2. Read the Catalog
-- Read `library.yaml`
+- Read `<LIBRARY_YAML_PATH>`
+- If `<LIBRARY_LOCAL_YAML_PATH>` exists, read it too
+- Merge entries: append local entries to public ones; if a name appears in both, local wins
 - Parse all entries from `library.skills`, `library.agents`, and `library.prompts`
 
 ### 3. Search
@@ -33,10 +36,10 @@ If matches found, format as:
 ```
 ## Search Results for "<keyword>"
 
-| Type | Name | Description | Source |
-|------|------|-------------|--------|
-| skill | matching-skill | description... | source... |
-| agent | matching-agent | description... | source... |
+| Type | Name | Description | Catalog | Source |
+|------|------|-------------|---------|--------|
+| skill | matching-skill | description... | public | source... |
+| skill | work-matching | description... | private | source... |
 ```
 
 If no matches:

@@ -13,6 +13,9 @@
 .claude/
 .ruby-lsp/
 
+# Private/work catalog (never commit)
+**/library.local.yaml
+
 # Secrets (never commit)
 *.secrets
 .credentials.json

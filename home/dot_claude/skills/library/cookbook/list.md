@@ -5,15 +5,18 @@ Show the full library catalog with install status.
 
 ## Steps
 
-### 1. Sync the Library Repo
-Pull the latest catalog before reading:
+### 1. Sync the Public Catalog
+Pull the latest dotfiles and apply:
 ```bash
-cd <LIBRARY_SKILL_DIR>
+cd <CHEZMOI_SOURCE_DIR>
 git pull
+chezmoi apply
 ```
 
 ### 2. Read the Catalog
-- Read `library.yaml`
+- Read `<LIBRARY_YAML_PATH>`
+- If `<LIBRARY_LOCAL_YAML_PATH>` exists, read it too
+- Merge entries: append local entries to public ones; if a name appears in both, local wins
 - Parse all entries from `library.skills`, `library.agents`, and `library.prompts`
 
 ### 3. Check Install Status
@@ -26,30 +29,31 @@ For each entry:
 
 ### 4. Display Results
 
-Format the output as a table grouped by type:
+Format the output as a table grouped by type, with a catalog column:
 
 ```
 ## Skills
-| Name | Description | Source | Status |
-|------|-------------|--------|--------|
-| skill-name | skill-description | /local/path/... | installed (default) |
-| other-skill | other-description | github.com/... | not installed |
+| Name | Description | Catalog | Source | Status |
+|------|-------------|---------|--------|--------|
+| skill-name | skill-description | public | /local/path/... | installed (default) |
+| work-skill | work-description | private | ~/work/... | installed (global) |
+| other-skill | other-description | public | github.com/... | not installed |
 
 ## Agents
-| Name | Description | Source | Status |
-|------|-------------|--------|--------|
-| agent-name | agent-description | /local/path/... | installed (global) |
+| Name | Description | Catalog | Source | Status |
+|------|-------------|---------|--------|--------|
+| agent-name | agent-description | private | /local/path/... | installed (global) |
 
 ## Prompts
-| Name | Description | Source | Status |
-|------|-------------|--------|--------|
-| prompt-name | prompt-description | github.com/... | not installed |
+| Name | Description | Catalog | Source | Status |
+|------|-------------|---------|--------|--------|
+| prompt-name | prompt-description | public | github.com/... | not installed |
 ```
 
 If a section is empty, show: `No <type> in catalog.`
 
 ### 5. Summary
 At the bottom, show:
-- Total entries in catalog
+- Total entries in catalog (public + private)
 - Total installed locally
 - Total not installed

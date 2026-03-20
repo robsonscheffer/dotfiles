@@ -10,21 +10,35 @@ A meta-skill for private-first distribution of agentics (skills, agents, and pro
 
 ## Variables
 
-- **LIBRARY_REPO_URL**: `git@github.com:robsonscheffer/dotfiles.git`
-- **LIBRARY_YAML_PATH**: `~/.claude/skills/library/library.yaml`
+- **CHEZMOI_SOURCE_DIR**: `~/apps/robsonscheffer/dotfiles`
+- **LIBRARY_SOURCE_PATH**: `home/dot_claude/skills/library`
 - **LIBRARY_SKILL_DIR**: `~/.claude/skills/library/`
+- **LIBRARY_YAML_PATH**: `~/.claude/skills/library/library.yaml`
+- **LIBRARY_LOCAL_YAML_PATH**: `~/.claude/skills/library/library.local.yaml`
 
 ## How It Works
 
-The Library is a catalog of references to your agentics. The `library.yaml` file points to where skills, agents, and prompts live (local filesystem or GitHub repos). Nothing is fetched until you ask for it.
+The Library is a catalog of references to your agentics. Two catalog files work together:
 
-**The `library.yaml` is a catalog, not a manifest.** Entries define what's *available* — not what gets installed. You pull specific items on demand with `/library use <name>`.
+- **`library.yaml`** — public catalog, managed by chezmoi, synced across devices via the dotfiles repo
+- **`library.local.yaml`** — private/work catalog, lives only on this machine, never committed to git
+
+Entries define what's *available* — not what gets installed. You pull specific items on demand with `/library use <name>`.
+
+## Catalog Layering
+
+| File | Managed by | In git? | Contains |
+|------|-----------|---------|----------|
+| `library.yaml` | Chezmoi (dotfiles repo) | Yes | Public skills |
+| `library.local.yaml` | Manual (local only) | No | Work/private skills |
+
+When reading the catalog, **always merge both files**. Entries from `library.local.yaml` are appended to the corresponding sections in `library.yaml`. If a name appears in both, the local version wins.
 
 ## Commands
 
 | Command                     | Purpose                                  |
 | --------------------------- | ---------------------------------------- |
-| `/library install`          | First-time setup: fork, clone, configure |
+| `/library install`          | First-time setup: verify chezmoi config  |
 | `/library add <details>`    | Register a new entry in the catalog      |
 | `/library use <name>`       | Pull from source (install or refresh)    |
 | `/library push <name>`      | Push local changes back to source        |
@@ -52,7 +66,7 @@ Each command has a detailed step-by-step guide. **Read the relevant cookbook fil
 
 ## Source Format
 
-The `source` field in `library.yaml` supports these formats (auto-detected):
+The `source` field in catalog files supports these formats (auto-detected):
 
 - `/absolute/path/to/SKILL.md` — local filesystem
 - `https://github.com/org/repo/blob/main/path/to/SKILL.md` — GitHub browser URL
@@ -76,6 +90,33 @@ Both GitHub URL formats are supported. Parse org, repo, branch, and file path fr
 - Parse: `org`, `repo`, `branch`, `file_path`
 - Clone URL: `https://github.com/<org>/<repo>.git`
 - File location within repo: `<path>`
+
+## Chezmoi Integration
+
+The public catalog (`library.yaml`) is managed by chezmoi:
+
+- **Source of truth**: `<CHEZMOI_SOURCE_DIR>/<LIBRARY_SOURCE_PATH>/library.yaml`
+- **Deployed to**: `<LIBRARY_SKILL_DIR>/library.yaml`
+
+**Reading**: Always read from the deployed path (`<LIBRARY_SKILL_DIR>`).
+
+**Writing to public catalog**: Edit the chezmoi source file, commit to the dotfiles repo, then apply:
+```bash
+cd <CHEZMOI_SOURCE_DIR>
+# edit <LIBRARY_SOURCE_PATH>/library.yaml
+git add <LIBRARY_SOURCE_PATH>/library.yaml
+git commit -m "library: <change description>"
+chezmoi apply
+```
+
+**Writing to private catalog**: Edit `<LIBRARY_LOCAL_YAML_PATH>` directly. No git, no chezmoi.
+
+**Syncing**: Pull the dotfiles repo and apply chezmoi to get latest public catalog:
+```bash
+cd <CHEZMOI_SOURCE_DIR>
+git pull
+chezmoi apply
+```
 
 ## GitHub Workflow
 
@@ -102,7 +143,7 @@ The `requires` field uses typed references to avoid ambiguity:
 - `agent:name` — references an agent in the library catalog
 - `prompt:name` — references a prompt in the library catalog
 
-When resolving dependencies: look up each reference in `library.yaml`, fetch all dependencies first (recursively), then fetch the requested item.
+When resolving dependencies: look up each reference in the merged catalog (both files), fetch all dependencies first (recursively), then fetch the requested item.
 
 ## Target Directories
 
@@ -125,17 +166,9 @@ default_dirs:
 - If the user specifies a custom path, use that path.
 - Otherwise, use the `default` directory.
 
-## Library Repo Sync
+## Example Filled Library Files
 
-The library skill itself lives in `<LIBRARY_SKILL_DIR>` as a cloned git repo. When running `add` (which modifies `library.yaml`), always:
-1. `git pull` in the library directory first to get latest
-2. Make the changes
-3. `git add library.yaml && git commit && git push`
-
-This keeps the catalog in sync across devices.
-
-## Example Filled Library File
-
+**library.yaml** (public, chezmoi-managed):
 ```yaml
 default_dirs:
   skills:
@@ -157,6 +190,22 @@ library:
     - name: cmux
       description: cmux terminal multiplexer - manage workspaces, spawn agents
       source: https://github.com/robsonscheffer/dotfiles/blob/main/home/dot_claude/skills/cmux/SKILL.md
+
+  agents: []
+  prompts: []
+```
+
+**library.local.yaml** (private, gitignored):
+```yaml
+library:
+  skills:
+    - name: work-deploy
+      description: Deploy services via internal tooling
+      source: ~/work/skills/deploy/SKILL.md
+
+    - name: work-ticket-triage
+      description: Triage tickets for sprint planning
+      source: git@github.com:your-org/internal-skills.git
 
   agents: []
   prompts: []
