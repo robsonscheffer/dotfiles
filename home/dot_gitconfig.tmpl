@@ -8,6 +8,7 @@
 [user]
 	email = {{ .email }}
 	name = {{ .name }}
+{{- if .signingkey }}
 	signingkey = {{ .signingkey }}
 [commit]
 	gpgsign = true
@@ -15,5 +16,6 @@
 	format = ssh
 [gpg "ssh"]
 	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
+{{- end }}
 [core]
 	excludesfile = ~/.config/git/ignore

@@ -33,8 +33,19 @@ fi
 echo "==> Configuring git hooks..."
 git -C "$DOTFILES_DIR" config core.hooksPath .githooks
 
+# --- Chezmoi source symlink ---
+# chezmoi expects source at ~/.local/share/chezmoi by default.
+# Symlink it to our actual source dir so all chezmoi commands work without --source.
+CHEZMOI_DEFAULT="$HOME/.local/share/chezmoi"
+if [ ! -L "$CHEZMOI_DEFAULT" ] || [ "$(readlink "$CHEZMOI_DEFAULT")" != "$DOTFILES_DIR/home" ]; then
+  echo "==> Symlinking chezmoi source dir..."
+  mkdir -p "$(dirname "$CHEZMOI_DEFAULT")"
+  rm -rf "$CHEZMOI_DEFAULT"
+  ln -s "$DOTFILES_DIR/home" "$CHEZMOI_DEFAULT"
+fi
+
 # --- Apply dotfiles ---
 echo "==> Applying dotfiles with chezmoi..."
-chezmoi init --source "$DOTFILES_DIR/home" --apply
+chezmoi init --apply
 
 echo "==> Done! Restart your shell or run: source ~/.zshrc"

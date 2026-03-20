@@ -1,6 +1,6 @@
 {{- $name := promptStringOnce . "name" "Git user name" -}}
 {{- $email := promptStringOnce . "email" "Git user email" -}}
-{{- $signingkey := promptStringOnce . "signingkey" "SSH signing key (ssh-ed25519 ...)" -}}
+{{- $signingkey := promptStringOnce . "signingkey" "SSH signing key (ssh-ed25519 ..., leave empty to skip)" -}}
 
 [data]
     name = {{ $name | quote }}
