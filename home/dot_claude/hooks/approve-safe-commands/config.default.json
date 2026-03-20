@@ -1,0 +1,160 @@
+{
+  "logging": {
+    "enabled": false,
+    "log_approved": true,
+    "log_rejected": true,
+    "path": "~/.claude/logs/approve-safe-commands.jsonl"
+  },
+
+  "safe_commands": [
+    "awk",
+    "basename",
+    "cat",
+    "cut",
+    "date",
+    "diff",
+    "dirname",
+    "echo",
+    "false",
+    "file",
+    "find",
+    "grep",
+    "head",
+    "jq",
+    "ls",
+    "pwd",
+    "realpath",
+    "rg",
+    "sed",
+    "sort",
+    "stat",
+    "tail",
+    "test",
+    "tr",
+    "tree",
+    "true",
+    "uniq",
+    "wc",
+    "which",
+    "xxd"
+  ],
+
+  "wrapper_commands": {
+    "xargs": {
+      "flags_with_values": [
+        "-d",
+        "-E",
+        "-I",
+        "-J",
+        "-L",
+        "-n",
+        "-P",
+        "-s"
+      ]
+    }
+  },
+
+  "safe_subcommands": {
+    "git": [
+      "add",
+      "blame",
+      "branch",
+      "commit",
+      "describe",
+      "diff",
+      "log",
+      "ls-files",
+      "rebase",
+      "remote",
+      "rev-parse",
+      "show",
+      "stash",
+      "status",
+      "tag"
+    ]
+  },
+
+  "dangerous_flags": {
+    "awk": [
+      "-i"
+    ],
+    "find": [
+      "--delete",
+      "--exec",
+      "--execdir",
+      "--ok",
+      "--okdir",
+      "-delete",
+      "-exec",
+      "-execdir",
+      "-ok",
+      "-okdir"
+    ],
+    "git branch": [
+      "-D",
+      "-d",
+      "--delete",
+      "--delete-force"
+    ],
+    "git rebase": [
+      "--exec"
+    ],
+    "git remote": [
+      "remove"
+    ],
+    "git stash": [
+      "clear",
+      "drop"
+    ],
+    "git tag": [
+      "-d",
+      "--delete"
+    ],
+    "sed": [
+      "--in-place",
+      "-i"
+    ],
+    "sort": [
+      "--output",
+      "-o"
+    ]
+  },
+
+  "dangerous_arg_patterns": {
+    "awk": [
+      "\\bsystem\\s*\\(",
+      "\\bgetline\\b",
+      "\\bprintf?\\b.*\\|\\s*[\"']",
+      "\\bprintf?\\b.*>+\\s*[\"']"
+    ],
+    "sed": [
+      "(?:^|;)\\s*e(?:$|\\s|;)",
+      "(?:^|;)\\s*\\d+\\s*e(?:$|\\s|;)",
+      "(?:^|;)\\s*\\$\\s*e(?:$|\\s|;)",
+      "\\/[giIpw]*e(?:$|[giIpw]*$)"
+    ]
+  },
+
+  "safe_flags": {
+    "*": [
+      "--help",
+      "--version"
+    ]
+  },
+
+  "allow_safe_writes": false,
+
+  "safe_write_commands": [
+    "cp",
+    "mkdir",
+    "sed",
+    "touch"
+  ],
+
+  "strict_argument_checks": {
+    "block_ansi_c_quoting": true,
+    "block_array_syntax": true,
+    "block_brace_expansion": false,
+    "enabled": true
+  }
+}

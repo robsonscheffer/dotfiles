@@ -1,0 +1,22 @@
+# Patterns that must never appear in commits (one regex per line)
+# Lines starting with # are comments
+# Uses grep -Ei (extended regex, case insensitive where needed)
+
+# Company names
+[Gg]usto[^m]
+[Gg]usto$
+gustohq
+
+# Internal product/repo names
+[Gg]uideline[^s]
+[Gg]uideline$
+gld-monolith
+zenpayroll
+
+# Internal ticket patterns
+RETIRE-[0-9]+
+RNDCORE-[0-9]+
+
+# Internal domains
+guideline\.tools
+guideline\.atlassian

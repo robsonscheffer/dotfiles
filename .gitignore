@@ -1,0 +1,18 @@
+# Chezmoi
+.chezmoiroot
+
+# OS
+.DS_Store
+
+# Editor
+*.swp
+*.swo
+*~
+
+# Auto-generated
+.claude/
+.ruby-lsp/
+
+# Secrets (never commit)
+*.secrets
+.credentials.json

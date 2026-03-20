@@ -1,0 +1,142 @@
+{
+  "env": {
+    "AWS_REGION": "us-west-2",
+    "AWS_PROFILE": "bedrock-users",
+    "CLAUDE_CODE_USE_BEDROCK": "true",
+    "ANTHROPIC_SMALL_FAST_MODEL": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "us.anthropic.claude-sonnet-4-6",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "us.anthropic.claude-opus-4-6-v1",
+    "ANTHROPIC_MODEL": "us.anthropic.claude-opus-4-6-v1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(bash ~/.agentic/bin/*)",
+      "Bash(bash ~/.claude/scripts/*)",
+      "Bash(bundle *)",
+      "Bash(cargo build *)",
+      "Bash(cargo check *)",
+      "Bash(cargo clippy *)",
+      "Bash(cargo fmt *)",
+      "Bash(cargo test *)",
+      "Bash(claude mcp:*)",
+      "Bash(cmux current-workspace*)",
+      "Bash(cmux identify*)",
+      "Bash(cmux list-pane-surfaces*)",
+      "Bash(cmux list-workspaces*)",
+      "Bash(cmux ping*)",
+      "Bash(cmux read-screen*)",
+      "Bash(cmux tree*)",
+      "Bash(gh api repos/*/pulls/*/comments --jq *)",
+      "Bash(gh issue view *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh pr diff *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr review *)",
+      "Bash(gh pr view *)",
+      "Bash(gh repo view *)",
+      "Bash(jj *)",
+      "Bash(mise ls *)",
+      "Bash(mise ls-remote *)",
+      "Bash(node *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(nx *)",
+      "Bash(ruby -c *)",
+      "Bash(tmux *)",
+      "Bash(vitest *)",
+      "Bash(~/.agentic/bin/*)",
+      "Bash(~/.claude/scripts/*)",
+      "Edit(~/.workbench/**)",
+      "Read(~/.claude/**)",
+      "Read(~/.workbench/**)",
+      "Skill(work-archive)",
+      "Skill(work-list-worktrees)",
+      "Skill(work-resume)",
+      "Skill(work-start)",
+      "Skill(work-status)",
+      "Skill(write-pr-description)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:github.com)",
+      "Write(~/.workbench/**)"
+    ],
+    "deny": [
+      "Bash(git clean:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(rm -fr:*)",
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)",
+      "Read(./**/.nx/**)",
+      "Read(./**/build/**)",
+      "Read(./**/dist/**)",
+      "Read(./**/node_modules/**)",
+      "Read(./dist/**)",
+      "Read(./node_modules/**)"
+    ],
+    "ask": [
+      "Bash(rm *)",
+      "Bash(jj git push *)",
+      "Bash(git push *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/post-edit-lint/hook.sh \"$TOOL_INPUT_FILE_PATH\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/approve-safe-commands/hook.sh"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/enforce-pr-template/hook.sh \"$TOOL_INPUT\""
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/worktree-setup/setup.sh"
+          },
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/cmux-session-map.py"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/cmux-session-map.py"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
+  },
+  "effortLevel": "medium",
+  "skipDangerousModePermissionPrompt": true
+}

@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Pre-commit hook: block commits containing denied patterns.
+# Patterns are loaded from .denied-patterns (one regex per line).
+
+set -euo pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+PATTERNS_FILE="$REPO_ROOT/.denied-patterns"
+
+if [[ ! -f "$PATTERNS_FILE" ]]; then
+  exit 0
+fi
+
+# Build grep pattern from non-empty, non-comment lines
+pattern=""
+while IFS= read -r line; do
+  line="${line%%#*}"        # strip inline comments
+  line="${line// /}"        # trim spaces
+  [[ -z "$line" ]] && continue
+  if [[ -z "$pattern" ]]; then
+    pattern="$line"
+  else
+    pattern="$pattern|$line"
+  fi
+done < "$PATTERNS_FILE"
+
+[[ -z "$pattern" ]] && exit 0
+
+# Check staged diff (additions only), excluding the patterns file itself
+matches=$(git diff --cached --diff-filter=d -U0 -- . ':!.denied-patterns' | grep '^+' | grep -v "^+++" | grep -Ei "$pattern" || true)
+
+if [[ -n "$matches" ]]; then
+  echo "Pre-commit: denied pattern found in staged changes!"
+  echo ""
+  echo "Patterns: $pattern"
+  echo ""
+  echo "Matches:"
+  echo "$matches"
+  echo ""
+  echo "Remove these references before committing."
+  echo "To bypass (emergency only): git commit --no-verify"
+  exit 1
+fi

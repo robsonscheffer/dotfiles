@@ -1,0 +1,13 @@
+{{- $name := promptStringOnce . "name" "Git user name" -}}
+{{- $email := promptStringOnce . "email" "Git user email" -}}
+{{- $signingkey := promptStringOnce . "signingkey" "SSH signing key (ssh-ed25519 ...)" -}}
+
+[data]
+    name = {{ $name | quote }}
+    email = {{ $email | quote }}
+    signingkey = {{ $signingkey | quote }}
+
+[edit]
+    command = "cursor"
+
+sourceDir = "~/apps/robsonscheffer/dotfiles/home"
