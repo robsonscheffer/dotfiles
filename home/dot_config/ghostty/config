@@ -40,8 +40,6 @@ font-codepoint-map = U+e5fa-U+e6b1=JetBrainsMono Nerd Font
 # codicons
 font-codepoint-map = U+ea60-U+ebeb=JetBrainsMono Nerd Font
 
-adjust-cell-width = -3%
-
 background = #010101
 background-opacity = 0.93
 
