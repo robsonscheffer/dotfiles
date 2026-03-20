@@ -12,6 +12,7 @@ brew "jq"
 brew "yq"
 brew "git-lfs"
 brew "shfmt"
+brew "diffnav"
 
 # Fonts
 cask "font-fira-code-nerd-font"
