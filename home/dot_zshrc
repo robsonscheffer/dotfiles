@@ -37,6 +37,9 @@ alias jcc='claude --permission-mode bypassPermissions --output-format stream-jso
 
 tmpd() { cd "$(mktemp -d)"; }
 
+# --- Prompt ---
+eval "$(oh-my-posh init zsh --config $(brew --prefix oh-my-posh)/themes/tokyonight_storm.omp.json)"
+
 # --- Tools ---
 eval "$(zoxide init zsh)"
 

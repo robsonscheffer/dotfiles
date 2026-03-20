@@ -4,6 +4,7 @@ tap "manaflow-ai/cmux"
 brew "fzf"
 brew "zoxide"
 brew "direnv"
+brew "oh-my-posh"
 
 # Editor
 brew "neovim"
