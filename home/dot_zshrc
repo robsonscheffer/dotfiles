@@ -4,11 +4,15 @@
 # Silence direnv logging
 export DIRENV_LOG_FORMAT=""
 
-# --- Oh My Zsh ---
-export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME=""
-plugins=(git zsh-autosuggestions z)
-source $ZSH/oh-my-zsh.sh
+# --- Agent detection ---
+# Skip interactive plugins when running inside Claude Code, Codex, or CI.
+# Agents get clean POSIX output without aliases or prompt overhead.
+_is_automated=0
+if [[ -n "${CLAUDE_CODE_ENTRYPOINT:-}" ]] ||
+   [[ -n "${CODEX_CLI_ENTRYPOINT:-}" ]] ||
+   [[ -n "${CI:-}" ]]; then
+  _is_automated=1
+fi
 
 # --- Secrets (tokens, API keys) ---
 [[ -f ~/.zshrc.secrets ]] && source ~/.zshrc.secrets
@@ -21,6 +25,7 @@ export EDITOR="nvim"
 export VISUAL="nvim"
 
 # --- PATH ---
+export PATH="$HOME/.local/share/mise/shims:$PATH"
 export PATH=$PATH:$ANDROID_HOME/emulator
 export PATH=$PATH:$ANDROID_HOME/platform-tools
 export PATH=$PATH:$HOME/.maestro/bin
@@ -31,7 +36,26 @@ if [[ "$TERM_PROGRAM" == "ghostty" ]]; then
 fi
 export COLORTERM=truecolor
 
-# --- Aliases ---
+# --- Interactive only (skipped for agents/CI) ---
+if [[ $_is_automated -eq 0 ]]; then
+  # Oh My Zsh
+  export ZSH="$HOME/.oh-my-zsh"
+  ZSH_THEME=""
+  plugins=(git zsh-autosuggestions z)
+  source $ZSH/oh-my-zsh.sh
+
+  # Prompt
+  eval "$(oh-my-posh init zsh --config ~/.config/oh-my-posh/theme.omp.json)"
+
+  # Tools
+  eval "$(zoxide init zsh)"
+
+  # Completions
+  fpath=(~/.zsh/completions $fpath)
+  autoload -U compinit && compinit
+fi
+
+# --- Aliases (always available) ---
 alias cc='claude'
 alias dcc='claude --permission-mode bypassPermissions'
 alias fcc='claude --permission-mode bypassPermissions --print'
@@ -56,19 +80,5 @@ cmux-layout() {
   '
 }
 
-# --- Prompt ---
-eval "$(oh-my-posh init zsh --config ~/.config/oh-my-posh/theme.omp.json)"
-
-# --- Tools ---
-eval "$(zoxide init zsh)"
-
-
-# --- Completions ---
-fpath=(~/.zsh/completions $fpath)
-autoload -U compinit && compinit
-
 # --- Direnv (must be last) ---
 eval "$(direnv hook zsh)"
-
-export PATH="$HOME/.local/share/mise/shims:$PATH"
-# eval "$(mise activate zsh)"
