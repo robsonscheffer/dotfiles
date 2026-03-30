@@ -10,7 +10,7 @@
 *~
 
 # Auto-generated
-.claude/
+.claude/settings.local.json
 .ruby-lsp/
 
 # Private/work catalog (never commit)

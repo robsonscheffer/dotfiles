@@ -2,8 +2,6 @@
   "env": {},
   "permissions": {
     "allow": [
-      "Bash(bash ~/.agentic/bin/*)",
-      "Bash(bash ~/.claude/scripts/*)",
       "Bash(bundle *)",
       "Bash(cargo build *)",
       "Bash(cargo check *)",
@@ -36,20 +34,10 @@
       "Bash(ruby -c *)",
       "Bash(tmux *)",
       "Bash(vitest *)",
-      "Bash(~/.agentic/bin/*)",
-      "Bash(~/.claude/scripts/*)",
-      "Edit(~/.workbench/**)",
       "Read(~/.claude/**)",
-      "Read(~/.workbench/**)",
-      "Skill(work-archive)",
-      "Skill(work-list-worktrees)",
-      "Skill(work-resume)",
-      "Skill(work-start)",
-      "Skill(work-status)",
       "Skill(write-pr-description)",
       "WebFetch(domain:docs.anthropic.com)",
-      "WebFetch(domain:github.com)",
-      "Write(~/.workbench/**)"
+      "WebFetch(domain:github.com)"
     ],
     "deny": [
       "Bash(git clean:*)",

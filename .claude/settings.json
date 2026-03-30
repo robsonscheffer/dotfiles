@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|Read|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/encourage-source-dir.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/stop-lint-and-test.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
