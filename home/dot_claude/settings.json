@@ -1,14 +1,5 @@
 {
-  "env": {
-    "AWS_REGION": "us-west-2",
-    "AWS_PROFILE": "bedrock-users",
-    "CLAUDE_CODE_USE_BEDROCK": "true",
-    "ANTHROPIC_SMALL_FAST_MODEL": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "us.anthropic.claude-sonnet-4-6",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "us.anthropic.claude-opus-4-6-v1",
-    "ANTHROPIC_MODEL": "us.anthropic.claude-opus-4-6-v1"
-  },
+  "env": {},
   "permissions": {
     "allow": [
       "Bash(bash ~/.agentic/bin/*)",
@@ -99,7 +90,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/approve-safe-commands/hook.sh"
+            "command": "ruby ~/.claude/hooks/approve-safe-commands/hook.rb"
           },
           {
             "type": "command",

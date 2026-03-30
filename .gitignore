@@ -16,6 +16,9 @@
 # Private/work catalog (never commit)
 **/library.local.yaml
 
+# Pre-commit deny patterns (contains work references)
+.denied-patterns
+
 # Secrets (never commit)
 *.secrets
 .credentials.json

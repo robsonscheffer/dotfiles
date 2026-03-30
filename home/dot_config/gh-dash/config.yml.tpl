@@ -35,8 +35,8 @@ defaults:
         hidden: true
 
   preview:
-    open: true
-    width: 80
+    open: false
+    width: 70
   prsLimit: 20
   issuesLimit: 20
 
@@ -48,7 +48,10 @@ keybindings:
         cd {{.RepoPath}} && lazygit
   prs:
     - key: C
-      builtin: checkout
+      name: code review
+      command: >
+        cmux new-workspace -n "PR-{{.PrNumber}}" 
+        'wt switch pr:{{.PrNumber}} -x "cc'
     - key: m
       command: gh pr merge --repo {{.RepoName}} {{.PrNumber}}
     - key: v
