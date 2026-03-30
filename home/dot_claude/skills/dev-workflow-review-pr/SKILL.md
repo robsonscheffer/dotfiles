@@ -1,6 +1,18 @@
 ---
 name: dev-workflow-review-pr
 description: Review GitHub pull requests using the gh CLI. Fetches PR diff and details, optional Jira or GitHub issue context from branch, analyzes for code quality, security, tests, and style, then posts inline comments. Use when the user asks to review a PR, check a pull request, or mentions a PR URL or number.
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash(gh pr view:*)
+  - Bash(gh pr diff:*)
+  - Bash(gh pr checks:*)
+  - Bash(gh api repos/*/pulls/*/comments --jq:*)
+  - Bash(git log:*)
+  - Bash(git diff:*)
+  - Agent
+  - AskUserQuestion
 ---
 
 # GitHub PR Review

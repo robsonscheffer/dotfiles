@@ -1,6 +1,13 @@
 ---
 name: tell-me-a-story
 description: Use when documenting what went wrong or right with an autonomous agent's work — produces a shareable narrative with citations for teammates
+allowed-tools:
+  - Read
+  - Grep
+  - Glob
+  - Bash(git log:*)
+  - Bash(git show:*)
+  - AskUserQuestion
 ---
 
 # Narrate Agent Incident
