@@ -1,0 +1,83 @@
+{
+  "$schema": "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes/schema.json",
+  "version": 4,
+  "final_space": true,
+  "palette": {
+    "bg": "#1e1e2e",
+    "blue": "#89B4FA",
+    "pink": "#F5C2E7",
+    "lavender": "#B4BEFE",
+    "green": "#A6E3A1",
+    "red": "#F38BA8",
+    "peach": "#FAB387",
+    "yellow": "#F9E2AF",
+    "surface": "#313244",
+    "subtext": "#6C7086"
+  },
+  "blocks": [
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "type": "path",
+          "style": "plain",
+          "foreground": "p:blue",
+          "template": "\uf07b {{ .Path }}",
+          "properties": {
+            "style": "agnoster_short",
+            "max_depth": 3,
+            "home_icon": "~",
+            "folder_separator_icon": "/"
+          }
+        },
+        {
+          "type": "git",
+          "style": "plain",
+          "foreground": "p:lavender",
+          "foreground_templates": [
+            "{{ if gt .Ahead 0 }}p:peach{{ end }}",
+            "{{ if gt .Behind 0 }}p:peach{{ end }}",
+            "{{ if and (.Working.Changed) (not .Staging.Changed) }}p:red{{ end }}",
+            "{{ if and (.Staging.Changed) (.Working.Changed) }}p:yellow{{ end }}",
+            "{{ if and (.Staging.Changed) (not .Working.Changed) }}p:green{{ end }}"
+          ],
+          "template": " \ue725 {{ .HEAD }}{{ if .BranchStatus }} {{ .BranchStatus }}{{ end }}{{ if .Working.Changed }} \uf044 {{ .Working.String }}{{ end }}{{ if .Staging.Changed }} \uf046 {{ .Staging.String }}{{ end }}",
+          "properties": {
+            "branch_icon": "",
+            "fetch_status": true,
+            "fetch_upstream_icon": true
+          }
+        },
+        {
+          "type": "executiontime",
+          "style": "plain",
+          "foreground": "p:subtext",
+          "template": " \uf252 {{ .FormattedMs }}",
+          "properties": {
+            "threshold": 2000,
+            "style": "round"
+          }
+        }
+      ]
+    },
+    {
+      "type": "prompt",
+      "alignment": "left",
+      "newline": true,
+      "segments": [
+        {
+          "type": "text",
+          "style": "plain",
+          "foreground": "p:lavender",
+          "template": "\u276f"
+        }
+      ]
+    }
+  ],
+  "transient_prompt": {
+    "foreground": "p:subtext",
+    "template": "\u276f "
+  }
+}

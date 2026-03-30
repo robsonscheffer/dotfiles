@@ -49,3 +49,4 @@ echo "==> Applying dotfiles with chezmoi..."
 chezmoi init --apply
 
 echo "==> Done! Restart your shell or run: source ~/.zshrc"
+ 
