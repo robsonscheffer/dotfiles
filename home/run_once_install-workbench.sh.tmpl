@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# chezmoi run_once — install workbench CLI and skill symlinks
+set -euo pipefail
+
+# Derive dotfiles root: resolve sourceDir symlink, then go up from home/
+SOURCE_DIR="$(readlink -f "{{ .chezmoi.sourceDir }}" 2>/dev/null || echo "{{ .chezmoi.sourceDir }}")"
+DOTFILES_DIR="${SOURCE_DIR%/home}"
+WB_DIR="$DOTFILES_DIR/workbench"
+
+if [[ ! -d "$WB_DIR" ]]; then
+  echo "workbench: skipping — $WB_DIR not found"
+  exit 0
+fi
+
+# Symlink wb to PATH
+mkdir -p ~/.local/bin
+ln -sf "$WB_DIR/bin/wb" ~/.local/bin/wb
+
+# Symlink skill for Claude Code
+mkdir -p ~/.claude/skills
+ln -sf "$WB_DIR/skill" ~/.claude/skills/workbench
+
+# Initialize runtime state directory
+mkdir -p ~/.workbench/state
+
+echo "workbench: installed (wb CLI, skill, state dir)"
