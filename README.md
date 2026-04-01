@@ -4,18 +4,18 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/). Focused on Cl
 
 ## What's Managed
 
-| Config | Description |
-|--------|-------------|
-| `~/.zshrc` | Zsh shell config (Oh My Zsh, aliases) |
-| `~/.gitconfig` | Git config (1Password signing, LFS, templated identity) |
-| `~/.config/git/ignore` | Global gitignore |
-| `~/.config/mise/config.toml` | Mise runtime versions |
-| `~/.config/gh-dash/config.yml` | gh-dash PR dashboard |
-| `~/.claude/CLAUDE.md` | Claude Code global instructions |
-| `~/.claude/CLAUDE.local.md` | Claude Code personal instructions |
-| `~/.claude/settings.json` | Claude Code settings, hooks, permissions |
-| `~/.claude/skills/*` | 30 Claude Code skills |
-| `~/.claude/hooks/*` | 5 Claude Code hooks |
+| Config                         | Description                                             |
+| ------------------------------ | ------------------------------------------------------- |
+| `~/.zshrc`                     | Zsh shell config (Oh My Zsh, aliases)                   |
+| `~/.gitconfig`                 | Git config (1Password signing, LFS, templated identity) |
+| `~/.config/git/ignore`         | Global gitignore                                        |
+| `~/.config/mise/config.toml`   | Mise runtime versions                                   |
+| `~/.config/gh-dash/config.yml` | gh-dash PR dashboard                                    |
+| `~/.claude/CLAUDE.md`          | Claude Code global instructions                         |
+| `~/.claude/CLAUDE.local.md`    | Claude Code personal instructions                       |
+| `~/.claude/settings.json`      | Claude Code settings, hooks, permissions                |
+| `~/.claude/skills/*`           | 30 Claude Code skills                                   |
+| `~/.claude/hooks/*`            | 5 Claude Code hooks                                     |
 
 ## What's NOT Tracked
 
@@ -80,4 +80,7 @@ dotfiles/
 
 ## Safety
 
-A pre-commit hook scans staged changes for work-specific patterns (company names, internal URLs, ticket IDs) defined in `.denied-patterns`. This prevents accidentally leaking org-specific references.
+A pre-commit hook runs two checks on every commit:
+
+1. **Denied patterns** — scans staged changes for work-specific patterns (company names, internal URLs, ticket IDs) defined in `.denied-patterns`. Blocks the commit if any match.
+2. **Prettier** — formats all staged files via `npx --yes prettier --ignore-unknown --write` (config in `prettier.config.js`). Partially staged files are skipped. Requires Node.js/npx; silently skipped if not available.
