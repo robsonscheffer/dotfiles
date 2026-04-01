@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# uninstall-cron — Remove workbench crontab entries
+
+require 'open3'
+
+MARKER_BEGIN = '# BEGIN workbench-watchers'
+MARKER_END   = '# END workbench-watchers'
+
+current, = Open3.capture2('crontab', '-l')
+
+if current.include?('no crontab for') || !current.include?(MARKER_BEGIN)
+  $stderr.puts "No workbench cron entries found."
+  exit 0
+end
+
+cleaned = current.sub(/\n*#{Regexp.escape(MARKER_BEGIN)}.*?#{Regexp.escape(MARKER_END)}\n?/m, "\n")
+
+if cleaned.strip.empty?
+  Open3.capture2('crontab', '-r')
+else
+  Open3.popen2('crontab', '-') do |stdin, _, _|
+    stdin.write(cleaned)
+    stdin.close
+  end
+end
+
+$stderr.puts "Workbench cron entries removed."

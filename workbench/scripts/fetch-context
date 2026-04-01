@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# fetch-context — Gather Jira + repo knowledge for a ticket
+# Contract: stdout=JSON, stderr=human log, exit 0=success
+
+$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
+
+require "workbench"
+require "json"
+
+id = ARGV[0] || (abort 'Usage: fetch-context <ticket_id>')
+registry = Workbench::Registry.new
+result = registry.fetch_context(id)
+puts JSON.pretty_generate(result)
