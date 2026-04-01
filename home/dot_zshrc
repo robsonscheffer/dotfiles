@@ -25,7 +25,7 @@ export EDITOR="nvim"
 export VISUAL="nvim"
 
 # --- PATH ---
-export PATH="$HOME/.local/share/mise/shims:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 export PATH=$PATH:$ANDROID_HOME/emulator
 export PATH=$PATH:$ANDROID_HOME/platform-tools
 export PATH=$PATH:$HOME/.maestro/bin
