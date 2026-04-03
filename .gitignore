@@ -19,6 +19,10 @@
 # Pre-commit deny patterns (contains work references)
 .denied-patterns
 
+# Machine-specific agent context (auto-generated per machine)
+AGENTS.local.md
+CLAUDE.local.md
+
 # Secrets (never commit)
 *.secrets
 .credentials.json
