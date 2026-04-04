@@ -1,5 +1,5 @@
 ---
-name: cmux
+name: rs-cmux
 description: cmux terminal multiplexer - manage workspaces, spawn agents, restore sessions. USE WHEN user says "restore sessions", "cmux workspaces", "spawn workspace", "list workspaces", "cmux status".
 ---
 
@@ -188,16 +188,16 @@ if __name__ == "__main__":
 
 Programmatic control via Unix socket at `/tmp/cmux.sock`. Request format: newline-terminated JSON.
 
-| Method | Purpose |
-|--------|---------|
-| `workspace.list` | List all workspaces |
-| `workspace.create` | Create new workspace |
-| `workspace.select` | Switch to workspace |
-| `surface.send_text` | Send text to terminal |
-| `surface.send_key` | Send keypress (enter, tab, escape) |
-| `set-status` | Sidebar status pill (icon, color) |
-| `set-progress` | Progress bar (0.0-1.0) |
-| `notification.create` | Push notification |
+| Method                | Purpose                            |
+| --------------------- | ---------------------------------- |
+| `workspace.list`      | List all workspaces                |
+| `workspace.create`    | Create new workspace               |
+| `workspace.select`    | Switch to workspace                |
+| `surface.send_text`   | Send text to terminal              |
+| `surface.send_key`    | Send keypress (enter, tab, escape) |
+| `set-status`          | Sidebar status pill (icon, color)  |
+| `set-progress`        | Progress bar (0.0-1.0)             |
+| `notification.create` | Push notification                  |
 
 CLI flags: `--json`, `--workspace ID`, `--surface ID`, `--id-format refs|uuids|both`
 

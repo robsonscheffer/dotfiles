@@ -1,5 +1,5 @@
 ---
-name: address-pr-feedback
+name: rs-address-pr-feedback
 description: Walk through PR review comments one by one, spawn a subagent per comment to validate the concern and propose fixes, then explain each to the user and suggest fixes without replying on GitHub. Use when the user wants to address PR feedback, go through review comments, process PR comments interactively, or respond to code review.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: personaltask
+name: rs-task-pipeline
 description: Generic idea-to-PR pipeline - creates a Jira subtask, plans, branches, implements, and opens a PR. Requires a wrapper skill to supply org-specific config (Jira instance, project, parent ticket, account ID, transition IDs). Triggers on "personaltask", "quick task", or "spin up a ticket".
 ---
 

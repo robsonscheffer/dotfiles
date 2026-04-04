@@ -1,5 +1,5 @@
 ---
-name: ccusage
+name: rs-usage
 description: Display Claude Code usage statistics including daily activity, token usage, session counts, and cost estimates. Use when asked about usage, stats, tokens, sessions, or Claude Code activity.
 allowed-tools: Read, Bash
 ---

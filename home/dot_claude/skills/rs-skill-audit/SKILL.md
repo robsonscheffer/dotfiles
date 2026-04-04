@@ -1,5 +1,5 @@
 ---
-name: evaluate-skill
+name: rs-skill-audit
 description: Use when reviewing a skill execution transcript to find tool failures, agent struggles, skill gaps, and produce an improvement plan. Use after observing a skill run that had issues, or to audit any skill invocation for quality.
 args: "[--skill <skill-name>] [--file <path-to-transcript>]"
 allowed-tools: Bash, Read, Write, Edit, Grep, Glob, Agent, AskUserQuestion
@@ -28,6 +28,7 @@ If no transcript is available, ask: "Please paste the skill execution transcript
 ### Step 1: Identify the Skill Under Evaluation
 
 From the transcript, extract:
+
 - **SKILL_NAME** — which skill was invoked (e.g., `/library use`, `/fix-pr`)
 - **SKILL_PATH** — locate the skill's SKILL.md on disk:
   ```
@@ -50,6 +51,7 @@ Parse the transcript into an ordered list of actions:
 ```
 
 Action types:
+
 - `TOOL_CALL` — agent called a tool (Bash, Read, Edit, etc.)
 - `TOOL_RESULT` — tool returned output (success, error, permission denied)
 - `DECISION` — agent made a choice or branched
@@ -82,6 +84,7 @@ For every tool call in the transcript:
 - Were there redundant tool calls (reading the same file twice)?
 
 **Common tool issues to flag:**
+
 - Combining destructive + non-destructive commands in one Bash call (causes full denial on permission reject)
 - Using Bash when a dedicated tool exists (cat instead of Read)
 - Missing error checking on tool results
@@ -137,6 +140,7 @@ This is the most important dimension — what's **missing from the skill itself*
 Classify every step in the skill's workflow as **deterministic** or **judgment-required**:
 
 **Deterministic** — Same input always produces same action. No agent reasoning needed:
+
 - File operations: clone, copy, move, delete, mkdir
 - Command execution: running a linter, a test suite, a build
 - Parsing: extracting a field from YAML/JSON, slugifying a string
@@ -144,6 +148,7 @@ Classify every step in the skill's workflow as **deterministic** or **judgment-r
 - Template expansion: filling known variables into a fixed structure
 
 **Judgment-required** — Agent reasoning, context, or user interaction needed:
+
 - Interpreting ambiguous input (URL parsing, intent detection)
 - Deciding between alternatives based on context
 - Error triage: choosing a recovery strategy
@@ -167,12 +172,14 @@ For each skill step, record:
 **Extraction opportunities** — For clusters of deterministic steps, recommend:
 
 1. **Shell function** — When 2+ deterministic steps form a sequence that the skill already expresses as bash commands. The agent calls one function instead of N tool calls.
+
    ```
    Example: clone → parse path → copy → verify → cleanup
    → extract to: catalog.sh pull-skill <name> <url>
    ```
 
 2. **Validation script** — When deterministic checks are repeated across invocations. The agent calls the script once instead of running each check.
+
    ```
    Example: check file exists → check SKILL.md present → check frontmatter valid
    → extract to: scripts/validate-skill.sh <path>
@@ -185,12 +192,14 @@ For each skill step, record:
    ```
 
 **Why this matters:**
+
 - Deterministic steps done by the agent are fragile (permission issues, command chaining, forgetting cleanup)
 - Shell scripts handle errors with `set -e`, traps, and exit codes — more reliable than agent tool calls
 - Fewer tool calls = faster execution, fewer permission prompts, less context burned
 - Agent focuses on what it's good at: judgment, language, reasoning
 
 **What NOT to extract:**
+
 - Steps that need to adapt based on previous results
 - Error recovery that requires reading and interpreting output
 - Anything that varies based on user intent or conversation context
@@ -200,12 +209,14 @@ For each skill step, record:
 For each issue found, classify:
 
 **Severity:**
+
 - `critical` — execution failed or produced wrong result
 - `high` — partial failure, user had to intervene, or cleanup missed
 - `medium` — inefficiency or non-ideal behavior, but result was correct
 - `low` — cosmetic or minor style issue
 
 **Root cause:**
+
 - `skill-gap` — the skill's instructions are incomplete or ambiguous
 - `agent-error` — agent deviated from clear instructions
 - `tool-failure` — tool returned an error or unexpected result
@@ -220,6 +231,7 @@ Present the report in this format:
 # Skill Evaluation: {SKILL_NAME}
 
 ## Execution Summary
+
 - **Skill:** {SKILL_NAME}
 - **Invocation:** {exact command}
 - **Overall Result:** {success | partial-success | failure}
@@ -229,17 +241,21 @@ Present the report in this format:
 ## Issues Found
 
 ### Critical
-| # | Issue | Dimension | Root Cause | Evidence |
-|---|-------|-----------|------------|----------|
-| 1 | ...   | ...       | ...        | ...      |
+
+| #   | Issue | Dimension | Root Cause | Evidence |
+| --- | ----- | --------- | ---------- | -------- |
+| 1   | ...   | ...       | ...        | ...      |
 
 ### High
+
 (same table format)
 
 ### Medium / Low
+
 (same table format)
 
 ## Execution Timeline
+
 (condensed timeline from Step 2 — only notable events)
 
 ## Skill Improvement Recommendations
@@ -247,6 +263,7 @@ Present the report in this format:
 Priority-ordered list of changes to the SKILL.md:
 
 ### 1. {Recommendation title}
+
 **Issue(s) addressed:** #1, #3
 **Change:** {specific edit to make to SKILL.md}
 **Rationale:** {why this fixes the issue}
@@ -255,13 +272,14 @@ Priority-ordered list of changes to the SKILL.md:
 
 ## Determinism Map
 
-| Step | Description | Classification | Extractable? |
-|------|-------------|---------------|-------------|
+| Step | Description | Classification           | Extractable?   |
+| ---- | ----------- | ------------------------ | -------------- |
 | ...  | ...         | deterministic / judgment | yes/no/partial |
 
 ### Extraction Recommendations
 
 #### Extract: {function/script name}
+
 **Steps covered:** {which deterministic steps this replaces}
 **Type:** shell function | validation script | template
 **Interface:** `{command} <args>`
@@ -270,9 +288,11 @@ Priority-ordered list of changes to the SKILL.md:
 #### Extract: ...
 
 ### Remaining Agent Responsibilities
+
 {List of judgment-required steps that must stay in the skill as agent instructions}
 
 ## Agent Behavior Notes
+
 {Observations about agent behavior that aren't skill issues —
 e.g., "Agent should have split destructive and non-destructive
 commands into separate Bash calls"}
@@ -285,6 +305,7 @@ After presenting the report, ask:
 > "Would you like me to apply the skill improvement recommendations to {SKILL_NAME}/SKILL.md?"
 
 If yes:
+
 1. Read the current SKILL.md
 2. Apply each recommendation as an Edit
 3. Show the diff summary
@@ -295,31 +316,31 @@ If the user wants to apply only some recommendations, let them pick.
 
 Quick-reference patterns that almost always indicate issues:
 
-| Signal in Transcript | Likely Issue |
-|---------------------|--------------|
-| `Permission denied` then same command retried | Agent didn't adjust approach |
-| `Permission denied` on combined `&&` command | Destructive + non-destructive mixed |
-| `rm -rf` denied | Cleanup step should be separate or optional |
-| Agent says "installed" but cleanup failed | Partial success reported as full success |
-| `Cogitated for N s` where N > 20 | Agent struggled with decision |
-| Tool called then same tool with same args | Redundant call |
-| `cat` / `grep` / `find` in Bash | Should use dedicated Read/Grep/Glob tool |
-| File read but never referenced again | Unnecessary exploration |
-| Sequential calls that could be parallel | Efficiency issue |
-| Agent invents steps not in skill | Skill has gaps or agent deviated |
-| 3+ sequential Bash calls that are all fixed commands | Deterministic chain — extract to script |
-| Agent copies bash commands verbatim from skill | Step is deterministic, should be a script |
-| Permission denied on a step that never varies | Deterministic step — script with proper permissions |
-| Agent burned context parsing/validating structured data | Extract to jq/yq/shell — agent shouldn't parse |
+| Signal in Transcript                                    | Likely Issue                                        |
+| ------------------------------------------------------- | --------------------------------------------------- |
+| `Permission denied` then same command retried           | Agent didn't adjust approach                        |
+| `Permission denied` on combined `&&` command            | Destructive + non-destructive mixed                 |
+| `rm -rf` denied                                         | Cleanup step should be separate or optional         |
+| Agent says "installed" but cleanup failed               | Partial success reported as full success            |
+| `Cogitated for N s` where N > 20                        | Agent struggled with decision                       |
+| Tool called then same tool with same args               | Redundant call                                      |
+| `cat` / `grep` / `find` in Bash                         | Should use dedicated Read/Grep/Glob tool            |
+| File read but never referenced again                    | Unnecessary exploration                             |
+| Sequential calls that could be parallel                 | Efficiency issue                                    |
+| Agent invents steps not in skill                        | Skill has gaps or agent deviated                    |
+| 3+ sequential Bash calls that are all fixed commands    | Deterministic chain — extract to script             |
+| Agent copies bash commands verbatim from skill          | Step is deterministic, should be a script           |
+| Permission denied on a step that never varies           | Deterministic step — script with proper permissions |
+| Agent burned context parsing/validating structured data | Extract to jq/yq/shell — agent shouldn't parse      |
 
 ## Error Handling
 
-| Error | Action |
-|-------|--------|
-| No transcript provided | Ask user to paste or provide file path |
-| Skill SKILL.md not found on disk | Evaluate without baseline; note in report that compliance couldn't be checked |
-| Transcript is truncated | Evaluate what's available; note gaps |
-| Multiple skills invoked in transcript | Ask which one to evaluate, or evaluate each separately |
+| Error                                 | Action                                                                        |
+| ------------------------------------- | ----------------------------------------------------------------------------- |
+| No transcript provided                | Ask user to paste or provide file path                                        |
+| Skill SKILL.md not found on disk      | Evaluate without baseline; note in report that compliance couldn't be checked |
+| Transcript is truncated               | Evaluate what's available; note gaps                                          |
+| Multiple skills invoked in transcript | Ask which one to evaluate, or evaluate each separately                        |
 
 ## Notes
 

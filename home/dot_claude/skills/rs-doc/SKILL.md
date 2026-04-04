@@ -1,5 +1,5 @@
 ---
-name: doc
+name: rs-doc
 description: Use when writing or improving documentation. Applies Diátaxis framework to create user-centered docs (tutorials, how-to guides, reference, explanation).
 argument-hint: "[topic | file | --type tutorial|howto|reference|explanation | --audit]"
 allowed-tools:

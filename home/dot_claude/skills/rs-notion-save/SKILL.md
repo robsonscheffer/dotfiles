@@ -1,5 +1,5 @@
 ---
-name: save-to-notion
+name: rs-notion-save
 description: Use when saving brainstorms, plans, designs, queries, or documents to Notion for future reference
 ---
 
