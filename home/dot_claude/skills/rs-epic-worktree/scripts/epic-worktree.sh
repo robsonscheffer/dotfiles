@@ -121,9 +121,9 @@ cmd_setup() {
 
     # Create ticket worktrees
     local tickets
-    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key) \(.value)\"")"
+    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")"
 
-    while IFS=' ' read -r ticket_id desc; do
+    while IFS=$'\t' read -r ticket_id desc; do
       [[ -z "$ticket_id" ]] && continue
       local num
       num="$(ticket_number "$ticket_id")"
@@ -150,15 +150,15 @@ cmd_setup() {
   while IFS= read -r repo_name; do
     [[ -z "$repo_name" ]] && continue
     local worktree_root feature_branch
-    worktree_root="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].worktree_root")"
+    worktree_root="$(expand_path "$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].worktree_root")")"
     feature_branch="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].feature_branch")"
 
     printf "%s (%s)\n" "$repo_name" "$worktree_root"
     printf "  %-12s %-40s (epic)\n" "$epic" "$feature_branch"
 
     local tickets
-    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key) \(.value)\"")"
-    while IFS=' ' read -r ticket_id desc; do
+    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")"
+    while IFS=$'\t' read -r ticket_id desc; do
       [[ -z "$ticket_id" ]] && continue
       local num
       num="$(ticket_number "$ticket_id")"
@@ -198,9 +198,9 @@ cmd_status() {
     echo "$repo_name"
 
     local tickets
-    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key) \(.value)\"")"
+    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")"
 
-    while IFS=' ' read -r ticket_id desc; do
+    while IFS=$'\t' read -r ticket_id desc; do
       [[ -z "$ticket_id" ]] && continue
       total=$((total + 1))
 
@@ -281,11 +281,11 @@ cmd_sync() {
     echo "Syncing $feature_branch ($repo_name)"
 
     local tickets
-    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key) \(.value)\"")"
+    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")"
 
     # Pre-scan: check which tickets need merging
     local has_unmerged=false
-    while IFS=' ' read -r ticket_id desc; do
+    while IFS=$'\t' read -r ticket_id desc; do
       [[ -z "$ticket_id" ]] && continue
       local num
       num="$(ticket_number "$ticket_id")"
@@ -311,7 +311,7 @@ cmd_sync() {
 
     local unmerged=0
 
-    while IFS=' ' read -r ticket_id desc; do
+    while IFS=$'\t' read -r ticket_id desc; do
       [[ -z "$ticket_id" ]] && continue
 
       local num
@@ -419,9 +419,9 @@ cmd_teardown() {
 
     # Remove ticket worktrees first
     local tickets
-    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key) \(.value)\"")"
+    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")"
 
-    while IFS=' ' read -r ticket_id desc; do
+    while IFS=$'\t' read -r ticket_id desc; do
       [[ -z "$ticket_id" ]] && continue
       local num
       num="$(ticket_number "$ticket_id")"
