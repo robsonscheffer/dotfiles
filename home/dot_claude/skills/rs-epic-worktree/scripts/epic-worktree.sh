@@ -280,14 +280,36 @@ cmd_sync() {
 
     echo "Syncing $feature_branch ($repo_name)"
 
-    # Fetch latest main
-    git -C "$epic_dir" fetch origin main --quiet
-    echo "  ✓ Reset to origin/main"
-    git -C "$epic_dir" checkout -B "$feature_branch" origin/main --quiet
-
-    local unmerged=0
     local tickets
     tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key) \(.value)\"")"
+
+    # Pre-scan: check which tickets need merging
+    local has_unmerged=false
+    while IFS=' ' read -r ticket_id desc; do
+      [[ -z "$ticket_id" ]] && continue
+      local num
+      num="$(ticket_number "$ticket_id")"
+      local branch="${epic}/${num}-${desc}"
+      local pr_state
+      pr_state="$(gh pr list --repo "$remote" --head "$branch" --json state --jq '.[0].state // empty' 2>/dev/null || echo "")"
+      if [[ "$pr_state" != "MERGED" ]]; then
+        has_unmerged=true
+        break
+      fi
+    done <<< "$tickets"
+
+    if [[ "$has_unmerged" != "true" ]]; then
+      echo "  All tickets merged to main. Feature branch no longer needed."
+      echo ""
+      continue
+    fi
+
+    # Fetch latest main and reset feature branch
+    git -C "$epic_dir" fetch origin main --quiet
+    git -C "$epic_dir" checkout -B "$feature_branch" origin/main --quiet
+    echo "  ✓ Reset to origin/main"
+
+    local unmerged=0
 
     while IFS=' ' read -r ticket_id desc; do
       [[ -z "$ticket_id" ]] && continue
@@ -325,11 +347,7 @@ cmd_sync() {
     done <<< "$tickets"
 
     echo ""
-    if [[ $unmerged -eq 0 ]]; then
-      echo "All tickets merged to main. Feature branch no longer needed."
-    else
-      echo "Feature branch ready with $unmerged unmerged ticket(s)."
-    fi
+    echo "Feature branch ready with $unmerged unmerged ticket(s)."
     echo ""
 
   done <<< "$repos"
