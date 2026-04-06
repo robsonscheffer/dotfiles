@@ -6,45 +6,32 @@ argument-hint: "[setup|status|sync|teardown] <epic-id>"
 
 # epic-worktree
 
-Manage epic-level worktree workflows for Tiger Team feature branch strategies.
-
-## Concepts
-
-- **Epic worktree** — worktree for the epic's feature branch. Ephemeral merge point for unmerged ticket branches. Rebuilt from scratch on sync.
-- **Ticket worktree** — worktree per ticket, branched from `main`. Each gets its own PR against `main`.
-- **Feature branch** — `main` + all unmerged ticket branches merged together. Shrinks as PRs merge.
-- **Manifest** — `epic.json` in the epic worktree. Source of truth for repos, tickets, branch names.
+Epic-level worktree orchestration. Manages worktrees across multiple repos for an epic with pluggable worktree creation commands.
 
 ## Quick Reference
 
 ```bash
-SCRIPT="$HOME/.claude/skills/rs-epic-worktree/scripts/epic-worktree.sh"
+EW="$HOME/.claude/skills/rs-epic-worktree/scripts/epic-worktree.sh"
 
-# Setup — create all worktrees from a manifest
-$SCRIPT setup <epic-id> <manifest-path>
-
-# Status — show PR status for all ticket branches
-$SCRIPT status <epic-id>
-
-# Sync — rebuild feature branches from main + unmerged tickets
-$SCRIPT sync <epic-id> [--repo <repo-name>]
-
-# Teardown — remove all worktrees (confirms first)
-$SCRIPT teardown <epic-id> [--force]
+$EW setup <epic-id> <manifest.json>   # Create all worktrees (JSON output)
+$EW status <epic-id>                   # PR status for all tickets
+$EW sync <epic-id> [--repo <name>]     # Rebuild feature branch from main + unmerged
+$EW teardown <epic-id> [--force]       # Remove all worktrees
 ```
 
-## Manifest Format
+## Manifest
 
-Stored in the epic worktree directory. Created by `setup`, read by all commands.
+`epic.json` — source of truth. Stored in epic worktree after setup.
 
 ```json
 {
   "epic": "PROJ-100",
   "repos": {
-    "backend": {
-      "git_source": "~/repos/backend",
-      "worktree_root": "~/worktrees/backend",
+    "app": {
+      "git_source": "~/repos/app",
+      "worktree_root": "~/worktrees/app",
       "feature_branch": "PROJ-100/embed-support",
+      "worktree_cmd": "minion-worktree --skip-dev-db --skip-test-db",
       "tickets": {
         "PROJ-201": "if-embedded-chrome",
         "PROJ-202": "redirect-uri"
@@ -54,53 +41,41 @@ Stored in the epic worktree directory. Created by `setup`, read by all commands.
 }
 ```
 
-- `git_source` — the main git repo checkout (used for `git worktree add`)
-- `worktree_root` — parent directory for worktrees (e.g., `~/worktrees/backend/`)
-- Branch naming: `<epic>/<ticket-number>-<short-desc>` (number extracted from ticket ID)
+| Field            | Required | Description                                                                                             |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `git_source`     | yes      | Path to the main git checkout                                                                           |
+| `worktree_root`  | yes      | Parent directory for worktrees                                                                          |
+| `feature_branch` | yes      | Epic feature branch name                                                                                |
+| `worktree_cmd`   | no       | Custom worktree creation command. Receives `--repo <path> --branch <name>`. Default: `git worktree add` |
+| `tickets`        | yes      | Map of ticket ID to short description                                                                   |
+
+Branch naming: `<epic>/<ticket-number>-<short-desc>` (e.g., `PROJ-100/201-if-embedded-chrome`).
 
 ## Commands
 
-### `setup <epic-id> <manifest-path>`
+**setup** — Creates worktrees in parallel (one thread per repo, sequential within). Returns JSON array:
 
-1. Reads manifest from `<manifest-path>`
-2. For each repo: fetches `main`, creates epic worktree + ticket worktrees
-3. Copies manifest into each epic worktree
-4. Prints summary table
+```json
+[
+  {
+    "repo": "app",
+    "id": "PROJ-201",
+    "branch": "...",
+    "path": "/...",
+    "type": "ticket",
+    "status": "created"
+  }
+]
+```
 
-### `status <epic-id>`
+Status values: `created`, `exists`, `failed`.
 
-1. Finds manifest by scanning `~/worktrees/*/epic-id/epic.json`
-2. For each ticket branch: checks PR status via `gh pr list`
-3. Prints status table with: `● merged`, `◐ open`, `◑ draft`, `○ no PR`
-4. Shows progress count
+**status** — Checks PR status via `gh`. Shows `● merged`, `◐ open`, `◑ draft`, `○ no PR` with progress count.
 
-### `sync <epic-id> [--repo <name>]`
+**sync** — Rebuilds feature branch: reset to `origin/main`, merge unmerged ticket branches. Skips repo if all tickets merged. Aborts on conflict.
 
-1. Runs status check to identify merged vs unmerged tickets
-2. Resets feature branch to `origin/main`
-3. Merges each unmerged ticket branch
-4. On conflict: aborts merge, reports which branch conflicted, exits
-
-### `teardown <epic-id> [--force]`
-
-1. Lists what will be removed
-2. Unless `--force`, prompts for confirmation
-3. Removes ticket worktrees, then epic worktrees
-4. Deletes merged branches (keeps unmerged)
-
-## Workflow
-
-**Typical usage with Claude Code:**
-
-1. Write an `epic.json` manifest (Claude can help draft it based on tickets)
-2. `epic-worktree setup PROJ-100 /path/to/epic.json`
-3. Work in ticket worktrees, create PRs against `main`
-4. `epic-worktree status PROJ-100` to check progress
-5. `epic-worktree sync PROJ-100` when you need unmerged code in the feature branch
-6. `epic-worktree teardown PROJ-100` when the epic ships
+**teardown** — Removes worktrees and deletes merged branches. Confirms unless `--force`.
 
 ## Dependencies
 
-- `git` (worktree support)
-- `gh` CLI (authenticated)
-- `jq` (JSON parsing)
+`git`, `gh` (authenticated), `jq`

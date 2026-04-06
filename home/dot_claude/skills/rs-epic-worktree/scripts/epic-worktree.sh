@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# epic-worktree.sh — Manage epic-level worktree workflows
+# epic-worktree.sh — Epic-level worktree orchestration
 #
 # Usage:
 #   epic-worktree.sh setup <epic-id> <manifest-path>
@@ -9,228 +9,196 @@ set -euo pipefail
 #   epic-worktree.sh sync <epic-id> [--repo <name>]
 #   epic-worktree.sh teardown <epic-id> [--force]
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-
 # ── Helpers ──────────────────────────────────────────────────
-
-usage() {
-  cat <<'EOF'
-Usage:
-  epic-worktree setup <epic-id> <manifest-path>
-  epic-worktree status <epic-id>
-  epic-worktree sync <epic-id> [--repo <name>]
-  epic-worktree teardown <epic-id> [--force]
-EOF
-  exit 1
-}
 
 die() { echo "Error: $*" >&2; exit 1; }
 
-# Expand ~ in paths (bash 3 compatible)
 expand_path() {
-  local p="$1"
-  if [[ "$p" == "~/"* ]]; then
-    echo "$HOME/${p#\~/}"
-  else
-    echo "$p"
-  fi
+  [[ "$1" == "~/"* ]] && echo "$HOME/${1#\~/}" || echo "$1"
 }
 
-# Find epic.json by scanning worktree roots
-# Returns the path to the first epic.json found for this epic
-find_manifest() {
-  local epic="$1"
-  local manifest=""
+ticket_number() { echo "$1" | grep -oE '[0-9]+$'; }
 
-  # Scan ~/worktrees/*/epic-id/epic.json
-  for candidate in "$HOME/worktrees"/*/"$epic"/epic.json; do
-    if [[ -f "$candidate" ]]; then
-      manifest="$candidate"
-      break
-    fi
-  done
+branch_name() { echo "$1/$(ticket_number "$2")-$3"; }
 
-  if [[ -z "$manifest" ]]; then
-    die "No manifest found for epic '$epic'. Searched ~/worktrees/*/$epic/epic.json"
-  fi
-  echo "$manifest"
-}
-
-# Extract ticket number suffix from ticket ID (e.g., PROJ-201 → 201)
-ticket_number() {
-  echo "$1" | grep -oE '[0-9]+$'
-}
-
-# Get the remote URL for a git source (org/repo format for gh)
 get_remote() {
-  local git_source
-  git_source="$(expand_path "$1")"
-  git -C "$git_source" remote get-url origin 2>/dev/null \
+  git -C "$(expand_path "$1")" remote get-url origin 2>/dev/null \
     | sed -E 's|.*github\.com[:/]||; s|\.git$||'
+}
+
+find_manifest() {
+  for f in "$HOME/worktrees"/*/"$1"/epic.json; do
+    [[ -f "$f" ]] && echo "$f" && return
+  done
+  die "No manifest for '$1'. Searched ~/worktrees/*/$1/epic.json"
+}
+
+# Find worktree path by branch name (porcelain output)
+find_worktree() {
+  git -C "$1" worktree list --porcelain 2>/dev/null | awk -v b="refs/heads/$2" '
+    /^worktree /{ p=substr($0,11) }
+    /^branch /{ if ($2==b) { print p; exit } }
+  '
+}
+
+# Read repo fields from manifest into GS, WT, FB, WCMD
+read_repo() {
+  local m="$1" r="$2"
+  GS=$(expand_path "$(echo "$m" | jq -r ".repos[\"$r\"].git_source")")
+  WT=$(expand_path "$(echo "$m" | jq -r ".repos[\"$r\"].worktree_root")")
+  FB=$(echo "$m" | jq -r ".repos[\"$r\"].feature_branch")
+  WCMD=$(echo "$m" | jq -r ".repos[\"$r\"].worktree_cmd // empty")
 }
 
 # ── setup ────────────────────────────────────────────────────
 
+_create_wt() {
+  local gs="$1" wt="$2" id="$3" branch="$4" cmd="$5" out="$6" repo="$7" type="$8"
+
+  # Already exists?
+  local existing
+  existing=$(find_worktree "$gs" "$branch")
+  if [[ -n "$existing" ]]; then
+    printf '{"repo":"%s","id":"%s","branch":"%s","path":"%s","type":"%s","status":"exists"}\n' \
+      "$repo" "$id" "$branch" "$existing" "$type" > "$out"
+    return
+  fi
+
+  local ok=true
+  if [[ -n "$cmd" ]]; then
+    # shellcheck disable=SC2086
+    $cmd --repo "$gs" --branch "$branch" >/dev/null 2>&1 || ok=false
+  else
+    git -C "$gs" worktree add "$wt/$id" -b "$branch" origin/main --quiet 2>/dev/null || \
+      git -C "$gs" worktree add "$wt/$id" "$branch" --quiet 2>/dev/null || ok=false
+  fi
+
+  # Discover actual path (works with any worktree tool)
+  local path
+  path=$(find_worktree "$gs" "$branch")
+  [[ -z "$path" ]] && ok=false
+
+  local st; $ok && st="created" || st="failed"
+  printf '{"repo":"%s","id":"%s","branch":"%s","path":"%s","type":"%s","status":"%s"}\n' \
+    "$repo" "$id" "$branch" "${path:-unknown}" "$type" "$st" > "$out"
+}
+
+_setup_repo() {
+  local epic="$1" manifest="$2" repo="$3" manifest_path="$4" out_dir="$5"
+  mkdir -p "$out_dir"
+  read_repo "$manifest" "$repo"
+
+  mkdir -p "$WT"
+  [[ -z "$WCMD" ]] && git -C "$GS" fetch origin main --quiet
+
+  local idx=0
+
+  # Epic worktree
+  _create_wt "$GS" "$WT" "$epic" "$FB" "$WCMD" "$out_dir/$idx.json" "$repo" "epic"
+  idx=$((idx + 1))
+
+  # Ticket worktrees (sequential within repo — avoids git lock contention)
+  local tickets
+  tickets=$(echo "$manifest" | jq -r ".repos[\"$repo\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")
+  while IFS=$'\t' read -r tid desc; do
+    [[ -z "$tid" ]] && continue
+    _create_wt "$GS" "$WT" "$tid" "$(branch_name "$epic" "$tid" "$desc")" "$WCMD" "$out_dir/$idx.json" "$repo" "ticket"
+    idx=$((idx + 1))
+  done <<< "$tickets"
+
+  # Copy manifest to epic worktree
+  local epic_path
+  epic_path=$(find_worktree "$GS" "$FB")
+  [[ -n "$epic_path" ]] && cp "$manifest_path" "$epic_path/epic.json"
+}
+
 cmd_setup() {
   local epic="${1:?Usage: epic-worktree setup <epic-id> <manifest-path>}"
   local manifest_path="${2:?Usage: epic-worktree setup <epic-id> <manifest-path>}"
-
-  [[ -f "$manifest_path" ]] || die "Manifest not found: $manifest_path"
+  [[ -f "$manifest_path" ]] || die "Not found: $manifest_path"
 
   local manifest
-  manifest="$(cat "$manifest_path")"
+  manifest=$(cat "$manifest_path")
+  local results_dir
+  results_dir=$(mktemp -d)
+  local pids=()
 
-  # Validate manifest structure
-  echo "$manifest" | jq -e '.epic' >/dev/null 2>&1 || die "Invalid manifest: missing 'epic' field"
-  echo "$manifest" | jq -e '.repos' >/dev/null 2>&1 || die "Invalid manifest: missing 'repos' field"
-
-  local total=0
+  # Dispatch each repo in parallel
   local repos
-  repos="$(echo "$manifest" | jq -r '.repos | keys[]')"
-
-  # First pass: create all worktrees
-  while IFS= read -r repo_name; do
-    [[ -z "$repo_name" ]] && continue
-
-    local git_source worktree_root feature_branch
-    git_source="$(expand_path "$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].git_source")")"
-    worktree_root="$(expand_path "$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].worktree_root")")"
-    feature_branch="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].feature_branch")"
-
-    [[ -d "$git_source/.git" ]] || [[ -d "$git_source" && -f "$git_source/HEAD" ]] || die "Git source not found: $git_source"
-    mkdir -p "$worktree_root"
-
-    echo ""
-    echo "Setting up $repo_name ($worktree_root)"
-    echo "  Fetching origin/main..."
-    git -C "$git_source" fetch origin main --quiet
-
-    # Create epic worktree
-    local epic_dir="$worktree_root/$epic"
-    if [[ -d "$epic_dir" ]]; then
-      echo "  Epic worktree already exists: $epic_dir"
-    else
-      echo "  Creating epic worktree: $feature_branch"
-      git -C "$git_source" worktree add "$epic_dir" -b "$feature_branch" origin/main --quiet 2>/dev/null || \
-        git -C "$git_source" worktree add "$epic_dir" "$feature_branch" --quiet
-      total=$((total + 1))
-    fi
-
-    # Copy manifest into epic worktree
-    cp "$manifest_path" "$epic_dir/epic.json"
-
-    # Create ticket worktrees
-    local tickets
-    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")"
-
-    while IFS=$'\t' read -r ticket_id desc; do
-      [[ -z "$ticket_id" ]] && continue
-      local num
-      num="$(ticket_number "$ticket_id")"
-      local branch="${epic}/${num}-${desc}"
-      local ticket_dir="$worktree_root/$ticket_id"
-
-      if [[ -d "$ticket_dir" ]]; then
-        echo "  Ticket worktree already exists: $ticket_dir"
-      else
-        echo "  Creating ticket worktree: $branch"
-        git -C "$git_source" worktree add "$ticket_dir" -b "$branch" origin/main --quiet 2>/dev/null || \
-          git -C "$git_source" worktree add "$ticket_dir" "$branch" --quiet
-        total=$((total + 1))
-      fi
-    done <<< "$tickets"
-
+  repos=$(echo "$manifest" | jq -r '.repos | keys[]')
+  while IFS= read -r repo; do
+    [[ -z "$repo" ]] && continue
+    _setup_repo "$epic" "$manifest" "$repo" "$manifest_path" "$results_dir/$repo" &
+    pids+=($!)
   done <<< "$repos"
 
-  echo ""
-  echo "Created $total worktrees for $epic"
-  echo ""
+  # Wait for all repos
+  local failed=0
+  for pid in "${pids[@]}"; do
+    wait "$pid" || failed=$((failed + 1))
+  done
 
-  # Print summary table
-  while IFS= read -r repo_name; do
-    [[ -z "$repo_name" ]] && continue
-    local worktree_root feature_branch
-    worktree_root="$(expand_path "$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].worktree_root")")"
-    feature_branch="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].feature_branch")"
+  # Collect and output JSON array
+  printf '['
+  local first=true
+  for f in "$results_dir"/*/*.json; do
+    [[ -f "$f" ]] || continue
+    $first || printf ','
+    cat "$f"
+    first=false
+  done
+  printf ']\n'
 
-    printf "%s (%s)\n" "$repo_name" "$worktree_root"
-    printf "  %-12s %-40s (epic)\n" "$epic" "$feature_branch"
-
-    local tickets
-    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")"
-    while IFS=$'\t' read -r ticket_id desc; do
-      [[ -z "$ticket_id" ]] && continue
-      local num
-      num="$(ticket_number "$ticket_id")"
-      printf "  %-12s %-40s (ticket)\n" "$ticket_id" "${epic}/${num}-${desc}"
-    done <<< "$tickets"
-    echo ""
-  done <<< "$repos"
+  rm -rf "$results_dir"
+  [[ $failed -eq 0 ]] || exit 1
 }
 
 # ── status ───────────────────────────────────────────────────
 
 cmd_status() {
   local epic="${1:?Usage: epic-worktree status <epic-id>}"
-
-  local manifest_path
-  manifest_path="$(find_manifest "$epic")"
   local manifest
-  manifest="$(cat "$manifest_path")"
+  manifest=$(cat "$(find_manifest "$epic")")
 
-  local merged=0
-  local total=0
-
+  local merged=0 total=0
   echo "$epic Epic Status"
   echo "───────────────────────────────────────────────────────────"
 
   local repos
-  repos="$(echo "$manifest" | jq -r '.repos | keys[]')"
-
-  while IFS= read -r repo_name; do
-    [[ -z "$repo_name" ]] && continue
-
-    local git_source
-    git_source="$(expand_path "$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].git_source")")"
+  repos=$(echo "$manifest" | jq -r '.repos | keys[]')
+  while IFS= read -r repo; do
+    [[ -z "$repo" ]] && continue
+    read_repo "$manifest" "$repo"
     local remote
-    remote="$(get_remote "$git_source")"
+    remote=$(get_remote "$GS")
 
-    echo "$repo_name"
-
+    echo "$repo"
     local tickets
-    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")"
-
-    while IFS=$'\t' read -r ticket_id desc; do
-      [[ -z "$ticket_id" ]] && continue
+    tickets=$(echo "$manifest" | jq -r ".repos[\"$repo\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")
+    while IFS=$'\t' read -r tid desc; do
+      [[ -z "$tid" ]] && continue
       total=$((total + 1))
-
-      local num
-      num="$(ticket_number "$ticket_id")"
-      local branch="${epic}/${num}-${desc}"
-
-      # Check PR status via gh
-      local pr_json
-      pr_json="$(gh pr list --repo "$remote" --head "$branch" --json number,state,url,isDraft --jq '.[0] // empty' 2>/dev/null || echo "")"
+      local branch pr_json
+      branch=$(branch_name "$epic" "$tid" "$desc")
+      pr_json=$(gh pr list --repo "$remote" --head "$branch" --json number,state,isDraft --jq '.[0] // empty' 2>/dev/null || echo "")
 
       if [[ -z "$pr_json" ]]; then
-        printf "  %-12s %-24s ○ no PR\n" "$ticket_id" "$desc"
+        printf "  %-12s %-24s ○ no PR\n" "$tid" "$desc"
       else
-        local state pr_number is_draft
-        state="$(echo "$pr_json" | jq -r '.state')"
-        pr_number="$(echo "$pr_json" | jq -r '.number')"
-        is_draft="$(echo "$pr_json" | jq -r '.isDraft')"
-
+        local state num draft
+        state=$(echo "$pr_json" | jq -r '.state')
+        num=$(echo "$pr_json" | jq -r '.number')
+        draft=$(echo "$pr_json" | jq -r '.isDraft')
         if [[ "$state" == "MERGED" ]]; then
-          printf "  %-12s %-24s ● merged\n" "$ticket_id" "$desc"
+          printf "  %-12s %-24s ● merged\n" "$tid" "$desc"
           merged=$((merged + 1))
-        elif [[ "$is_draft" == "true" ]]; then
-          printf "  %-12s %-24s ◑ draft      PR #%s\n" "$ticket_id" "$desc" "$pr_number"
+        elif [[ "$draft" == "true" ]]; then
+          printf "  %-12s %-24s ◑ draft      PR #%s\n" "$tid" "$desc" "$num"
         else
-          printf "  %-12s %-24s ◐ open       PR #%s\n" "$ticket_id" "$desc" "$pr_number"
+          printf "  %-12s %-24s ◐ open       PR #%s\n" "$tid" "$desc" "$num"
         fi
       fi
     done <<< "$tickets"
-
     echo ""
   done <<< "$repos"
 
@@ -242,114 +210,80 @@ cmd_status() {
 cmd_sync() {
   local epic="${1:?Usage: epic-worktree sync <epic-id> [--repo <name>]}"
   shift
-
   local filter_repo=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --repo) filter_repo="$2"; shift 2 ;;
-      *) die "Unknown arg: $1" ;;
+      *) die "Unknown: $1" ;;
     esac
   done
 
-  local manifest_path
-  manifest_path="$(find_manifest "$epic")"
   local manifest
-  manifest="$(cat "$manifest_path")"
-
+  manifest=$(cat "$(find_manifest "$epic")")
   local repos
-  repos="$(echo "$manifest" | jq -r '.repos | keys[]')"
+  repos=$(echo "$manifest" | jq -r '.repos | keys[]')
 
-  while IFS= read -r repo_name; do
-    [[ -z "$repo_name" ]] && continue
+  while IFS= read -r repo; do
+    [[ -z "$repo" ]] && continue
+    [[ -n "$filter_repo" && "$repo" != "$filter_repo" ]] && continue
+    read_repo "$manifest" "$repo"
+    local remote epic_dir
+    remote=$(get_remote "$GS")
+    epic_dir=$(find_worktree "$GS" "$FB")
+    [[ -z "$epic_dir" ]] && die "Epic worktree not found for $FB"
 
-    # Skip if filtering to a specific repo
-    if [[ -n "$filter_repo" ]] && [[ "$repo_name" != "$filter_repo" ]]; then
-      continue
-    fi
+    echo "Syncing $FB ($repo)"
 
-    local git_source worktree_root feature_branch
-    git_source="$(expand_path "$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].git_source")")"
-    worktree_root="$(expand_path "$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].worktree_root")")"
-    feature_branch="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].feature_branch")"
-
-    local remote
-    remote="$(get_remote "$git_source")"
-    local epic_dir="$worktree_root/$epic"
-
-    [[ -d "$epic_dir" ]] || die "Epic worktree not found: $epic_dir"
-
-    echo "Syncing $feature_branch ($repo_name)"
-
-    local tickets
-    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")"
-
-    # Pre-scan: check which tickets need merging
-    local has_unmerged=false
-    while IFS=$'\t' read -r ticket_id desc; do
-      [[ -z "$ticket_id" ]] && continue
-      local num
-      num="$(ticket_number "$ticket_id")"
-      local branch="${epic}/${num}-${desc}"
-      local pr_state
-      pr_state="$(gh pr list --repo "$remote" --head "$branch" --json state --jq '.[0].state // empty' 2>/dev/null || echo "")"
-      if [[ "$pr_state" != "MERGED" ]]; then
-        has_unmerged=true
-        break
-      fi
+    # Pre-scan: any unmerged tickets?
+    local tickets has_unmerged=false
+    tickets=$(echo "$manifest" | jq -r ".repos[\"$repo\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")
+    while IFS=$'\t' read -r tid desc; do
+      [[ -z "$tid" ]] && continue
+      local branch st
+      branch=$(branch_name "$epic" "$tid" "$desc")
+      st=$(gh pr list --repo "$remote" --head "$branch" --json state --jq '.[0].state // empty' 2>/dev/null || echo "")
+      [[ "$st" != "MERGED" ]] && has_unmerged=true && break
     done <<< "$tickets"
 
     if [[ "$has_unmerged" != "true" ]]; then
-      echo "  All tickets merged to main. Feature branch no longer needed."
+      echo "  All tickets merged. Feature branch no longer needed."
       echo ""
       continue
     fi
 
-    # Fetch latest main and reset feature branch
+    # Reset feature branch to latest main
     git -C "$epic_dir" fetch origin main --quiet
-    git -C "$epic_dir" checkout -B "$feature_branch" origin/main --quiet
+    git -C "$epic_dir" checkout -B "$FB" origin/main --quiet
     echo "  ✓ Reset to origin/main"
 
-    local unmerged=0
+    # Merge unmerged ticket branches
+    local count=0
+    while IFS=$'\t' read -r tid desc; do
+      [[ -z "$tid" ]] && continue
+      local branch st
+      branch=$(branch_name "$epic" "$tid" "$desc")
+      st=$(gh pr list --repo "$remote" --head "$branch" --json state --jq '.[0].state // empty' 2>/dev/null || echo "")
 
-    while IFS=$'\t' read -r ticket_id desc; do
-      [[ -z "$ticket_id" ]] && continue
-
-      local num
-      num="$(ticket_number "$ticket_id")"
-      local branch="${epic}/${num}-${desc}"
-
-      # Check if PR is merged
-      local pr_state
-      pr_state="$(gh pr list --repo "$remote" --head "$branch" --json state --jq '.[0].state // empty' 2>/dev/null || echo "")"
-
-      if [[ "$pr_state" == "MERGED" ]]; then
-        echo "  ⊘ Skipped $ticket_id (merged to main)"
+      if [[ "$st" == "MERGED" ]]; then
+        echo "  ⊘ Skipped $tid (merged)"
         continue
       fi
-
-      # Check if branch exists locally
       if ! git -C "$epic_dir" rev-parse --verify "$branch" >/dev/null 2>&1; then
-        echo "  ⊘ Skipped $ticket_id (branch not found)"
+        echo "  ⊘ Skipped $tid (no local branch)"
         continue
       fi
-
-      # Merge the ticket branch
       if git -C "$epic_dir" merge "$branch" --no-edit --quiet 2>/dev/null; then
-        echo "  ✓ Merged ${epic}/${num}-${desc}"
-        unmerged=$((unmerged + 1))
+        echo "  ✓ Merged $branch"
+        count=$((count + 1))
       else
         git -C "$epic_dir" merge --abort 2>/dev/null || true
-        echo "  ✗ CONFLICT merging ${epic}/${num}-${desc}"
-        echo ""
-        echo "Merge conflict detected. Resolve manually in: $epic_dir"
-        exit 1
+        echo "  ✗ CONFLICT: $branch"
+        die "Resolve manually in: $epic_dir"
       fi
     done <<< "$tickets"
 
+    echo "  Ready with $count unmerged ticket(s)."
     echo ""
-    echo "Feature branch ready with $unmerged unmerged ticket(s)."
-    echo ""
-
   done <<< "$repos"
 }
 
@@ -358,123 +292,80 @@ cmd_sync() {
 cmd_teardown() {
   local epic="${1:?Usage: epic-worktree teardown <epic-id> [--force]}"
   shift
-
   local force=false
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --force) force=true; shift ;;
-      *) die "Unknown arg: $1" ;;
+      *) die "Unknown: $1" ;;
     esac
   done
 
-  local manifest_path
-  manifest_path="$(find_manifest "$epic")"
   local manifest
-  manifest="$(cat "$manifest_path")"
-
+  manifest=$(cat "$(find_manifest "$epic")")
   local repos
-  repos="$(echo "$manifest" | jq -r '.repos | keys[]')"
+  repos=$(echo "$manifest" | jq -r '.repos | keys[]')
 
-  # List what will be removed
-  echo "Will remove worktrees for epic: $epic"
-  echo ""
-
-  while IFS= read -r repo_name; do
-    [[ -z "$repo_name" ]] && continue
-    local worktree_root
-    worktree_root="$(expand_path "$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].worktree_root")")"
-
-    echo "$repo_name ($worktree_root)"
-    echo "  $epic (epic worktree)"
-
-    local tickets
-    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | keys[]")"
-    while IFS= read -r ticket_id; do
-      [[ -z "$ticket_id" ]] && continue
-      echo "  $ticket_id (ticket worktree)"
-    done <<< "$tickets"
-    echo ""
+  # Preview
+  echo "Will remove worktrees for: $epic"
+  while IFS= read -r repo; do
+    [[ -z "$repo" ]] && continue
+    read_repo "$manifest" "$repo"
+    echo "  $repo: $epic (epic) + $(echo "$manifest" | jq ".repos[\"$repo\"].tickets | length") tickets"
   done <<< "$repos"
 
-  # Confirm unless --force
   if [[ "$force" != "true" ]]; then
     echo -n "Proceed? [y/N] "
     read -r confirm
-    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-      echo "Aborted."
-      exit 0
-    fi
+    [[ "$confirm" =~ ^[yY]$ ]] || { echo "Aborted."; exit 0; }
   fi
 
-  # Remove worktrees
-  while IFS= read -r repo_name; do
-    [[ -z "$repo_name" ]] && continue
+  while IFS= read -r repo; do
+    [[ -z "$repo" ]] && continue
+    read_repo "$manifest" "$repo"
+    echo "Removing $repo..."
 
-    local git_source worktree_root feature_branch
-    git_source="$(expand_path "$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].git_source")")"
-    worktree_root="$(expand_path "$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].worktree_root")")"
-    feature_branch="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].feature_branch")"
-
-    echo "Removing $repo_name worktrees..."
-
-    # Remove ticket worktrees first
+    # Ticket worktrees
     local tickets
-    tickets="$(echo "$manifest" | jq -r ".repos[\"$repo_name\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")"
-
-    while IFS=$'\t' read -r ticket_id desc; do
-      [[ -z "$ticket_id" ]] && continue
-      local num
-      num="$(ticket_number "$ticket_id")"
-      local branch="${epic}/${num}-${desc}"
-      local ticket_dir="$worktree_root/$ticket_id"
-
-      if [[ -d "$ticket_dir" ]]; then
-        git -C "$git_source" worktree remove "$ticket_dir" --force 2>/dev/null || \
-          echo "  Warning: could not remove worktree $ticket_dir"
-        echo "  Removed worktree: $ticket_id"
-      fi
-
-      # Delete branch only if merged
-      if git -C "$git_source" branch -d "$branch" 2>/dev/null; then
-        echo "  Deleted branch: $branch (merged)"
-      else
-        # Branch not merged or doesn't exist — leave it
-        git -C "$git_source" rev-parse --verify "$branch" >/dev/null 2>&1 && \
-          echo "  Kept branch: $branch (not merged)"
-      fi
+    tickets=$(echo "$manifest" | jq -r ".repos[\"$repo\"].tickets | to_entries[] | \"\(.key)\t\(.value)\"")
+    while IFS=$'\t' read -r tid desc; do
+      [[ -z "$tid" ]] && continue
+      local branch path
+      branch=$(branch_name "$epic" "$tid" "$desc")
+      path=$(find_worktree "$GS" "$branch")
+      [[ -n "$path" ]] && git -C "$GS" worktree remove "$path" --force 2>/dev/null && echo "  ✓ $tid"
+      git -C "$GS" branch -d "$branch" 2>/dev/null && echo "  ✓ Deleted $branch (merged)" || true
     done <<< "$tickets"
 
-    # Remove epic worktree last
-    local epic_dir="$worktree_root/$epic"
-    if [[ -d "$epic_dir" ]]; then
-      git -C "$git_source" worktree remove "$epic_dir" --force 2>/dev/null || \
-        echo "  Warning: could not remove epic worktree $epic_dir"
-      echo "  Removed epic worktree: $epic"
-    fi
-
-    # Delete feature branch (always safe to delete — it's ephemeral)
-    git -C "$git_source" branch -D "$feature_branch" 2>/dev/null && \
-      echo "  Deleted feature branch: $feature_branch"
-
+    # Epic worktree (last)
+    local epic_path
+    epic_path=$(find_worktree "$GS" "$FB")
+    [[ -n "$epic_path" ]] && git -C "$GS" worktree remove "$epic_path" --force 2>/dev/null && echo "  ✓ $epic (epic)"
+    git -C "$GS" branch -D "$FB" 2>/dev/null && echo "  ✓ Deleted $FB" || true
     echo ""
   done <<< "$repos"
 
-  echo "Teardown complete for $epic."
+  echo "Done."
 }
 
 # ── Main ─────────────────────────────────────────────────────
 
-if [[ $# -lt 1 ]]; then
-  usage
-fi
+[[ $# -ge 1 ]] || {
+  cat <<'EOF'
+Usage:
+  epic-worktree setup <epic-id> <manifest-path>
+  epic-worktree status <epic-id>
+  epic-worktree sync <epic-id> [--repo <name>]
+  epic-worktree teardown <epic-id> [--force]
+EOF
+  exit 1
+}
 
-COMMAND="$1"; shift
-
-case "$COMMAND" in
+cmd="$1"; shift
+case "$cmd" in
   setup)    cmd_setup "$@" ;;
   status)   cmd_status "$@" ;;
   sync)     cmd_sync "$@" ;;
   teardown) cmd_teardown "$@" ;;
-  --help|-h) usage ;;
-  *) die "Unknown command: $COMMAND" ;;
+  -h|--help) exec "$0" ;;
+  *) die "Unknown command: $cmd" ;;
 esac
