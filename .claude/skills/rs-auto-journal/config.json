@@ -1,0 +1,13 @@
+{
+  "topics": {},
+  "defaults": {
+    "journal_date": "yesterday",
+    "cron_time": "0 9 * * 1-5",
+    "sections": {
+      "summary": true,
+      "decisions": true,
+      "surprises": true,
+      "would_change": true
+    }
+  }
+}
