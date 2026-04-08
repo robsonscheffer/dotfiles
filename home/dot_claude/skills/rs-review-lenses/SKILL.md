@@ -88,6 +88,11 @@ Examine the diff (and file list with stats from PR-DATA.json if available) to ch
 3. **What could go wrong?** — What failures would be most impactful?
 4. **What would a senior reviewer prioritize?**
 
+**Auto-include triggers** — always select these lenses when their signals appear:
+
+- **Feature Flag Completeness**: Any diff containing feature flag checks (`feature_enabled?`, `useFeatureFlag`, `isEnabled`, `flipper`, `LaunchDarkly`, or similar gating patterns). This lens has caught real production incidents where a flag gated only part of a feature.
+- **Blast Radius**: Any diff touching routes, redirects, URL changes, permission/role checks, or `before_action` filters. Verify the change works for every user type that hits the affected path, not just the one the author had in mind.
+
 ### 3. Dispatch Parallel Subagents
 
 **CRITICAL: ALL selected lenses MUST be dispatched as separate Agent tool calls in a SINGLE message.** Do NOT synthesize any lens findings in the main agent context. Each lens must run independently to avoid cross-contamination and to leverage parallelism.
@@ -246,19 +251,21 @@ Summarize:
 
 ### Domain-Specific Lenses (select based on changes)
 
-| Lens                       | When It Applies                                           |
-| -------------------------- | --------------------------------------------------------- |
-| **Security**               | Auth, input handling, crypto, secrets, permissions        |
-| **Performance**            | Loops, queries, caching, async, large data                |
-| **Backward Compatibility** | Public APIs, config changes, DB migrations, serialization |
-| **Error Handling**         | New error paths, exception handling, validation           |
-| **Test Coverage**          | Ratio of test-to-impl code, untested branches             |
-| **Domain Correctness**     | Business logic, calculations, state machines              |
-| **Concurrency**            | Shared state, locks, race conditions, async coordination  |
-| **Data Integrity**         | DB writes, transactions, validation, consistency          |
-| **Observability**          | Logging, metrics, tracing, debuggability                  |
-| **Accessibility**          | Screen readers, keyboard nav, ARIA attributes             |
-| **Responsive Design**      | Mobile layouts, breakpoints, touch targets                |
+| Lens                          | When It Applies                                                                                                                                                                                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Security**                  | Auth, input handling, crypto, secrets, permissions                                                                                                                                                                                         |
+| **Performance**               | Loops, queries, caching, async, large data                                                                                                                                                                                                 |
+| **Backward Compatibility**    | Public APIs, config changes, DB migrations, serialization                                                                                                                                                                                  |
+| **Error Handling**            | New error paths, exception handling, validation                                                                                                                                                                                            |
+| **Test Coverage**             | Ratio of test-to-impl code, untested branches                                                                                                                                                                                              |
+| **Domain Correctness**        | Business logic, calculations, state machines                                                                                                                                                                                               |
+| **Concurrency**               | Shared state, locks, race conditions, async coordination                                                                                                                                                                                   |
+| **Data Integrity**            | DB writes, transactions, validation, consistency                                                                                                                                                                                           |
+| **Observability**             | Logging, metrics, tracing, debuggability                                                                                                                                                                                                   |
+| **Accessibility**             | Screen readers, keyboard nav, ARIA attributes                                                                                                                                                                                              |
+| **Responsive Design**         | Mobile layouts, breakpoints, touch targets                                                                                                                                                                                                 |
+| **Feature Flag Completeness** | Any change gated by a feature flag — verify the flag gates ALL related code paths (data fetching, rendering, side effects, routing), not just part of them. A partially-gated feature is worse than ungated — it creates false confidence. |
+| **Blast Radius**              | Route changes, redirects, permission checks, role-dependent logic — verify changes work for ALL affected user types (admins, employees, advisors, payroll admins), not just the primary target persona.                                    |
 
 Invent new lenses as appropriate — this catalog is not exhaustive.
 
