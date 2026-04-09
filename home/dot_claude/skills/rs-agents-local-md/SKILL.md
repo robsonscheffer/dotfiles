@@ -1,5 +1,5 @@
 ---
-name: agents-local-md
+name: rs-agents-local-md
 description: "Generate machine-specific AGENTS.local.md with host facts and system tool details"
 argument-hint: "[--force]"
 disable-model-invocation: true
@@ -35,6 +35,7 @@ $ARGUMENTS
 ```
 
 Options:
+
 - `--force` — regenerate even if the file is fresh
 
 ## Instructions
@@ -49,6 +50,7 @@ stat -f %m AGENTS.local.md 2>/dev/null || stat -c %Y AGENTS.local.md 2>/dev/null
 
 Read the file and extract the `Generated:` line. If ALL of these are true, report "AGENTS.local.md
 is current (generated DATE on HOSTNAME)" and **stop**:
+
 - File is less than 7 days old
 - Hostname in file matches current hostname
 - OS in file matches current OS
@@ -59,6 +61,7 @@ Otherwise, continue to regenerate.
 ### 2. Probe System Identity
 
 Gather:
+
 ```bash
 uname -s        # OS kernel (Darwin/Linux)
 uname -m        # Architecture (x86_64/arm64)
@@ -66,6 +69,7 @@ hostname -s     # Short hostname
 ```
 
 Determine which system package manager is available:
+
 - macOS: `command -v brew`
 
 ### 3. Probe Core System Tools
@@ -73,6 +77,7 @@ Determine which system package manager is available:
 Only probe tools that **vary across systems and affect agent behavior**: **zsh, tmux, nvim**.
 
 For each tool, collect:
+
 - Version: `zsh --version`, `tmux -V`, `nvim --version`
 - Path: `command -v <tool>`
 
@@ -103,9 +108,9 @@ Generated: YYYY-MM-DD on HOSTNAME (OS ARCH)
 
 ## Core Tools
 
-| Tool | Version | Path |
-|------|---------|------|
-| zsh  | 5.9     | `/bin/zsh` |
+| Tool | Version | Path                     |
+| ---- | ------- | ------------------------ |
+| zsh  | 5.9     | `/bin/zsh`               |
 | tmux | 3.5a    | `/opt/homebrew/bin/tmux` |
 | nvim | 0.11.x  | `/opt/homebrew/bin/nvim` |
 

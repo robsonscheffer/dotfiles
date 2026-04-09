@@ -1,5 +1,5 @@
 ---
-name: copy
+name: rs-copy
 description: Copy content to my clipboard using `pbcopy`.
 argument-hint: "[content | file path | last response]"
 disable-model-invocation: true
@@ -19,14 +19,18 @@ $ARGUMENTS
 ## Instructions
 
 ### No Arguments / "last response"
+
 Copy Claude's last response to the clipboard.
 
 ### File Path
+
 If arguments look like a file path (starts with `/`, `~`, `./`, or contains a known extension):
+
 1. Read the file with the Read tool
 2. Pipe contents to `pbcopy`
 
 ### Literal Content
+
 Copy the provided text directly to clipboard.
 
 ## Implementation

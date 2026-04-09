@@ -1,5 +1,5 @@
 ---
-name: gitingest
+name: rs-gitingest
 description: Use when the user wants to fetch and contextualize a GitHub repository for future reference.
 argument-hint: "[url | user/repo | repo-name] [filters...]"
 allowed-tools:
@@ -27,6 +27,7 @@ $ARGUMENTS
 ### 2. Parse Filters
 
 Natural language filters map to options:
+
 - "only Python files" → `-i "*.py"`
 - "exclude tests" → `-e "test/*" -e "*_test.py"`
 - "branch develop" → `-b develop`
@@ -40,14 +41,14 @@ gitingest [OPTIONS] -o docs/reference/<user>-<repo>.txt <url>
 
 **Options:**
 
-| Flag | Purpose |
-|------|---------|
-| `-o PATH` | Output file (required) |
+| Flag         | Purpose                      |
+| ------------ | ---------------------------- |
+| `-o PATH`    | Output file (required)       |
 | `-i PATTERN` | Include pattern (repeatable) |
 | `-e PATTERN` | Exclude pattern (repeatable) |
-| `-b NAME` | Branch |
-| `-s BYTES` | Max file size |
-| `-t TOKEN` | GitHub PAT for private repos |
+| `-b NAME`    | Branch                       |
+| `-s BYTES`   | Max file size                |
+| `-t TOKEN`   | GitHub PAT for private repos |
 
 ### 4. Execute & Confirm
 

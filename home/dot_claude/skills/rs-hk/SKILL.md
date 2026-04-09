@@ -1,5 +1,5 @@
 ---
-name: hk
+name: rs-hk
 description: "Use when bootstrapping hk pre-commit hooks for a project."
 argument-hint: "[stacks... | --check | --update]"
 disable-model-invocation: true
@@ -50,12 +50,12 @@ Conventional commits: !`git log --oneline -10 2>/dev/null || echo "no git histor
 
 ### Parse Arguments
 
-| Pattern | Mode |
-|---------|------|
-| (empty) | **Auto-detect**: scan project, detect stacks, full bootstrap |
-| `--check` | **Check**: validate existing `hk.pkl`, run `hk check --all` |
-| `--update` | **Update**: detect new stacks, propose additions |
-| `rust shell go ...` | **Force stacks**: use specified stacks |
+| Pattern             | Mode                                                         |
+| ------------------- | ------------------------------------------------------------ |
+| (empty)             | **Auto-detect**: scan project, detect stacks, full bootstrap |
+| `--check`           | **Check**: validate existing `hk.pkl`, run `hk check --all`  |
+| `--update`          | **Update**: detect new stacks, propose additions             |
+| `rust shell go ...` | **Force stacks**: use specified stacks                       |
 
 ### Mode: --check
 
@@ -70,16 +70,16 @@ Conventional commits: !`git log --oneline -10 2>/dev/null || echo "no git histor
 
 #### 2. Detect Stacks
 
-| Indicator | Stack |
-|-----------|-------|
-| *(always)* | essential |
-| `*.sh`, `bin/` with scripts | shell |
-| `.github/workflows/*.yml` | github-actions |
-| `Cargo.toml` | rust |
-| `go.mod` | go |
-| `Dockerfile*`, `docker-compose.yml` | docker |
-| `*.pkl`, `**/*.yml` (non-GHA) | config-languages |
-| `*.lua`, `init.lua` | lua |
+| Indicator                           | Stack            |
+| ----------------------------------- | ---------------- |
+| _(always)_                          | essential        |
+| `*.sh`, `bin/` with scripts         | shell            |
+| `.github/workflows/*.yml`           | github-actions   |
+| `Cargo.toml`                        | rust             |
+| `go.mod`                            | go               |
+| `Dockerfile*`, `docker-compose.yml` | docker           |
+| `*.pkl`, `**/*.yml` (non-GHA)       | config-languages |
+| `*.lua`, `init.lua`                 | lua              |
 
 #### 3. Analyze Project Context
 
