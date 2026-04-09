@@ -1,0 +1,84 @@
+version: "3"
+
+vars:
+  WB_DIR:
+    sh: 'cd "$(dirname "{{.TASKFILE}}")" && pwd'
+
+env:
+  WORKBENCH_HOME: "{{.HOME}}/.workbench"
+  WB: "{{.WB_DIR}}/bin/wb"
+
+tasks:
+  # -- Lifecycle (user-triggered) --
+
+  start:
+    desc: "Start a new ticket — create worktree, fetch context"
+    requires:
+      vars: [TICKET, REPO_PATH]
+    cmds:
+      - "{{.WB_DIR}}/bin/wb start {{.TICKET}} {{.REPO_PATH}} {{.CLI_ARGS}}"
+      - "{{.WB_DIR}}/scripts/fetch-context {{.TICKET}}"
+
+  focus:
+    desc: "Focus on a ticket — sync its state, print summary"
+    requires:
+      vars: [TICKET]
+    cmds:
+      - "{{.WB_DIR}}/scripts/sync-ticket {{.TICKET}}"
+      - "{{.WB_DIR}}/bin/wb focus {{.TICKET}}"
+
+  archive:
+    desc: "Archive a ticket — check safety, remove worktree"
+    requires:
+      vars: [TICKET]
+    cmds:
+      - "{{.WB_DIR}}/bin/wb archive {{.TICKET}} {{.CLI_ARGS}}"
+
+  # -- Watchers (cron-safe, sync external state -> active.yaml) --
+
+  sync-github:
+    desc: "Sync PR state, CI status, reviews from GitHub"
+    cmds:
+      - "{{.WB_DIR}}/scripts/sync-github"
+
+  sync-worktrees:
+    desc: "Discover new worktrees, flag missing ones"
+    cmds:
+      - "{{.WB_DIR}}/scripts/sync-worktrees"
+
+  detect-stale:
+    desc: "Flag tickets with no git activity in 3+ days"
+    cmds:
+      - "{{.WB_DIR}}/scripts/detect-stale"
+
+  sync-all:
+    desc: "Run all watchers sequentially"
+    cmds:
+      - task: sync-worktrees
+      - task: sync-github
+      - task: detect-stale
+
+  # -- Reporters (read-only) --
+
+  briefing:
+    desc: "Morning briefing — sync all, compile status"
+    deps: [sync-all]
+    cmds:
+      - "{{.WB_DIR}}/scripts/morning-briefing"
+
+  drift-report:
+    desc: "Show drift between active.yaml and reality"
+    cmds:
+      - "{{.WB_DIR}}/bin/wb reconcile"
+
+  # -- Maintenance --
+
+  install-cron:
+    desc: "Install crontab entries for watchers"
+    cmds:
+      - "{{.WB_DIR}}/scripts/install-cron"
+
+  uninstall-cron:
+    desc: "Remove workbench crontab entries"
+    cmds:
+      - "{{.WB_DIR}}/scripts/uninstall-cron"

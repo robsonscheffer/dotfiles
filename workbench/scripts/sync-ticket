@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# sync-ticket — Sync single ticket's PR/git state from GitHub
+# Contract: stdout=JSON, stderr=human log, exit 0=success
+
+$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
+
+require "workbench"
+require "json"
+
+id = ARGV[0] || (abort 'Usage: sync-ticket <ticket_id>')
+registry = Workbench::Registry.new
+github = Workbench::GithubSync.new(registry: registry)
+result = github.sync_ticket(id)
+puts JSON.pretty_generate(result)

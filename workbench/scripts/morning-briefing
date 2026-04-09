@@ -1,0 +1,117 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# morning-briefing — Compile status report from registry
+# Read-only. Contract: stdout=human-readable report, exit 0=success
+
+$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
+
+require "workbench"
+require "date"
+
+registry = Workbench::Registry.new
+tickets = registry.list
+
+puts "## Morning Briefing -- #{Date.today}"
+puts
+
+# Categorize
+needs_attention = []
+in_progress = []
+ready_to_archive = []
+stale = []
+
+tickets.each do |t|
+  prs = t['prs'] || []
+  has_changes_requested = prs.any? { |p| p.is_a?(Hash) && p['review_status'] == 'changes_requested' }
+  has_open_pr = prs.any? { |p| p.is_a?(Hash) && p['state'] == 'open' }
+
+  case t['status']
+  when 'merged'
+    ready_to_archive << t
+  when 'stale'
+    stale << t
+  when 'orphan'
+    needs_attention << { ticket: t, reason: 'orphan entry' }
+  else
+    if has_changes_requested
+      needs_attention << { ticket: t, reason: 'review feedback pending' }
+    elsif prs.empty? && t['status'] == 'active'
+      days = begin
+        (Date.today - Date.parse(t['started'])).to_i
+      rescue
+        0
+      end
+      needs_attention << { ticket: t, reason: "no PR, #{days} days old" } if days > 3
+    elsif has_open_pr
+      ci = prs.select { |p| p.is_a?(Hash) && p['state'] == 'open' }.map { |p| p['ci'] }.compact.first
+      review = prs.select { |p| p.is_a?(Hash) && p['state'] == 'open' }.map { |p| p['review_status'] }.compact.first
+      in_progress << { ticket: t, ci: ci || 'unknown', review: review || 'pending' }
+    else
+      in_progress << { ticket: t, ci: 'n/a', review: 'n/a' }
+    end
+  end
+end
+
+if needs_attention.any?
+  puts "### Needs Attention"
+  needs_attention.each do |item|
+    t = item[:ticket]
+    pr_info = (t['prs'] || []).map { |p| p.is_a?(Hash) ? "##{p['number']}" : "##{p}" }.join(', ')
+    pr_str = pr_info.empty? ? '' : " (#{pr_info})"
+    puts "- #{t['id']}: #{item[:reason]}#{pr_str}"
+  end
+  puts
+end
+
+if in_progress.any?
+  puts "### In Progress"
+  in_progress.each do |item|
+    t = item[:ticket]
+    pr_info = (t['prs'] || []).map { |p| p.is_a?(Hash) ? "##{p['number']}" : "##{p}" }.join(', ')
+    pr_str = pr_info.empty? ? 'no PR' : pr_info
+    puts "- #{t['id']}: #{pr_str}  ci=#{item[:ci]}  review=#{item[:review]}"
+  end
+  puts
+end
+
+if ready_to_archive.any?
+  puts "### Ready to Archive"
+  ready_to_archive.each do |t|
+    pr_info = (t['prs'] || []).map { |p| p.is_a?(Hash) ? "##{p['number']}" : "##{p}" }.join(', ')
+    puts "- #{t['id']}: #{pr_info} merged"
+  end
+  puts
+end
+
+if stale.any?
+  puts "### Stale"
+  stale.each do |t|
+    days = begin
+      (Date.today - Date.parse(t['last_touched'])).to_i
+    rescue
+      '?'
+    end
+    puts "- #{t['id']}: inactive for #{days} days"
+  end
+  puts
+end
+
+# Drift summary
+drift = registry.reconcile
+missing = drift['missing_worktree']
+orphans = drift['orphan']
+unreg = drift['unregistered']
+
+if missing.any? || orphans.any? || unreg.any?
+  puts "### Drift"
+  missing.each { |m| puts "- #{m['id']}: worktree missing at #{m['path']}" }
+  orphans.each { |o| puts "- #{o['id']}: #{o['reason']}" }
+  unreg.first(5).each { |p| puts "- #{p}: unregistered worktree" }
+  puts "- ...and #{unreg.length - 5} more" if unreg.length > 5
+  puts
+end
+
+if tickets.empty?
+  puts "No tracked tickets."
+end

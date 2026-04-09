@@ -1,15 +1,19 @@
 # Use a Skill from the Library
 
 ## Context
+
 Pull a skill, agent, or prompt from the catalog into the local environment. If already installed locally, overwrite with the latest from the source (refresh).
 
 ## Input
+
 The user provides a skill name or description.
 
 ## Steps
 
 ### 1. Sync the Public Catalog
+
 Pull the latest dotfiles and apply:
+
 ```bash
 cd <CHEZMOI_SOURCE_DIR>
 git pull
@@ -17,31 +21,44 @@ chezmoi apply
 ```
 
 ### 2. Find the Entry
+
 - Read both `<LIBRARY_YAML_PATH>` and `<LIBRARY_LOCAL_YAML_PATH>` (if it exists)
 - Merge entries: append local entries to public ones; if a name appears in both, local wins
-- Search across `library.skills`, `library.agents`, and `library.prompts`
+- Search across `library.skills`, `library.plugins`, `library.agents`, and `library.prompts`
 - Match by name (exact) or description (fuzzy/keyword match)
 - If multiple matches, show them and ask the user to pick one
 - If no match, tell the user and suggest `/library search`
 
-### 3. Resolve Dependencies
+### 3. If Plugin, Install via CLI
+
+If the matched entry is a plugin (from `library.plugins`):
+
+- Run the `install` command from the entry via Bash (e.g., `claude plugin install superpowers@claude-plugins-official`)
+- Verify by checking `~/.claude/plugins/installed_plugins.json` for the key `<name>@<marketplace>`
+- Report success and skip remaining steps (plugins don't use target directories or file copies)
+
+### 4. Resolve Dependencies (skills/agents/prompts only)
+
 If the entry has a `requires` field:
+
 - For each typed reference (`skill:name`, `agent:name`, `prompt:name`):
   - Look it up in the merged catalog
   - If found, recursively run the `use` workflow for that dependency first
   - If not found, warn the user: "Dependency <ref> not found in library catalog"
 - Process all dependencies before the requested item
 
-### 4. Determine Target Directory
+### 5. Determine Target Directory
+
 - Read `default_dirs` from `<LIBRARY_YAML_PATH>`
 - If user said "global" or "globally" -> use the `global` path
 - If user specified a custom path -> use that path
 - Otherwise -> use the `default` path
 - Select the correct section based on type (skills/agents/prompts)
 
-### 5. Fetch from Source
+### 6. Fetch from Source
 
 **If source is a local path** (starts with `/` or `~`):
+
 - Resolve `~` to the home directory
 - Get the parent directory of the referenced file
 - For skills: copy the entire parent directory to the target:
@@ -58,6 +75,7 @@ If the entry has a `requires` field:
   ```
 
 **If source is a GitHub URL**:
+
 - Parse the URL to extract: `org`, `repo`, `branch`, `file_path`
   - Browser URL pattern: `https://github.com/<org>/<repo>/blob/<branch>/<path>`
   - Raw URL pattern: `https://raw.githubusercontent.com/<org>/<repo>/<branch>/<path>`
@@ -78,17 +96,21 @@ If the entry has a `requires` field:
   ```
 
 **If clone fails (private repo)**, try SSH:
-  ```bash
-  git clone --depth 1 --branch <branch> git@github.com:<org>/<repo>.git "$tmp_dir"
-  ```
 
-### 6. Verify Installation
+```bash
+git clone --depth 1 --branch <branch> git@github.com:<org>/<repo>.git "$tmp_dir"
+```
+
+### 7. Verify Installation
+
 - Confirm the target directory exists
 - Confirm the main file (SKILL.md, AGENT.md, or prompt file) exists in it
 - Report success with the installed path
 
-### 7. Confirm
+### 8. Confirm
+
 Tell the user:
+
 - What was installed and where
 - Any dependencies that were also installed
 - If this was a refresh (overwrite), mention that

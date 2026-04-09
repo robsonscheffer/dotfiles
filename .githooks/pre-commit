@@ -41,3 +41,41 @@ if [[ -n "$matches" ]]; then
   echo "To bypass (emergency only): git commit --no-verify"
   exit 1
 fi
+
+# Prettier: format staged files (skips unknown extensions via --ignore-unknown)
+staged_prettier_files=()
+while IFS= read -r f; do
+  [[ -n "$f" ]] && staged_prettier_files+=("$f")
+done < <(git diff --cached --name-only --diff-filter=ACMR)
+
+if [[ ${#staged_prettier_files[@]} -gt 0 ]] && command -v npx &>/dev/null; then
+  # Collect unstaged files to detect partial staging
+  unstaged_files=()
+  while IFS= read -r f; do
+    [[ -n "$f" ]] && unstaged_files+=("$f")
+  done < <(git diff --name-only)
+
+  prettier_to_format=()
+  for file in "${staged_prettier_files[@]}"; do
+    skip=0
+    for unstaged in "${unstaged_files[@]+"${unstaged_files[@]}"}"; do
+      if [[ "$file" == "$unstaged" ]]; then
+        skip=1
+        break
+      fi
+    done
+    if [[ "$skip" -eq 0 ]]; then
+      prettier_to_format+=("$file")
+    else
+      echo "prettier: skipping partially staged file: $file"
+    fi
+  done
+
+  if [[ ${#prettier_to_format[@]} -gt 0 ]]; then
+    echo "prettier: formatting ${#prettier_to_format[@]} staged file(s)..."
+    npx --yes prettier --ignore-unknown --write "${prettier_to_format[@]}"
+    git add "${prettier_to_format[@]}"
+  fi
+elif [[ ${#staged_prettier_files[@]} -gt 0 ]]; then
+  echo "prettier: skipping (npx not found — install Node.js to enable prettier autoformat)"
+fi

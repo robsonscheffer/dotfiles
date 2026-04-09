@@ -10,18 +10,25 @@ default_dirs:
     - global: ~/.claude/commands/
 
 library:
-  skills:
-    - name: address-pr-feedback
-      description: Walk through PR review comments one by one, spawn a subagent per comment to validate the concern and propose fixes
-      source: https://github.com/robsonscheffer/dotfiles/blob/main/home/dot_claude/skills/address-pr-feedback/SKILL.md
+  skills: []
 
-    - name: cmux
-      description: cmux terminal multiplexer - manage workspaces, spawn agents, restore sessions
-      source: https://github.com/robsonscheffer/dotfiles/blob/main/home/dot_claude/skills/cmux/SKILL.md
+  # Plugins are managed by the Claude Code plugin system.
+  # /library use <name> runs the install command. /library sync re-installs all.
+  plugins:
+    - name: context7
+      marketplace: claude-plugins-official
+      description: Library documentation MCP — fetch up-to-date docs for any library
+      install: "claude plugin install context7@claude-plugins-official"
 
-    - name: dev-workflow-review-pr
-      description: Review GitHub pull requests - fetches diff, analyzes for code quality, security, tests, and posts inline comments
-      source: https://github.com/robsonscheffer/dotfiles/blob/main/home/dot_claude/skills/dev-workflow-review-pr/SKILL.md
+    - name: supabase
+      marketplace: claude-plugins-official
+      description: Supabase MCP — manage projects, run queries, interact with Supabase services
+      install: "claude plugin install supabase@claude-plugins-official"
+
+    - name: superpowers
+      marketplace: claude-plugins-official
+      description: Core skills library — TDD, debugging, planning, brainstorming, collaboration patterns
+      install: "claude plugin install superpowers@claude-plugins-official"
 
   agents: []
   prompts: []

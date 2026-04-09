@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# detect-stale — Flag tickets with no git activity in 3+ days
+# Contract: stdout=JSON, stderr=human log, exit 0=success
+
+$LOAD_PATH.unshift(File.expand_path("../lib", __dir__))
+
+require "workbench"
+require "json"
+
+registry = Workbench::Registry.new
+result = registry.detect_stale
+puts JSON.pretty_generate(result)

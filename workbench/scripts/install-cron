@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# install-cron — Install crontab entries for workbench watchers
+
+require 'open3'
+
+WB_DIR = File.expand_path('..', __dir__)
+MARKER_BEGIN = '# BEGIN workbench-watchers'
+MARKER_END   = '# END workbench-watchers'
+
+cron_block = <<~CRON
+  #{MARKER_BEGIN}
+  */15 * * * * cd #{WB_DIR} && task sync-all >> ~/.workbench/state/watcher.log 2>&1
+  0 9 * * 1-5  cd #{WB_DIR} && task briefing >> ~/.workbench/state/briefing.log 2>&1
+  #{MARKER_END}
+CRON
+
+# Read current crontab
+current, = Open3.capture2('crontab', '-l')
+current = '' if current.include?('no crontab for')
+
+# Remove existing block if present
+if current.include?(MARKER_BEGIN)
+  current = current.sub(/#{Regexp.escape(MARKER_BEGIN)}.*?#{Regexp.escape(MARKER_END)}\n?/m, '')
+end
+
+# Append new block
+new_crontab = current.rstrip + "\n\n" + cron_block
+
+# Install
+Open3.popen2('crontab', '-') do |stdin, _, _|
+  stdin.write(new_crontab)
+  stdin.close
+end
+
+$stderr.puts "Cron installed:"
+$stderr.puts "  sync-all: every 15 minutes"
+$stderr.puts "  briefing: weekdays at 9am"
+$stderr.puts "\nView with: crontab -l"
