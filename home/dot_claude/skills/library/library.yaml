@@ -10,7 +10,14 @@ default_dirs:
     - global: ~/.claude/commands/
 
 library:
-  skills: []
+  skills:
+    - name: obsidian-bases
+      description: Create and edit Obsidian Bases (.base files) with views, filters, formulas, and summaries
+      source: https://github.com/kepano/obsidian-skills/blob/main/skills/obsidian-bases/SKILL.md
+
+    - name: obsidian-cli
+      description: Interact with Obsidian vaults using the Obsidian CLI — read, create, search, manage notes and properties
+      source: https://github.com/kepano/obsidian-skills/blob/main/skills/obsidian-cli/SKILL.md
 
   # Plugins are managed by the Claude Code plugin system.
   # /library use <name> runs the install command. /library sync re-installs all.
