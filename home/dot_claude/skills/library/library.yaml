@@ -11,6 +11,10 @@ default_dirs:
 
 library:
   skills:
+    - name: excalidraw-diagram
+      description: Create Excalidraw diagram JSON files — visual workflows, architectures, and concepts
+      source: https://github.com/coleam00/excalidraw-diagram-skill/blob/main/SKILL.md
+
     - name: obsidian-bases
       description: Create and edit Obsidian Bases (.base files) with views, filters, formulas, and summaries
       source: https://github.com/kepano/obsidian-skills/blob/main/skills/obsidian-bases/SKILL.md
