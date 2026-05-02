@@ -23,6 +23,14 @@ library:
       description: Interact with Obsidian vaults using the Obsidian CLI — read, create, search, manage notes and properties
       source: https://github.com/kepano/obsidian-skills/blob/main/skills/obsidian-cli/SKILL.md
 
+    - name: write-skill
+      description: Guides Claude Code skill creation — playbook patterns, scope decisions, and a required reviewer pass against REVIEW.md
+      source: https://github.com/ivy/dotfiles/blob/main/home/dot_claude/skills/write-skill/SKILL.md.tmpl
+
+    - name: write-subagent
+      description: Guides Claude Code subagent creation — focused prompts, constrained tools, required reviewer pass before deploy
+      source: https://github.com/ivy/dotfiles/blob/main/home/dot_claude/skills/write-subagent/SKILL.md.tmpl
+
   # Plugins are managed by the Claude Code plugin system.
   # /library use <name> runs the install command. /library sync re-installs all.
   plugins:
