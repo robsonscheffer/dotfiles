@@ -9,7 +9,7 @@ A small, real example of the pipelines pattern: deterministic shell, judgment in
 - Recipes compose ops. The op that locates a ticket file is a separate file, called by reference. Write once, call from anywhere.
 - State transitions are pure shell (`op-transition.yaml`). The model never writes to `status` or `needs` directly.
 
-## Lineage
+## Background
 
 The shape is older than AI tooling. Ansible playbooks, Kubernetes manifests, CI configs, Makefiles, Just files all share it. [Kestra](https://kestra.io/) sits closer to home: their workflow blueprints already include agent stages, and the shape of a Kestra flow looks much like a mate recipe. The pattern is borrowed widely. The combination here, applied to one person's day rather than a company's infrastructure, is what made it useful for me.
 
@@ -17,9 +17,9 @@ The shape is older than AI tooling. Ansible playbooks, Kubernetes manifests, CI 
 
 - `plan.yaml` — recipe, four stages: locate ticket, run planner agent, embed plan into ticket, transition state.
 - `op-locate-ticket.yaml` — small deterministic op. Globs the vault, returns a path.
+- `op-planner.yaml` — the only model call in the recipe. Wraps a Claude Code subagent named `mate-planner`. The agent's prompt lives elsewhere as a separate file, version-controlled and editable on its own.
+- `op-embed-section.yaml` — pure-awk op. Splices a content file into another file before a heading marker.
 - `op-transition.yaml` — state-machine op. Mutates the ticket's frontmatter and appends a Log entry. Every recipe ends with this.
-
-`op-planner` and `op-embed-section` are referenced by `plan.yaml` but not included here. They follow the same shape: each is a separate YAML file with one stage.
 
 ## Why
 

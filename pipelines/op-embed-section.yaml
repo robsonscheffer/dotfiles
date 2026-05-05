@@ -1,0 +1,43 @@
+# op-embed-section — Insert a content file into another file before a marker.
+#
+# Reads `content_path`, inserts its contents into `file` immediately before
+# the first line that exactly matches `before` (default: "## Log"). Mutates
+# the file in place. Emits the file path.
+#
+# Usage:
+#   mate pipeline run op-embed-section --file ~/path/ticket.md --content_path /tmp/plan.md
+#   mate pipeline run op-embed-section --file foo.md --content_path bar.md --before "## Risks"
+
+id: op-embed-section
+description: "Insert a content file into another file before a heading marker (default: ## Log)"
+usage: mate pipeline run op-embed-section --file <path> --content_path <path> [--before "## Heading"]
+topic: topic
+params:
+  - name: file
+    description: "Target file (mutated in place)"
+    required: true
+  - name: content_path
+    description: "File whose contents will be inserted"
+    required: true
+  - name: before
+    description: 'Marker line; insertion happens before this (default: "## Log")'
+
+stages:
+  - id: embed
+    command: |
+      set -e
+      file='{{.Param.file}}'
+      content_path='{{.Param.content_path}}'
+      before='{{index .Param "before"}}'
+      [ -z "$before" ] && before="## Log"
+
+      awk -v before="$before" -v content_path="$content_path" '
+        $0 == before && !inserted {
+          while ((getline line < content_path) > 0) print line
+          print ""
+          inserted = 1
+        }
+        { print }
+      ' "$file" > "$file.new"
+      mv "$file.new" "$file"
+      echo "$file"

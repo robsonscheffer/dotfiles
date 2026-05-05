@@ -1,0 +1,34 @@
+# op-planner — Wrapper for the mate-planner Claude subagent.
+#
+# Reads a topic spec and produces a TDD implementation plan with
+# files-to-touch, ordered steps, test strategy, and runnable Verify
+# commands. The agent explores the codebase itself when no findings
+# file is provided.
+#
+# This op is the only model call in the `plan` recipe. The prompt
+# itself lives elsewhere as a separate Claude Code subagent named
+# `mate-planner`. Keeping the prompt out of the YAML means it can be
+# version-controlled, edited, and tested independently of the pipeline.
+#
+# Usage: mate pipeline run op-planner --topic <topic>
+
+id: op-planner
+description: Write a TDD implementation plan for a topic — files-to-touch, ordered steps, test strategy, runnable Verify
+usage: mate pipeline run op-planner --topic <topic>
+topic: topic
+params:
+  - name: topic
+    description: "Session topic"
+    required: true
+  - name: spec_path
+    description: "Topic spec (default: brain ticket lookup by topic)"
+  - name: findings_path
+    description: "Optional investigation findings — agent explores itself if absent"
+  - name: out_path
+    description: "Override output path (default: ~/.mate/runs/<topic>/plan.md)"
+
+stages:
+  - id: run
+    agent: mate-planner
+    produces: ["plan"]
+    content_type: "plan-doc"
