@@ -1,46 +1,39 @@
 # Pipelines (worked example)
 
-Real examples of the pipelines pattern: deterministic shell, judgment in the model, composition by reference. The runner that executes them is [mate](https://github.com/robsonscheffer/mate). You do not need mate to read these.
+A folder of real pipeline files copied from [mate](https://github.com/robsonscheffer/mate): two recipes, four ops, and one prompt file. The point is to show the shape of a working pipeline. Some files reference mate-specific commands and paths; reading them is more useful than running them.
 
-Every YAML and prompt file here is taken verbatim (or near-verbatim) from mate's shipped recipes. Some files reference mate-specific commands and paths; the value is in seeing the _shape_ of a working pipeline, not in being able to clone-and-run.
+## Where to start
 
-## Two scales of example
+If you have not seen a pipeline before, read these in order:
 
-**A two-stage recipe with a prompt file.** `extract-signal.yaml` runs a shell command to collect input, then a model stage that uses `prompt: ./extract-signal.md` for the prompt. The prompt itself ships next to the recipe. This is the simplest form of "shell gathers, model judges, output flows forward." It also shows `when:` (conditional execution) and `with: tools:` (the agent's tool allowlist).
+1. **`extract-signal.yaml`** with **`extract-signal.md`** (about 5 minutes). A two-stage recipe. A shell command collects findings, then a model stage classifies them using a separate prompt file. The simplest "shell gathers, model judges, output flows" shape.
 
-**A multi-recipe composition.** `plan.yaml` is a four-stage recipe that composes four ops: locate the ticket, run the planner agent, embed the plan into the ticket, transition the ticket to the next state. Each op is a separate file in this folder. This is what a recipe looks like once it has lived in the system for a while: small ops, named, reused across recipes.
+2. **`plan.yaml`** with the four `op-*.yaml` files (about 10 minutes). A four-stage recipe that composes four small ops. This is what a pipeline looks like once it has lived in a system long enough to grow named, reusable parts.
 
-## What the examples show
-
-- A pipeline is YAML. Stages run in order. Outputs flow forward by name with `{{stageOutput "id"}}`.
-- A stage can be many things: a shell command, a model call (`prompt:` or `prompt_inline:` or `agent:`), an MCP tool invocation, another pipeline, a loop over a list, an op scoped to a git worktree.
-- Recipes compose ops. Write an op once, call it from anywhere.
-- State transitions are pure shell (`op-transition.yaml`). The model never writes to `status` or `needs` directly.
-
-## On the three forms of model call
-
-A stage that calls the model can point at the prompt three different ways:
-
-- `prompt: ./somefile.md` — the prompt is a sibling file. Best for longer prompts that you want to edit and version on their own. `extract-signal.yaml` uses this form.
-- `prompt_inline: |` — the prompt is written directly in the YAML. Best for short, recipe-specific prompts. None of the examples here use this; mate's shipped recipes all prefer separate files.
-- `agent: <name>` — the prompt is a Claude Code subagent installed elsewhere (typically `~/.claude/agents/<name>.md`), with its own system prompt and tool allowlist. Best for prompts you want to reuse across multiple recipes, or call from a Claude Code session directly. `op-planner.yaml` uses this form.
-
-All three produce the same kind of stage. They are alternative ways to point at the prompt.
-
-## Background
-
-The shape is older than AI tooling. Ansible playbooks, Kubernetes manifests, CI configs, Makefiles, Just files all share it. [Kestra](https://kestra.io/) sits closer to home: their workflow blueprints already include agent stages, and the shape of a Kestra flow looks much like a mate recipe. The pattern is borrowed widely. The combination here, applied to one person's day rather than a company's infrastructure, is what made it useful for me.
+For the full schema, kinds, and YAML syntax reference, read mate's [pipeline-reference.md](https://github.com/robsonscheffer/mate/blob/main/go/docs/pipeline-reference.md).
 
 ## Files
 
-- `extract-signal.yaml` — two-stage recipe. Shell collects, model classifies and writes. Uses a prompt file.
-- `extract-signal.md` — the prompt called by the recipe. A real working prompt, ~120 lines.
-- `plan.yaml` — full recipe, four stages, composes the four ops below.
-- `op-locate-ticket.yaml` — small deterministic op. Globs the vault, returns a path.
-- `op-planner.yaml` — the model call in `plan`. Wraps a Claude Code subagent named `mate-planner`.
-- `op-embed-section.yaml` — pure-awk op. Splices a content file into another file before a heading marker.
-- `op-transition.yaml` — state-machine op. Mutates frontmatter and appends a Log entry. Every recipe ends with this.
+**Recipes (top-level pipelines):**
 
-## Why
+- `extract-signal.yaml` — 2 stages. Shell collects, model classifies. Uses `prompt: ./extract-signal.md`.
+- `extract-signal.md` — the prompt the recipe calls. About 120 lines, real working prompt.
+- `plan.yaml` — 4 stages. Composes the four ops below.
 
-The reasoning lives in the article that goes with this folder. (Link goes here once published.)
+**Ops (atomic stages, called by recipes):**
+
+- `op-locate-ticket.yaml` — pure shell. Globs the vault, returns a path.
+- `op-planner.yaml` — model call. Uses `agent: mate-planner` to invoke a Claude Code subagent.
+- `op-embed-section.yaml` — pure awk. Splices a content file into another file before a heading marker.
+- `op-transition.yaml` — state machine. Mutates frontmatter and appends a Log entry. Every recipe ends with this.
+
+## Reading these alongside
+
+- **"On Owning Your AI Tools"** (link goes here once published) for the journey and the why.
+- **"Pipelines Over Agents"** (link goes here once published) for the structural pattern.
+- **mate's pipeline schema reference**: [pipeline-reference.md](https://github.com/robsonscheffer/mate/blob/main/go/docs/pipeline-reference.md). Full list of stage fields, kinds, and YAML syntax.
+- **The mate runner**: [github.com/robsonscheffer/mate](https://github.com/robsonscheffer/mate).
+
+## Background
+
+The shape is older than AI tooling. Ansible playbooks, Kubernetes manifests, CI configs, Makefiles, Just files all share it. [Kestra](https://kestra.io/) sits closest to this gist: its workflow blueprints already include agent stages, and the shape of a Kestra flow looks much like a mate recipe. This folder is what the pattern looks like when applied to one person's day instead of a company's infrastructure.
