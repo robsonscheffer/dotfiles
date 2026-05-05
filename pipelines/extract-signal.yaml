@@ -1,0 +1,33 @@
+# extract-signal — Classify review findings and route to the right store
+#
+# Usage:
+#   mate pipeline run extract-signal --topic <topic>
+#
+# The WRITE side of the pipeline learning system.
+# Reads accepted findings, classifies them as real bugs vs style prefs,
+# and routes generalizable patterns to pitfalls or brain articles.
+
+id: extract-signal
+hidden: true
+description: Classify review findings and route to the right store
+usage: mate pipeline run extract-signal --topic <topic>
+topic: topic
+params:
+  - name: topic
+    description: "The pipeline topic whose findings to learn from"
+    required: true
+  - name: repo
+    description: "Repo slug for pitfall file routing (auto-detected from cwd if omitted)"
+
+stages:
+  # 1. Collect accepted findings
+  - id: findings
+    command: >
+      mate finding list --review local --status accepted --json
+
+  # 2. Classify and write
+  - id: classify
+    prompt: ./extract-signal.md
+    when: '{{if eq (index .StageOutputs "findings") "[]"}}false{{else}}true{{end}}'
+    with:
+      tools: "Read,Write,Bash,Grep,Glob"
