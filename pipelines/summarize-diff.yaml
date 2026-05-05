@@ -1,0 +1,30 @@
+# summarize-diff — Summarize staged git changes in three bullets.
+#
+# The smallest possible example of a pipeline. Two stages:
+#   1. shell: gather the staged diff
+#   2. model: write a summary, with the prompt inlined right here in the YAML
+#
+# No external prompt files. No sub-pipelines. No subagent references.
+# The whole pipeline reads top to bottom in one screen.
+#
+# Usage:
+#   mate pipeline run summarize-diff
+
+id: summarize-diff
+description: "Summarize staged git changes in three bullets"
+usage: mate pipeline run summarize-diff
+
+stages:
+  - id: collect
+    command: git diff --staged
+
+  - id: summarize
+    prompt_inline: |
+      Below is the staged diff for a git repository.
+      Write a summary as exactly three bullets, each starting with a hyphen.
+      Each bullet must be one short sentence.
+      Focus on intent, not file-by-file changes.
+      Do not include filenames unless essential.
+
+      Diff:
+      {{stageOutput "collect"}}
