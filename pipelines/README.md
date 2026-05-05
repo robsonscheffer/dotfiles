@@ -1,6 +1,6 @@
-# Pipelines (worked example)
+# Pipelines
 
-A folder of real pipeline files copied from [mate](https://github.com/robsonscheffer/mate): two recipes, four ops, and one prompt file. The point is to show the shape of a working pipeline. Some files reference mate-specific commands and paths; reading them is more useful than running them.
+A folder of real pipeline files: two recipes, four ops, and one prompt file. The point is to show the shape of a working pipeline. Some files reference workflow-specific commands and paths; reading them is more useful than running them.
 
 ## Where to start
 
@@ -9,8 +9,6 @@ If you have not seen a pipeline before, read these in order:
 1. **`extract-signal.yaml`** with **`extract-signal.md`** (about 5 minutes). A two-stage recipe. A shell command collects findings, then a model stage classifies them using a separate prompt file. The simplest "shell gathers, model judges, output flows" shape.
 
 2. **`plan.yaml`** with the four `op-*.yaml` files (about 10 minutes). A four-stage recipe that composes four small ops. This is what a pipeline looks like once it has lived in a system long enough to grow named, reusable parts.
-
-For the full schema, kinds, and YAML syntax reference, read mate's [pipeline-reference.md](https://github.com/robsonscheffer/mate/blob/main/go/docs/pipeline-reference.md).
 
 ## Files
 
@@ -29,11 +27,9 @@ For the full schema, kinds, and YAML syntax reference, read mate's [pipeline-ref
 
 ## Reading these alongside
 
-- **"On Owning Your AI Tools"** (link goes here once published) for the journey and the why.
-- **"Pipelines Over Agents"** (link goes here once published) for the structural pattern.
-- **mate's pipeline schema reference**: [pipeline-reference.md](https://github.com/robsonscheffer/mate/blob/main/go/docs/pipeline-reference.md). Full list of stage fields, kinds, and YAML syntax.
-- **The mate runner**: [github.com/robsonscheffer/mate](https://github.com/robsonscheffer/mate).
+- **"On Owning Your AI Tools"** for the journey and the why. (Link goes here once published.)
+- **"Pipelines Over Agents"** for the structural pattern. (Link goes here once published.)
 
 ## Background
 
-The shape is older than AI tooling. Ansible playbooks, Kubernetes manifests, CI configs, Makefiles, Just files all share it. [Kestra](https://kestra.io/) sits closest to this gist: its workflow blueprints already include agent stages, and the shape of a Kestra flow looks much like a mate recipe. This folder is what the pattern looks like when applied to one person's day instead of a company's infrastructure.
+The shape is older than AI tooling. Ansible playbooks, Kubernetes manifests, CI configs, Makefiles, Just files all share it. [Kestra](https://kestra.io/) sits closest to this folder: its workflow blueprints already include agent stages, and the shape of a Kestra flow looks much like one of these recipes. This folder is what the pattern looks like when applied to one person's day instead of a company's infrastructure.
