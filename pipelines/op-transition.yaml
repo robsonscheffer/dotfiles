@@ -1,0 +1,64 @@
+# op-transition — Move a ticket between lifecycle states.
+#
+# Sets any combination of `status:` and `needs:` in the frontmatter, always
+# refreshes `updated:` to today, and appends a `## Log` entry of shape
+# `- YYYY-MM-DD HH:MM | EVENT | NOTE`. Mutates the file in place. Emits the
+# file path.
+#
+# This is the gate. Phase recipes call it as their final stage to record the
+# transition (PLANNED, BUILT, VERIFIED, SHIPPED, …) and hand off the ticket
+# to the next phase.
+#
+# Usage:
+#   mate pipeline run op-transition --file ~/path/ticket.md \
+#       --needs verify --event BUILT --note "from /path/to/build-result.md"
+#   mate pipeline run op-transition --file foo.md \
+#       --status building --needs verify --event BUILT
+#
+# Brain ticket contract: see ~/brain/CLAUDE.md ticket_contract.legal_states for
+# valid (status, needs) pairs.
+
+id: op-transition
+description: "Transition a ticket — set status/needs/updated and append a Log entry"
+usage: mate pipeline run op-transition --file <path> [--status X] [--needs Y] --event EVENT [--note "..."]
+topic: topic
+params:
+  - name: file
+    description: "Ticket file (mutated in place)"
+    required: true
+  - name: event
+    description: "Log event tag (e.g. CREATED, RESEARCHED, PLANNED, BUILT, VERIFIED, SHIPPED)"
+    required: true
+  - name: note
+    description: "Log entry note"
+  - name: status
+    description: "New status (open|ready|building|done|dropped). Skipped if empty."
+  - name: needs
+    description: "New needs value. Skipped if empty."
+
+stages:
+  - id: transition
+    command: |
+      set -e
+      file='{{.Param.file}}'
+      event='{{.Param.event}}'
+      note='{{index .Param "note"}}'
+      new_status='{{index .Param "status"}}'
+      new_needs='{{index .Param "needs"}}'
+
+      today=$(date +%Y-%m-%d)
+      ts=$(date +"%Y-%m-%d %H:%M")
+
+      if [ -n "$new_status" ]; then
+        sed -i '' "s/^status:.*\$/status: $new_status/" "$file"
+      fi
+      if [ -n "$new_needs" ]; then
+        sed -i '' "s/^needs:.*\$/needs: $new_needs/" "$file"
+      fi
+      sed -i '' "s/^updated:.*\$/updated: $today/" "$file"
+
+      log_line="- $ts | $event"
+      [ -n "$note" ] && log_line="$log_line | $note"
+      echo "$log_line" >> "$file"
+
+      echo "$file"

@@ -1,0 +1,36 @@
+# op-locate-ticket — Find a ticket file in the brain vault from its topic id.
+#
+# Reusable shell op. Searches `~/brain/projects/*/tickets/<topic>*.md` and
+# emits the absolute path of the first match. Fails (exit 1) if no match.
+#
+# Usage:
+#   mate pipeline run op-locate-ticket --topic MATE-154
+#
+# Composition example:
+#   - id: locate
+#     pipeline: op-locate-ticket
+#     with:
+#       topic: "{{.Param.topic}}"
+#   - id: next-stage
+#     ...
+#     plan_path: '{{stageOutput "locate"}}'
+
+id: op-locate-ticket
+description: "Locate a ticket file in the brain vault by topic id — emits the absolute path"
+usage: mate pipeline run op-locate-ticket --topic <topic>
+topic: topic
+params:
+  - name: topic
+    description: "Ticket id (e.g. MATE-154, PROJ-1234)"
+    required: true
+
+stages:
+  - id: locate
+    command: |
+      set -e
+      match=$(ls $HOME/brain/projects/*/tickets/{{.Param.topic}}*.md 2>/dev/null | head -1)
+      if [ -z "$match" ]; then
+        echo "ERROR: no ticket found for topic '{{.Param.topic}}' in $HOME/brain/projects/*/tickets/" >&2
+        exit 1
+      fi
+      echo "$match"

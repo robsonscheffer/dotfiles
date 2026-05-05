@@ -1,0 +1,48 @@
+# plan — Planning phase. Produce a TDD plan, embed it in the ticket,
+# advance state to needs:build.
+#
+# Composition (4 ops):
+#   1. op-locate-ticket   — topic → ticket path
+#   2. op-planner         — agent: spec → plan file
+#   3. op-embed-section   — insert plan into ticket before ## Log
+#   4. op-transition      — needs:build, log PLANNED
+#
+# No inline shell. Each stage is a reusable op.
+#
+# Usage:
+#   mate pipeline run plan --topic MATE-154
+
+id: plan
+description: "Planning phase — produce a TDD plan, embed it in the ticket, advance state to needs:build"
+usage: mate pipeline run plan --topic <topic>
+topic: topic
+params:
+  - name: topic
+    description: "Session topic"
+    required: true
+
+stages:
+  - id: locate
+    pipeline: op-locate-ticket
+    with:
+      topic: "{{.Param.topic}}"
+
+  - id: planner
+    pipeline: op-planner
+    with:
+      topic: "{{.Param.topic}}"
+      spec_path: '{{stageOutput "locate"}}'
+
+  - id: embed
+    pipeline: op-embed-section
+    with:
+      file: '{{stageOutput "locate"}}'
+      content_path: '{{stageOutput "planner"}}'
+
+  - id: transition
+    pipeline: op-transition
+    with:
+      file: '{{stageOutput "locate"}}'
+      needs: "build"
+      event: "PLANNED"
+      note: 'plan from {{stageOutput "planner"}}'
