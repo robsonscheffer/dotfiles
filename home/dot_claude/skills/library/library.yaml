@@ -11,6 +11,14 @@ default_dirs:
 
 library:
   skills:
+    - name: grill-me
+      description: Socratic flashcard drill for any topic — questions, wrong answers, hints, and progress tracking
+      source: https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md
+
+    - name: handoff
+      description: Generate a detailed handoff document so another agent or human can pick up where you left off
+      source: https://github.com/mattpocock/skills/blob/main/skills/productivity/handoff/SKILL.md
+
     - name: excalidraw-diagram
       description: Create Excalidraw diagram JSON files — visual workflows, architectures, and concepts
       source: https://github.com/coleam00/excalidraw-diagram-skill/blob/main/SKILL.md
