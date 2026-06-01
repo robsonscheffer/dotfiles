@@ -23,6 +23,10 @@ library:
       description: Interact with Obsidian vaults using the Obsidian CLI — read, create, search, manage notes and properties
       source: https://github.com/kepano/obsidian-skills/blob/main/skills/obsidian-cli/SKILL.md
 
+    - name: react-flow
+      description: Expert guidance for React Flow (@xyflow/react) — custom nodes/edges, handles, state management, layouting, TypeScript patterns, performance, and theming
+      source: https://github.com/framara/react-flow-skill/blob/main/SKILL.md
+
     - name: write-skill
       description: Guides Claude Code skill creation — playbook patterns, scope decisions, and a required reviewer pass against REVIEW.md
       source: https://github.com/ivy/dotfiles/blob/main/home/dot_claude/skills/write-skill/SKILL.md.tmpl
