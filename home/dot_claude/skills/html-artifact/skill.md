@@ -202,146 +202,49 @@ Triggers when `~/.config/html-artifact.json` is missing.
 
 ---
 
-## HTML Templates
-
-Every generated artifact must:
-
-- Load DaisyUI v5 CDN + Tailwind CDN + Google Fonts (Cormorant Garamond, Jost, DM Mono)
-- Set `data-theme="mate"` on `<html>`
-- Include the inlined `<style>` block from the pre-built template — do not copy from `dist/showcase.html` manually. The pre-built templates in `dist/templates/` already have all CSS inlined.
-- Include `.artifact-header` (breadcrumb + h1 + meta badges) — NOT sticky, scrolls with content
-- Use the page layout: sticky `<header>` (z-20) + flex `.page-shell` with 220px sidebar + `<main>`
-- Include `.artifact-footer`
-- Set `<title>` to a human-readable name (used by index.html manifest)
-
-### spec
-
-```html
-<!DOCTYPE html>
-<html lang="en" data-theme="mate">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>[Title]</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@400;500;600&family=DM+Mono&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdn.jsdelivr.net/npm/daisyui@5/dist/full.min.css"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      /* inline style block from dist/showcase.html */
-    </style>
-  </head>
-  <body>
-    <div class="artifact-header">
-      <h1>[Title]</h1>
-      <div class="meta">
-        <span class="badge badge-building">spec</span>
-        <span>[YYYY-MM-DD]</span>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>Summary</h2>
-      <p>[One-paragraph summary]</p>
-    </div>
-
-    <div class="section">
-      <h2>Goals</h2>
-      <!-- bullet list -->
-    </div>
-
-    <div class="section">
-      <h2>Design</h2>
-      <!-- decisions, tradeoffs, diagrams -->
-    </div>
-
-    <div class="section">
-      <h2>Out of scope</h2>
-      <!-- explicit exclusions -->
-    </div>
-
-    <div class="artifact-footer">
-      <span>Generated [date]</span>
-      <span><!-- if .pub.json: <a href="[url]">Live ↗</a> --></span>
-    </div>
-  </body>
-</html>
-```
-
-### report
-
-Same shell. Sections: Summary, Findings (use `table.artifact-table`), Recommendations, Next Steps.
-
-### prototype
-
-Same shell. Body is the working prototype itself. Sections are optional — the artifact IS the UI.
-
-### dashboard
-
-Same shell. Use `.card-grid` for metric tiles, `table.artifact-table` for data tables.
-
----
-
 ## index.html
 
 The manifest file at `wiki/artifact/index.html`. Claude maintains this — update on every `new` (wiki), `promote`, and `publish` operation.
 
+Use the `dashboard` pre-built template from `dist/templates/dashboard.html` as the base. Fill
+`<!-- TITLE -->` with `Artifact Index`, then replace `<!-- CONTENT -->` with:
+
 ```html
-<!DOCTYPE html>
-<html lang="en" data-theme="mate">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Artifact Index</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Jost:wght@400;500;600&family=DM+Mono&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://cdn.jsdelivr.net/npm/daisyui@5/dist/full.min.css"
-      rel="stylesheet"
-    />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      /* inline style block from dist/showcase.html */
-    </style>
-  </head>
-  <body>
-    <div class="artifact-header">
-      <h1>Artifacts</h1>
-      <p class="subtitle">All promoted HTML artifacts.</p>
-    </div>
-
-    <table class="artifact-table">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Type</th>
-          <th>Date</th>
-          <th>Published</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- one <tr> per artifact, added by Claude on new/promote/publish -->
-        <!-- example row:
-      <tr>
-        <td><a href="report/2026-06-09-my-report.html">My Report</a></td>
-        <td><span class="badge badge-done">report</span></td>
-        <td>2026-06-09</td>
-        <td><a href="https://share.html.com/abc123">share ↗</a></td>
-      </tr>
-      --></tbody>
-    </table>
-
-    <div class="artifact-footer">
-      <span>Updated [date]</span>
-    </div>
-  </body>
-</html>
+<table class="table w-full">
+  <thead>
+    <tr>
+      <th
+        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
+      >
+        Title
+      </th>
+      <th
+        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
+      >
+        Type
+      </th>
+      <th
+        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
+      >
+        Date
+      </th>
+      <th
+        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
+      >
+        Published
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- one <tr> per artifact — added by Claude on new/promote/publish -->
+    <!-- example row:
+    <tr>
+      <td><a href="report/2026-06-09-my-report.html" style="color:var(--mate-primary);">My Report</a></td>
+      <td><span class="badge badge-done">report</span></td>
+      <td style="font-family:var(--mate-font-mono);font-size:13px;color:var(--mate-frame-muted);">2026-06-09</td>
+      <td><a href="https://share.html.com/abc123" style="color:var(--mate-primary);">share ↗</a></td>
+    </tr>
+    -->
+  </tbody>
+</table>
 ```
