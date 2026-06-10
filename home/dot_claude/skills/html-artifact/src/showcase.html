@@ -10,27 +10,25 @@
 <body>
 <div class="grain"></div>
 
-<header class="site-header">
-  <nav class="navbar">
-    <div class="flex-1 flex items-center gap-6">
-      <div class="brand-mark">mate-<em>ds</em></div>
-      <div class="hidden md:flex items-center gap-1">
-        <a class="nav-link" href="#">Components</a>
-        <a class="nav-link" href="#">Reports</a>
-        <a class="nav-link" href="#">Specs</a>
-        <a class="nav-link" href="#">Prototypes</a>
-      </div>
+<header class="sticky top-0 z-20 h-12 flex items-center px-6 bg-[var(--mate-frame-nav)] border-b border-[var(--mate-frame-border)]">
+  <div class="flex-1 flex items-center gap-6">
+    <div style="font-family: var(--mate-font-display); font-size: 18px; color: var(--mate-frame-text);">mate-<em style="color: var(--mate-primary); font-weight: 400;">ds</em></div>
+    <div class="hidden md:flex items-center gap-4">
+      <a class="text-sm" style="color: var(--mate-frame-text);" href="#">Components</a>
+      <a class="text-sm" style="color: var(--mate-frame-muted);" href="#">Reports</a>
+      <a class="text-sm" style="color: var(--mate-frame-muted);" href="#">Specs</a>
+      <a class="text-sm" style="color: var(--mate-frame-muted);" href="#">Prototypes</a>
     </div>
-    <div class="flex items-center gap-3">
-      <span class="meta-pill accent">v1.0</span>
-      <button class="btn btn-primary btn-sm">Publish</button>
-    </div>
-  </nav>
+  </div>
+  <div class="flex items-center gap-3">
+    <span class="badge badge-outline" style="color: var(--mate-primary); border-color: var(--mate-primary);">v1.0</span>
+    <button class="btn btn-primary btn-sm">Publish</button>
+  </div>
 </header>
 
-<div class="page-shell">
-  <aside class="sidebar">
-    <div class="sidebar-section-label">Components</div>
+<div class="flex min-h-[calc(100vh-3rem)]">
+  <aside class="w-56 shrink-0 sticky top-12 h-[calc(100vh-3rem)] overflow-y-auto bg-[var(--mate-frame-sidebar)] border-r border-[var(--mate-frame-border)] py-5">
+    <div class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-dim)]">Components</div>
     <a class="sidebar-link" href="#nav"><span class="num">01</span> Navigation</a>
     <a class="sidebar-link" href="#buttons"><span class="num">02</span> Buttons</a>
     <a class="sidebar-link" href="#forms"><span class="num">03</span> Forms</a>
@@ -40,16 +38,16 @@
     <a class="sidebar-link" href="#badges"><span class="num">07</span> Badges</a>
     <a class="sidebar-link" href="#palette"><span class="num">08</span> Palette</a>
 
-    <div class="sidebar-section-label">Document layout</div>
+    <div class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-dim)]">Document layout</div>
     <a class="sidebar-link" href="#diff"><span class="num">09</span> Code Diff</a>
     <a class="sidebar-link" href="#spec"><span class="num">10</span> Spec / Right Rail</a>
     <a class="sidebar-link" href="#tooltips"><span class="num">11</span> Tooltips</a>
 
-    <div class="sidebar-section-label">Resources</div>
+    <div class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-dim)]">Resources</div>
     <a class="sidebar-link" href="#" target="_blank"><span class="num">↗</span> Artifact Index</a>
   </aside>
 
-  <main class="content">
+  <main class="flex-1 min-w-0">
     <div class="artifact-header">
       <div class="breadcrumbs text-sm" style="color: var(--mate-frame-muted);">
         <ul>
@@ -427,7 +425,7 @@
 
     </div>
 
-    <footer class="site-footer">
+    <footer class="artifact-footer">
       <span>mate-ds v1.0 — DaisyUI v5 · Tailwind v4</span>
       <span>generated 2026-06-09</span>
     </footer>

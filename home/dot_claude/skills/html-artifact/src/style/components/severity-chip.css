@@ -9,7 +9,7 @@
 }
 .sev-critical {
   background: #fef2f2;
-  color: #e05252;
+  color: var(--mate-error);
   border-color: #fca5a5;
 }
 .sev-major {
@@ -19,7 +19,7 @@
 }
 .sev-minor {
   background: #eff6ff;
-  color: #6b9fb4;
+  color: var(--mate-info);
   border-color: #93c5fd;
 }
 .sev-nit {
