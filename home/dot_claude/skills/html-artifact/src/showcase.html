@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="mate">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>mate-ds — Component Library</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style/main.css">
+</head>
+<body>
+<div class="grain"></div>
+
+<header class="site-header">
+  <nav class="navbar">
+    <div class="flex-1 flex items-center gap-6">
+      <div class="brand-mark">mate-<em>ds</em></div>
+      <div class="hidden md:flex items-center gap-1">
+        <a class="nav-link" href="#">Components</a>
+        <a class="nav-link" href="#">Reports</a>
+        <a class="nav-link" href="#">Specs</a>
+        <a class="nav-link" href="#">Prototypes</a>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="meta-pill accent">v1.0</span>
+      <button class="btn btn-primary btn-sm">Publish</button>
+    </div>
+  </nav>
+</header>
+
+<div class="page-shell">
+  <aside class="sidebar">
+    <div class="sidebar-section-label">Components</div>
+    <a class="sidebar-link" href="#nav"><span class="num">01</span> Navigation</a>
+    <a class="sidebar-link" href="#buttons"><span class="num">02</span> Buttons</a>
+    <a class="sidebar-link" href="#forms"><span class="num">03</span> Forms</a>
+    <a class="sidebar-link" href="#alerts"><span class="num">04</span> Alerts</a>
+    <a class="sidebar-link" href="#progress"><span class="num">05</span> Progress</a>
+    <a class="sidebar-link" href="#stats"><span class="num">06</span> Stats</a>
+    <a class="sidebar-link" href="#badges"><span class="num">07</span> Badges</a>
+    <a class="sidebar-link" href="#palette"><span class="num">08</span> Palette</a>
+
+    <div class="sidebar-section-label">Document layout</div>
+    <a class="sidebar-link" href="#diff"><span class="num">09</span> Code Diff</a>
+    <a class="sidebar-link" href="#spec"><span class="num">10</span> Spec / Right Rail</a>
+    <a class="sidebar-link" href="#tooltips"><span class="num">11</span> Tooltips</a>
+
+    <div class="sidebar-section-label">Resources</div>
+    <a class="sidebar-link" href="#" target="_blank"><span class="num">↗</span> Artifact Index</a>
+  </aside>
+
+  <main class="content">
+    <div class="artifact-header">
+      <div class="breadcrumbs text-sm" style="color: var(--mate-frame-muted);">
+        <ul>
+          <li><a>Artifacts</a></li>
+          <li><a>Reports</a></li>
+          <li>Component Library</li>
+        </ul>
+      </div>
+      <h1>mate-ds — <em>Component Library</em></h1>
+      <div class="artifact-meta">
+        <span class="meta-pill accent">v1.0</span>
+        <span class="meta-pill">DaisyUI v5</span>
+        <span class="meta-pill">Tailwind v4</span>
+        <span class="meta-pill">updated 2026-06-09</span>
+        <span class="meta-pill">owner robson</span>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <section class="ds-section" id="nav">
+        <div class="section-header">
+          <h2>01 — Navigation</h2>
+          <span class="section-tag">.navbar / .breadcrumbs</span>
+        </div>
+        <p class="section-desc">The top frame and the trail back. Navbar carries the brand, primary destinations, and a single high-intent action. Breadcrumbs sit above the document title and show provenance without nagging.</p>
+        <div class="preview-card">
+          <div class="navbar rounded-lg" style="background:#f9fafb; border:1px solid #e5e7eb;">
+            <div class="flex-1 flex items-center gap-4 px-2">
+              <span style="font-family: var(--mate-font-display); font-size: 18px; color:#111827;">mate-<em style="color:var(--mate-primary); font-weight:400;">ds</em></span>
+              <a class="text-sm" style="color:#374151;">Components</a>
+              <a class="text-sm" style="color:#6b7280;">Reports</a>
+              <a class="text-sm" style="color:#6b7280;">Specs</a>
+            </div>
+            <div class="flex items-center gap-2 px-2">
+              <span class="badge badge-outline" style="color:#b9430b; border-color:#fcd34d; background:#fffbeb;">v1.0</span>
+              <button class="btn btn-primary btn-sm">Publish</button>
+            </div>
+          </div>
+
+          <div class="preview-divider"></div>
+
+          <div class="breadcrumbs text-sm">
+            <ul>
+              <li><a>Artifacts</a></li>
+              <li><a>Reports</a></li>
+              <li>Component Library</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="ds-section" id="buttons">
+        <div class="section-header">
+          <h2>02 — Buttons</h2>
+          <span class="section-tag">.btn / .btn-*</span>
+        </div>
+        <p class="section-desc">One primary per surface. Secondary is for the lesser choice in the same decision. Ghost for tertiary tucked into a row. Error only when the action destroys.</p>
+        <div class="preview-card">
+          <div class="preview-row">
+            <button class="btn btn-primary">Save changes</button>
+            <button class="btn btn-outline btn-secondary">Cancel</button>
+            <button class="btn btn-ghost">Dismiss</button>
+            <button class="btn btn-error">Delete report</button>
+          </div>
+          <div class="preview-divider"></div>
+          <div class="preview-row">
+            <button class="btn">Default</button>
+            <button class="btn btn-sm">Small</button>
+            <button class="btn btn-outline btn-sm">Outline small</button>
+            <button class="btn btn-ghost btn-sm">Ghost small</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="ds-section" id="forms">
+        <div class="section-header">
+          <h2>03 — Forms</h2>
+          <span class="section-tag">.input / .select / .label</span>
+        </div>
+        <p class="section-desc">Two columns until you can't. Labels live above inputs, hints below, errors replace hints. Submit row sits at the bottom-right with the primary action terminal.</p>
+        <div class="preview-card">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="form-label">Title</label>
+              <input type="text" class="input input-bordered w-full" value="Component Library Showcase" />
+              <div class="form-hint">Shown in the artifact header and in the index.</div>
+            </div>
+            <div>
+              <label class="form-label">Type</label>
+              <select class="select select-bordered w-full">
+                <option>report</option>
+                <option selected>spec</option>
+                <option>prototype</option>
+                <option>dashboard</option>
+              </select>
+              <div class="form-hint">Drives sidebar grouping and default template.</div>
+            </div>
+            <div class="col-span-2">
+              <label class="form-label">Notes</label>
+              <textarea class="textarea textarea-bordered w-full" rows="3">Captures decisions taken during the embedded-beneficiaries audit, plus open questions on modal height.</textarea>
+            </div>
+            <div>
+              <label class="form-label">Owner key</label>
+              <input type="text" class="input input-bordered input-error w-full" value="rsche" />
+              <div class="form-err">Owner key must be 8+ characters. Re-authenticate with html-publisher.</div>
+            </div>
+            <div>
+              <label class="form-label">Visibility</label>
+              <select class="select select-bordered w-full">
+                <option>private (default)</option>
+                <option>shared with team</option>
+                <option>public</option>
+              </select>
+              <div class="form-hint">Private artifacts never leave your vault.</div>
+            </div>
+          </div>
+          <div class="preview-divider"></div>
+          <div class="flex justify-end gap-2">
+            <button class="btn btn-ghost">Cancel</button>
+            <button class="btn btn-primary">Save and publish</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="ds-section" id="alerts">
+        <div class="section-header">
+          <h2>04 — Alerts</h2>
+          <span class="section-tag">.alert / .alert-*</span>
+        </div>
+        <p class="section-desc">Four registers: info to orient, success to confirm, warning to slow you down, error to stop you. One alert per surface, top of the content area.</p>
+        <div class="preview-card space-y-3">
+          <div class="alert alert-info">
+            <span><strong>Heads up — </strong>This artifact was generated by the html-artifact skill at 09:14 this morning.</span>
+          </div>
+          <div class="alert alert-success">
+            <span><strong>Published — </strong>v1.0 is live at the canonical URL. Old preview links will redirect for 30 days.</span>
+          </div>
+          <div class="alert alert-warning">
+            <span><strong>Stale source — </strong>Two referenced wiki pages were last updated over 180 days ago. Run <code>brain lint</code> before relying on those claims.</span>
+          </div>
+          <div class="alert alert-error">
+            <span><strong>Publish blocked — </strong>Owner key mismatch. Re-authenticate with html-publisher before retrying.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="ds-section" id="progress">
+        <div class="section-header">
+          <h2>05 — Progress</h2>
+          <span class="section-tag">.progress</span>
+        </div>
+        <p class="section-desc">Phases of a ticket, left to right. Success when done, primary when underway, warning when stalled.</p>
+        <div class="preview-card space-y-4">
+          <div>
+            <div class="flex justify-between text-sm" style="color:#374151;">
+              <span>Plan phase</span><span class="mono">100%</span>
+            </div>
+            <progress class="progress progress-success w-full" value="100" max="100"></progress>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm" style="color:#374151;">
+              <span>Build phase</span><span class="mono">68%</span>
+            </div>
+            <progress class="progress progress-primary w-full" value="68" max="100"></progress>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm" style="color:#374151;">
+              <span>Verify phase</span><span class="mono">22%</span>
+            </div>
+            <progress class="progress progress-warning w-full" value="22" max="100"></progress>
+          </div>
+        </div>
+      </section>
+
+      <section class="ds-section" id="stats">
+        <div class="section-header">
+          <h2>06 — Stats</h2>
+          <span class="section-tag">.stats / .stat</span>
+        </div>
+        <p class="section-desc">Numbers that prove something. Display face for the value, mono caption beneath. Deltas only when the change is the point.</p>
+        <div class="preview-card">
+          <div class="stats stats-vertical lg:stats-horizontal shadow w-full">
+            <div class="stat">
+              <div class="stat-title">PRS REVIEWED</div>
+              <div class="stat-value">14</div>
+              <div class="stat-delta delta-up">↑ 3 vs last week</div>
+            </div>
+            <div class="stat">
+              <div class="stat-title">FINDINGS</div>
+              <div class="stat-value">37</div>
+              <div class="stat-delta" style="color:#6b7280;">3 critical open</div>
+            </div>
+            <div class="stat">
+              <div class="stat-title">SHIP RATE</div>
+              <div class="stat-value">94%</div>
+              <div class="stat-delta delta-up">↑ 2pp</div>
+            </div>
+            <div class="stat">
+              <div class="stat-title">AVG CYCLE</div>
+              <div class="stat-value">1.4d</div>
+              <div class="stat-delta" style="color:#6b7280;">stable</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ds-section" id="badges">
+        <div class="section-header">
+          <h2>07 — Badges</h2>
+          <span class="section-tag">.badge / .sev</span>
+        </div>
+        <p class="section-desc">Lifecycle badges describe state, severity chips describe weight. Same shape, different vocabulary — never mix the two scales in one list.</p>
+        <div class="preview-card">
+          <div class="text-xs uppercase tracking-wider mb-2" style="color:#9ca3af;">Lifecycle</div>
+          <div class="preview-row">
+            <span class="badge badge-open">open</span>
+            <span class="badge badge-ready">ready</span>
+            <span class="badge badge-building">building</span>
+            <span class="badge badge-done">done</span>
+            <span class="badge badge-dropped">dropped</span>
+          </div>
+          <div class="preview-divider"></div>
+          <div class="text-xs uppercase tracking-wider mb-2" style="color:#9ca3af;">Severity</div>
+          <div class="preview-row">
+            <span class="sev sev-critical">critical</span>
+            <span class="sev sev-major">major</span>
+            <span class="sev sev-minor">minor</span>
+            <span class="sev sev-nit">nit</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="ds-section" id="palette">
+        <div class="section-header">
+          <h2>08 — Palette</h2>
+          <span class="section-tag">tokens.yaml</span>
+        </div>
+        <p class="section-desc">Warm earth on dark frame. Brand colors carry the work; semantics signal state. Hex values are the source of truth — DaisyUI tokens derive from them.</p>
+        <div class="preview-card">
+          <div class="swatch-group-label">Brand</div>
+          <div class="swatch-grid">
+            <div class="swatch">
+              <div class="swatch-chip" style="background:#d4764e;"></div>
+              <div class="swatch-name">Primary</div>
+              <div class="swatch-hex">#d4764e</div>
+            </div>
+            <div class="swatch">
+              <div class="swatch-chip" style="background:#c4956a;"></div>
+              <div class="swatch-name">Secondary</div>
+              <div class="swatch-hex">#c4956a</div>
+            </div>
+            <div class="swatch">
+              <div class="swatch-chip" style="background:#5a9a4e;"></div>
+              <div class="swatch-name">Erva</div>
+              <div class="swatch-hex">#5a9a4e</div>
+            </div>
+            <div class="swatch">
+              <div class="swatch-chip" style="background:#18150f;"></div>
+              <div class="swatch-name">Frame</div>
+              <div class="swatch-hex">#18150f</div>
+            </div>
+          </div>
+
+          <div class="swatch-group-label">Semantic</div>
+          <div class="swatch-grid">
+            <div class="swatch">
+              <div class="swatch-chip" style="background:#7db46e;"></div>
+              <div class="swatch-name">Success</div>
+              <div class="swatch-hex">#7db46e</div>
+            </div>
+            <div class="swatch">
+              <div class="swatch-chip" style="background:#e8b84a;"></div>
+              <div class="swatch-name">Warning</div>
+              <div class="swatch-hex">#e8b84a</div>
+            </div>
+            <div class="swatch">
+              <div class="swatch-chip" style="background:#e05252;"></div>
+              <div class="swatch-name">Error</div>
+              <div class="swatch-hex">#e05252</div>
+            </div>
+            <div class="swatch">
+              <div class="swatch-chip" style="background:#6b9fb4;"></div>
+              <div class="swatch-name">Info</div>
+              <div class="swatch-hex">#6b9fb4</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ds-section" id="diff">
+        <div class="section-header">
+          <h2>09 — Code Diff</h2>
+          <span class="section-tag">.diff-block</span>
+        </div>
+        <p class="section-desc">A small, real diff is worth more than a long prose explanation. Line numbers on the left, prefix in the gutter, code in the body.</p>
+        <div class="preview-card">
+          <div class="diff-block">
+            <div class="diff-file-header">
+              <span>src/hooks/useEmbeddedContext.ts</span>
+              <span class="diff-stats"><span class="plus">+3</span> <span class="minus">-1</span></span>
+            </div>
+            <div class="diff-hunk-header">@@ -12,7 +12,9 @@ export function useEmbeddedContext() {</div>
+            <div class="diff-line context"><span class="diff-line-num">12</span><span class="diff-prefix"> </span><span class="diff-line-code">  const isEmbedded = useContext(EmbeddedContext)</span></div>
+            <div class="diff-line removed"><span class="diff-line-num">13</span><span class="diff-prefix">-</span><span class="diff-line-code">  return { isEmbedded }</span></div>
+            <div class="diff-line added"><span class="diff-line-num">13</span><span class="diff-prefix">+</span><span class="diff-line-code">  const maxHeight = isEmbedded ? '80vh' : '100vh'</span></div>
+            <div class="diff-line added"><span class="diff-line-num">14</span><span class="diff-prefix">+</span><span class="diff-line-code">  const scrollable = isEmbedded &amp;&amp; viewportHeight &lt; 600</span></div>
+            <div class="diff-line added"><span class="diff-line-num">15</span><span class="diff-prefix">+</span><span class="diff-line-code">  return { isEmbedded, maxHeight, scrollable }</span></div>
+            <div class="diff-line context"><span class="diff-line-num">16</span><span class="diff-prefix"> </span><span class="diff-line-code">}</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ds-section" id="spec">
+        <div class="section-header">
+          <h2>10 — Spec / Right Rail</h2>
+          <span class="section-tag">.spec-layout / .spec-rail</span>
+        </div>
+        <p class="section-desc">Prose in the wide column, metadata in the narrow one. The rail is read-only at-a-glance context; the decision callout names the choice and why.</p>
+        <div class="preview-card">
+          <div class="spec-layout">
+            <div>
+              <h3>Modal Height — Embedded Context</h3>
+              <p>The beneficiaries modal renders at full viewport height in the standalone app, which works fine when the modal owns the page. Inside the embedded host iframe, the same height causes the host scrollbar to compete with the modal's internal scroll. Two scrollbars, two interactions, one confused user.</p>
+              <div class="spec-decision">
+                <strong>Decision —</strong> cap modal height at <code>80vh</code> when <code>isEmbedded</code> is true. Scroll within the modal, not the host page.
+              </div>
+              <p>Trade-off: short viewports (under 600px) still need an internal scroll, which is why <code>scrollable</code> is derived from the same flag and the measured viewport. Tested against the embedded harness at 320×568 and 768×1024.</p>
+            </div>
+            <div>
+              <div class="spec-rail">
+                <div class="spec-rail-row">
+                  <div class="spec-rail-label">Status</div>
+                  <div class="spec-rail-value"><span class="badge badge-building">building</span></div>
+                </div>
+                <div class="spec-rail-row">
+                  <div class="spec-rail-label">Ticket</div>
+                  <div class="spec-rail-value mono">RETIRE-10110</div>
+                </div>
+                <div class="spec-rail-row">
+                  <div class="spec-rail-label">Severity</div>
+                  <div class="spec-rail-value"><span class="sev sev-major">major</span></div>
+                </div>
+                <div class="spec-rail-row">
+                  <div class="spec-rail-label">Owner</div>
+                  <div class="spec-rail-value">Robson S.</div>
+                </div>
+                <div class="spec-rail-row">
+                  <div class="spec-rail-label">Target</div>
+                  <div class="spec-rail-value">2026-06-14</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="ds-section" id="tooltips">
+        <div class="section-header">
+          <h2>11 — Tooltips</h2>
+          <span class="section-tag">.tooltip</span>
+        </div>
+        <p class="section-desc">For details the eye doesn't need until it asks. Anchor on dense identifiers — ticket IDs, abbreviations, mono spans — never on prose.</p>
+        <div class="preview-card">
+          <div class="preview-row">
+            <div class="tooltip tooltip-top" data-tip="Top tooltip — orients above"><button class="btn btn-sm">Hover top</button></div>
+            <div class="tooltip tooltip-right" data-tip="Right tooltip — orients beside"><button class="btn btn-sm">Hover right</button></div>
+            <div class="tooltip tooltip-bottom" data-tip="Bottom tooltip — orients below"><button class="btn btn-sm">Hover bottom</button></div>
+            <div class="tooltip tooltip-left" data-tip="Left tooltip — orients beside"><button class="btn btn-sm">Hover left</button></div>
+          </div>
+          <div class="preview-divider"></div>
+          <p>Active ticket: <span class="tooltip tooltip-top" data-tip="Modal height — embedded context · major · building"><code>RETIRE-10110</code></span> — beneficiaries modal in the embedded host. Hover the ID for the one-line summary.</p>
+        </div>
+      </section>
+
+    </div>
+
+    <footer class="site-footer">
+      <span>mate-ds v1.0 — DaisyUI v5 · Tailwind v4</span>
+      <span>generated 2026-06-09</span>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  const sections = document.querySelectorAll('.ds-section');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.05 });
+  sections.forEach(s => observer.observe(s));
+
+  const sidebarLinks = document.querySelectorAll('.sidebar-link[href^="#"]');
+  const linkById = {};
+  sidebarLinks.forEach(a => { linkById[a.getAttribute('href').slice(1)] = a; });
+
+  const activeObserver = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        sidebarLinks.forEach(a => { a.classList.remove('active'); a.removeAttribute('aria-current'); });
+        const link = linkById[e.target.id];
+        if (link) { link.classList.add('active'); link.setAttribute('aria-current', 'true'); }
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => activeObserver.observe(s));
+
+  sidebarLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      const href = link.getAttribute('href');
+      if (!href || !href.startsWith('#')) return;
+      e.preventDefault();
+      const target = document.querySelector(href);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+})();
+</script>
+</body>
+</html>
