@@ -5,7 +5,7 @@ How-to guide for adding components, changing tokens, and keeping the build healt
 ## Prerequisites
 
 ```bash
-cd ~/apps/robsonscheffer/dotfiles/home/dot_claude/skills/html-artifact
+cd "$(chezmoi source-path)/home/dot_claude/skills/html-artifact"
 npm install   # only needed once, or after a fresh clone
 ```
 
@@ -57,7 +57,7 @@ npm install   # only needed once, or after a fresh clone
 ## How to rebuild after any source change
 
 ```bash
-cd ~/apps/robsonscheffer/dotfiles/home/dot_claude/skills/html-artifact
+cd "$(chezmoi source-path)/home/dot_claude/skills/html-artifact"
 npm run build
 npm test
 ```
@@ -68,7 +68,8 @@ npm test
 If all 56 checks pass, commit and sync:
 
 ```bash
-cd ~/apps/robsonscheffer/dotfiles
+DOTFILES=$(chezmoi source-path)
+cd "$DOTFILES"
 git add home/dot_claude/skills/html-artifact/dist/ home/dot_claude/skills/html-artifact/src/
 git commit -m "chore(html-artifact): rebuild DS"
 chezmoi apply
@@ -79,7 +80,7 @@ chezmoi apply
 ## How to preview the showcase locally
 
 ```bash
-cd ~/apps/robsonscheffer/dotfiles/home/dot_claude/skills/html-artifact
+cd "$(chezmoi source-path)/home/dot_claude/skills/html-artifact"
 node bin/artifact-serve.mjs --showcase
 ```
 
