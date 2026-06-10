@@ -41,7 +41,14 @@ one command.
    - `~/.claude/skills/html-artifact/dist/templates/prototype.html`
    - `~/.claude/skills/html-artifact/dist/templates/dashboard.html`
 
-3. The template has all CSS inlined. **Do NOT modify the `<style>` block.**
+3. Link the stylesheet. Every generated artifact must have this in `<head>`:
+
+   ```html
+   <link rel="stylesheet" href="http://localhost:52010/style/main.css" />
+   ```
+
+   The persistent server (started via LaunchAgent) serves the compiled CSS at this URL.
+   **Never use a `file://` path and never inline the CSS as a `<style>` block.**
 
 4. Fill the content slots:
    - `<!-- TITLE -->` — artifact title (appears in `<title>`, breadcrumb, and h1)
@@ -51,6 +58,12 @@ one command.
    - `<!-- FOOTER LINK -->` — optional: add a link to the live URL if published
 
 5. Write the filled template to the output path.
+
+6. Run the linter and fix every violation before reporting done:
+   ```bash
+   node ~/.claude/skills/html-artifact/bin/lint-artifact.mjs <output-path>
+   ```
+   Exit 0 = clean. Exit 1 = violations printed with file:line context — fix each one.
 
 ---
 
@@ -66,23 +79,40 @@ properties and oklch color definitions declared in the `<style>` block.
 These CSS custom properties are defined in every artifact's `<style>` block. Use them — never
 invent raw hex values.
 
-| Token                  | Value              | Usage                      |
-| ---------------------- | ------------------ | -------------------------- |
-| `--mate-primary`       | `#d4764e`          | Brand, CTAs, active states |
-| `--mate-secondary`     | `#c4956a`          | Secondary accents          |
-| `--mate-success`       | `#7db46e`          | Success, done states       |
-| `--mate-warning`       | `#e8b84a`          | Warning, in-progress       |
-| `--mate-error`         | `#e05252`          | Error, destructive         |
-| `--mate-info`          | `#6b9fb4`          | Info, minor severity       |
-| `--mate-frame-bg`      | `#18150f`          | Page background            |
-| `--mate-frame-sidebar` | `#201c15`          | Sidebar background         |
-| `--mate-frame-nav`     | `#1c1810`          | Top nav background         |
-| `--mate-frame-text`    | `#e8e0d4`          | Primary text on dark       |
-| `--mate-frame-muted`   | `#a0927e`          | Secondary text on dark     |
-| `--mate-frame-dim`     | `#857363`          | Tertiary text, icons       |
-| `--mate-font-display`  | Cormorant Garamond | Headings, stat values      |
-| `--mate-font-body`     | Jost               | UI text, labels            |
-| `--mate-font-mono`     | DM Mono            | Code, hex values, numbers  |
+| Token                  | Value              | Usage                                                                   |
+| ---------------------- | ------------------ | ----------------------------------------------------------------------- |
+| `--mate-primary`       | `#d4764e`          | Brand, CTAs, active states                                              |
+| `--mate-secondary`     | `#c4956a`          | Secondary accents                                                       |
+| `--mate-success`       | `#7db46e`          | Success, done states                                                    |
+| `--mate-warning`       | `#e8b84a`          | Warning, in-progress                                                    |
+| `--mate-error`         | `#e05252`          | Error, destructive                                                      |
+| `--mate-info`          | `#6b9fb4`          | Info, minor severity                                                    |
+| `--mate-frame-bg`      | `#18150f`          | Page background                                                         |
+| `--mate-frame-sidebar` | `#201c15`          | Sidebar background                                                      |
+| `--mate-frame-nav`     | `#1c1810`          | Top nav background                                                      |
+| `--mate-frame-text`    | `#e8e0d4`          | All body copy and descriptive text                                      |
+| `--mate-frame-muted`   | `#a0927e`          | **Labels, captions, rail labels, table headers only** — never body copy |
+| `--mate-frame-dim`     | `#857363`          | Tertiary: timestamps, footer, placeholder text                          |
+| `--mate-font-display`  | Cormorant Garamond | Headings, stat values                                                   |
+| `--mate-font-body`     | Jost               | UI text, labels                                                         |
+| `--mate-font-mono`     | DM Mono            | Code, hex values, numbers                                               |
+
+### Token usage rules (hard constraints)
+
+These are the most common mistakes. Treat them as invariants, not guidelines.
+
+| Rule                                 | Wrong                           | Right                             |
+| ------------------------------------ | ------------------------------- | --------------------------------- |
+| Body/paragraph text                  | `color:var(--mate-frame-muted)` | `color:var(--mate-frame-text)`    |
+| Rollout step descriptions            | `color:var(--mate-frame-muted)` | `color:var(--mate-frame-text)`    |
+| Table cell content                   | `color:var(--mate-frame-muted)` | `color:var(--mate-frame-text)`    |
+| Table column headers                 | `color:var(--mate-frame-text)`  | `color:var(--mate-frame-muted)`   |
+| Rail label (the small uppercase key) | `color:var(--mate-frame-text)`  | `color:var(--mate-frame-muted)`   |
+| Rail value (the actual value)        | `color:var(--mate-frame-muted)` | `color:var(--mate-frame-text)`    |
+| Body font size                       | `font-size:12px` or `13px`      | `font-size:14px` or `15px`        |
+| Light-mode hex in dark theme         | `background:#fef2f2`            | `background:rgba(212,36,21,0.07)` |
+
+**The rule of thumb:** if a human would read it as content, it gets `--mate-frame-text`. If it is a label _above_ or _beside_ content (never the content itself), it may use `--mate-frame-muted`.
 
 ### DaisyUI components (use directly — no special setup)
 
@@ -91,8 +121,8 @@ alert (all variants), progress, stats/stat, badge, tooltip, card, table, footer
 
 ### Custom registry components
 
-These are not in DaisyUI. Use the class names exactly as listed — they are defined in the
-inlined `<style>` block sourced from `dist/showcase.html`.
+These are not in DaisyUI. Use the class names exactly as listed — they are compiled into
+`dist/style/main.css` and available in every artifact via the external stylesheet link.
 
 | Component       | Classes                                                                                                                         | When to use                              |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |

@@ -79,6 +79,9 @@ chezmoi apply
 
 ## How to preview the showcase locally
 
+> If the LaunchAgent is running, the showcase is always at
+> http://localhost:52010/showcase.html — no separate server needed.
+
 ```bash
 cd "$(chezmoi source-path)/home/dot_claude/skills/html-artifact"
 node bin/artifact-serve.mjs --showcase
@@ -94,6 +97,30 @@ npm run dev
 
 This starts a Vite dev server for `src/showcase.html` with hot module replacement.
 Note: in dev mode the CSS is not inlined — that only happens on `npm run build`.
+
+---
+
+## How to run the persistent server (LaunchAgent)
+
+Install once:
+
+```bash
+bash ~/.claude/skills/html-artifact/bin/install-launchagent.sh
+```
+
+After installation the server auto-starts on login at port 52010. Bookmarks:
+
+- http://localhost:52010/showcase.html — DS reference
+- http://localhost:52010/artifacts/ — promoted artifacts (requires html-artifact configured)
+
+To restart after rebuilding `dist/`:
+
+```bash
+launchctl stop com.robsonscheffer.html-artifact
+launchctl start com.robsonscheffer.html-artifact
+```
+
+Logs: `~/.local/share/html-artifact/server.log`
 
 ---
 
