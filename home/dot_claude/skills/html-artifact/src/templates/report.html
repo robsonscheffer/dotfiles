@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="mate">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><!-- TITLE --></title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style/main.css">
+</head>
+<body>
+
+<header style="position:sticky;top:0;z-index:20;background:var(--mate-frame-nav);border-bottom:1px solid var(--mate-frame-border);height:48px;display:flex;align-items:center;padding:0 24px;">
+  <span style="font-family:var(--mate-font-display);font-size:20px;font-weight:600;color:var(--mate-primary);letter-spacing:-0.02em;">mate-ds</span>
+</header>
+
+<main style="max-width:900px;margin:0 auto;padding:40px 40px 80px;">
+
+  <div class="artifact-header" style="border-bottom:1px solid var(--mate-frame-border);padding-bottom:24px;margin-bottom:32px;background:transparent;">
+    <nav aria-label="Breadcrumb">
+      <ol class="breadcrumb">
+        <li><a href="#">Artifacts</a></li>
+        <li><a href="#">Reports</a></li>
+        <li aria-current="page"><!-- TITLE --></li>
+      </ol>
+    </nav>
+    <h1 style="font-family:var(--mate-font-display);font-size:44px;font-weight:600;color:var(--mate-frame-text);letter-spacing:-0.015em;margin:14px 0 10px;line-height:1.1;"><!-- TITLE --></h1>
+    <div class="meta">
+      <span class="badge badge-done">report</span>
+      <span style="color:var(--mate-frame-muted);font-size:13px;font-family:var(--mate-font-body);"><!-- DATE --></span>
+      <!-- ADDITIONAL META BADGES -->
+    </div>
+  </div>
+
+  <!-- CONTENT: use table.artifact-table for findings, plain sections for summary/recommendations -->
+  <!-- badge: <span class="badge badge-done">report</span> -->
+
+  <footer style="margin-top:80px;border-top:1px solid var(--mate-frame-border);padding-top:16px;display:flex;justify-content:space-between;font-size:12px;color:var(--mate-frame-dim);font-family:var(--mate-font-body);background:transparent;">
+    <span>Generated <!-- DATE --> · html-artifact skill</span>
+    <span><!-- FOOTER LINK --></span>
+  </footer>
+
+</main>
+</body>
+</html>
