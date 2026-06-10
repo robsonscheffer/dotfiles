@@ -1,0 +1,11 @@
+id: spec-rail
+name: Spec Rail
+coverage: custom
+description: Sticky 240px right panel for spec documents with label/value metadata rows
+tokens: [--mate-font-body, --mate-font-mono]
+classes:
+  - .spec-layout
+  - .spec-rail
+  - .spec-rail-row
+  - .spec-rail-label
+  - .spec-rail-value

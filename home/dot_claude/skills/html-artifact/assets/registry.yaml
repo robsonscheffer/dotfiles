@@ -1,0 +1,42 @@
+version: "1"
+base: [tailwind, daisyui@5]
+theme: mate
+
+components:
+  - id: stat-delta
+    path: components/stat-delta
+    coverage: custom
+    description: Directional trend indicator with ↑↓ color and secondary metric
+
+  - id: severity-chip
+    path: components/severity-chip
+    coverage: custom
+    description: Bordered square chip for code review severity (critical/major/minor/nit)
+    variants: [critical, major, minor, nit]
+
+  - id: lifecycle-badge
+    path: components/lifecycle-badge
+    coverage: override
+    description: DaisyUI badge with mate lifecycle colors (open/ready/building/done/dropped)
+    variants: [open, ready, building, done, dropped]
+    extends: daisyui/badge
+
+  - id: palette-swatch
+    path: components/palette-swatch
+    coverage: custom
+    description: Color card showing swatch, name, token name, and hex value
+
+  - id: code-diff
+    path: components/code-diff
+    coverage: custom
+    description: Unified diff viewer with file header, hunk header, and line-level add/remove/context
+
+  - id: spec-rail
+    path: components/spec-rail
+    coverage: custom
+    description: Sticky right-panel for spec documents with label/value metadata rows
+
+  - id: spec-decision
+    path: components/spec-decision
+    coverage: custom
+    description: Left-border callout for design decisions and important notes

@@ -1,0 +1,11 @@
+id: stat-delta
+name: Stat Delta
+coverage: custom
+extends: daisyui/stat
+description: Directional trend indicator shown below a stat value (↑↓ with color)
+variants: [up, down, neutral]
+tokens: [--mate-success, --mate-error, --mate-font-body]
+classes:
+  - .stat-delta
+  - .delta-up
+  - .delta-down

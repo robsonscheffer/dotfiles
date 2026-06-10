@@ -1,0 +1,7 @@
+id: spec-decision
+name: Spec Decision
+coverage: custom
+description: Left-border callout for design decisions and important notes in spec documents
+tokens: [--mate-primary]
+classes:
+  - .spec-decision

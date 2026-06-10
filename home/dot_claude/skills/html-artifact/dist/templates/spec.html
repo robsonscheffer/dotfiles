@@ -2590,13 +2590,14 @@
             font-weight: 600;
             color: var(--mate-frame-text);
             letter-spacing: -0.015em;
-            margin: 14px 0 10px;
+            margin: 0;
             line-height: 1.1;
+            min-height: 0;
           "
         >
           <!-- TITLE -->
         </h1>
-        <div class="meta">
+        <div class="meta" style="padding-top: 14px">
           <span class="badge badge-building">spec</span>
           <span
             style="
@@ -2677,7 +2678,11 @@
             <div class="spec-rail-label">Target</div>
             <div
               class="spec-rail-value"
-              style="font-family: var(--mate-font-mono); font-size: 12px"
+              style="
+                font-family: var(--mate-font-mono);
+                font-size: 12px;
+                color: var(--mate-frame-muted);
+              "
             >
               2026-07-01
             </div>
@@ -2885,7 +2890,11 @@
             <div class="spec-rail-label">Format</div>
             <div
               class="spec-rail-value"
-              style="font-family: var(--mate-font-mono); font-size: 12px"
+              style="
+                font-family: var(--mate-font-mono);
+                font-size: 12px;
+                color: var(--mate-frame-muted);
+              "
             >
               .csv / UTF-8
             </div>
@@ -2894,7 +2903,11 @@
             <div class="spec-rail-label">Encoding</div>
             <div
               class="spec-rail-value"
-              style="font-family: var(--mate-font-mono); font-size: 12px"
+              style="
+                font-family: var(--mate-font-mono);
+                font-size: 12px;
+                color: var(--mate-frame-muted);
+              "
             >
               UTF-8 BOM
             </div>

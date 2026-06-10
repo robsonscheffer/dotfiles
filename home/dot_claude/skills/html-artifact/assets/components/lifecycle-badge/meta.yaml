@@ -1,0 +1,13 @@
+id: lifecycle-badge
+name: Lifecycle Badge
+coverage: override
+extends: daisyui/badge
+description: DaisyUI badge with mate lifecycle state colors
+variants: [open, ready, building, done, dropped]
+tokens: []
+classes:
+  - .badge.badge-open
+  - .badge.badge-ready
+  - .badge.badge-building
+  - .badge.badge-done
+  - .badge.badge-dropped

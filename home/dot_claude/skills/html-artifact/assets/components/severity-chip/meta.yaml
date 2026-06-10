@@ -1,0 +1,12 @@
+id: severity-chip
+name: Severity Chip
+coverage: custom
+description: Bordered square chip for code review finding severity levels
+variants: [critical, major, minor, nit]
+tokens: [--mate-error, --mate-warning, --mate-info, --mate-font-mono]
+classes:
+  - .sev
+  - .sev-critical
+  - .sev-major
+  - .sev-minor
+  - .sev-nit

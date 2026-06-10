@@ -1,0 +1,16 @@
+id: code-diff
+name: Code Diff
+coverage: custom
+description: Unified diff viewer with file header, hunk header, and line-level add/remove/context
+tokens: [--mate-font-mono]
+classes:
+  - .diff-block
+  - .diff-file-header
+  - .diff-hunk-header
+  - .diff-line
+  - .diff-line-num
+  - .diff-prefix
+  - .diff-line-code
+  - .diff-line.added
+  - .diff-line.removed
+  - .diff-line.context

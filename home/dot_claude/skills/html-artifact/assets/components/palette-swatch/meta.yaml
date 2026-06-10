@@ -1,0 +1,12 @@
+id: palette-swatch
+name: Palette Swatch
+coverage: custom
+description: Color card showing swatch square, token name, color name, and hex value
+tokens: [--mate-font-mono, --mate-font-body]
+classes:
+  - .swatch-grid
+  - .swatch-card
+  - .swatch-color
+  - .swatch-name
+  - .swatch-token
+  - .swatch-hex
