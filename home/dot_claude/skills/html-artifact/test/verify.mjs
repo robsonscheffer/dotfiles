@@ -64,6 +64,20 @@ for (const [name, path] of Object.entries(distFiles)) {
   );
 }
 
+console.log("\ndist/style/ CSS output");
+const cssPath = join(DIST, "style", "main.css");
+assert("dist/style/main.css exists", existsSync(cssPath));
+assert(
+  "dist/style/main.css > 10 KB",
+  fileSize(cssPath) > 10_000,
+  `got ${fileSize(cssPath)} bytes`,
+);
+const cssContent = fileContent(cssPath);
+assert(
+  "dist/style/main.css contains mate tokens",
+  cssContent.includes("--mate-primary"),
+);
+
 console.log("\ncontent slots present in templates");
 const SLOTS = ["<!-- TITLE -->", "<!-- DATE -->"];
 for (const name of ["spec", "report", "prototype", "dashboard"]) {

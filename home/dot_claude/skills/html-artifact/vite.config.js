@@ -34,18 +34,36 @@ const entries = {
     input: resolve(__dirname, "src/templates/dashboard.html"),
     outDir: resolve(__dirname, "dist/templates"),
   },
+  css: {
+    root: resolve(__dirname, "src/style"),
+    input: resolve(__dirname, "src/style/index.js"),
+    outDir: resolve(__dirname, "dist/style"),
+  },
 };
 
 const current = entries[entry] || entries.showcase;
+const isCss = entry === "css";
 
 export default defineConfig({
   root: current.root,
-  plugins: [tailwindcss(), viteSingleFile()],
+  plugins: isCss ? [tailwindcss()] : [tailwindcss(), viteSingleFile()],
   build: {
     outDir: current.outDir,
     emptyOutDir: false,
-    rollupOptions: {
-      input: current.input,
-    },
+    ...(isCss
+      ? {
+          lib: {
+            entry: current.input,
+            formats: ["es"],
+            fileName: () => "index",
+            name: "main",
+          },
+          rollupOptions: {
+            output: { assetFileNames: "main[extname]" },
+          },
+        }
+      : {
+          rollupOptions: { input: current.input },
+        }),
   },
 });

@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "vite src/showcase.html",
     "prebuild": "rm -rf dist",
-    "build": "for entry in showcase spec report prototype dashboard; do ENTRY=$entry vite build; done",
+    "build": "for entry in css showcase spec report prototype dashboard; do ENTRY=$entry vite build; done",
+    "build:css": "ENTRY=css vite build",
     "preview": "vite preview",
     "test": "node test/verify.mjs"
   },
