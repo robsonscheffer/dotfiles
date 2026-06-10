@@ -1,0 +1,35 @@
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+}
+.swatch-card {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background: white;
+}
+.swatch-color {
+  height: 64px;
+}
+.swatch-meta {
+  padding: 8px 10px;
+}
+.swatch-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+  font-family: var(--mate-font-body);
+}
+.swatch-token {
+  font-size: 10px;
+  color: #9ca3af;
+  font-family: var(--mate-font-mono);
+  margin-top: 1px;
+}
+.swatch-hex {
+  font-size: 11px;
+  color: #6b7280;
+  font-family: var(--mate-font-mono);
+  margin-top: 2px;
+}

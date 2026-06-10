@@ -1,0 +1,25 @@
+.badge-open {
+  background: #dbeafe !important;
+  color: #1d4ed8 !important;
+  border-color: #dbeafe !important;
+}
+.badge-ready {
+  background: #e0e7ff !important;
+  color: #3730a3 !important;
+  border-color: #e0e7ff !important;
+}
+.badge-building {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #fef3c7 !important;
+}
+.badge-done {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+  border-color: #d1fae5 !important;
+}
+.badge-dropped {
+  background: #f3f4f6 !important;
+  color: #6b7280 !important;
+  border-color: #f3f4f6 !important;
+}

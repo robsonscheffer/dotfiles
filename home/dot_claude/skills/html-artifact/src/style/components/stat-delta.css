@@ -1,0 +1,11 @@
+.stat-delta {
+  font-size: 12px;
+  font-family: var(--mate-font-body);
+  margin-top: 4px;
+}
+.delta-up {
+  color: var(--mate-success);
+}
+.delta-down {
+  color: var(--mate-error);
+}

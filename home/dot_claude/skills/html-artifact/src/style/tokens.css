@@ -1,0 +1,32 @@
+[data-theme="mate"] {
+  --color-primary: oklch(from #d4764e l c h);
+  --color-secondary: oklch(from #c4956a l c h);
+  --color-success: oklch(from #7db46e l c h);
+  --color-warning: oklch(from #e8b84a l c h);
+  --color-error: oklch(from #e05252 l c h);
+  --color-info: oklch(from #6b9fb4 l c h);
+  --color-base-100: oklch(from #18150f l c h);
+  --color-base-200: oklch(from #201c15 l c h);
+  --color-base-300: oklch(from #1c1810 l c h);
+  --color-base-content: oklch(from #e8e0d4 l c h);
+}
+
+:root {
+  --mate-primary: #d4764e;
+  --mate-secondary: #c4956a;
+  --mate-success: #7db46e;
+  --mate-warning: #e8b84a;
+  --mate-error: #e05252;
+  --mate-info: #6b9fb4;
+  --mate-erva: #5a9a4e;
+  --mate-frame-bg: #18150f;
+  --mate-frame-sidebar: #201c15;
+  --mate-frame-nav: #1c1810;
+  --mate-frame-border: rgba(255, 255, 255, 0.07);
+  --mate-frame-text: #e8e0d4;
+  --mate-frame-muted: #a0927e;
+  --mate-frame-dim: #857363;
+  --mate-font-display: "Cormorant Garamond", Georgia, serif;
+  --mate-font-body: "Jost", system-ui, sans-serif;
+  --mate-font-mono: "DM Mono", monospace;
+}

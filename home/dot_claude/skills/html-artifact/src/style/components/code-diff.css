@@ -1,0 +1,70 @@
+.diff-block {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: var(--mate-font-mono);
+  font-size: 12px;
+}
+.diff-file-header {
+  background: #f3f4f6;
+  padding: 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 13px;
+  color: #374151;
+}
+.diff-hunk-header {
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 4px 16px;
+  font-size: 11px;
+  border-bottom: 1px solid #dbeafe;
+}
+.diff-line {
+  display: flex;
+}
+.diff-line-num {
+  width: 48px;
+  text-align: right;
+  padding: 2px 8px;
+  color: #9ca3af;
+  user-select: none;
+  border-right: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+.diff-prefix {
+  width: 20px;
+  text-align: center;
+  padding: 2px 0;
+  flex-shrink: 0;
+}
+.diff-line-code {
+  padding: 2px 8px;
+  flex: 1;
+  white-space: pre;
+  color: #374151;
+}
+.diff-line.added {
+  background: #f0fdf4;
+}
+.diff-line.added .diff-prefix {
+  color: #16a34a;
+}
+.diff-line.added .diff-line-code {
+  color: #166534;
+}
+.diff-line.removed {
+  background: #fef2f2;
+}
+.diff-line.removed .diff-prefix {
+  color: #dc2626;
+}
+.diff-line.removed .diff-line-code {
+  color: #991b1b;
+}
+.diff-line.context {
+  background: white;
+}
