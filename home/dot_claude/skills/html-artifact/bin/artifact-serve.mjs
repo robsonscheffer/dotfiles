@@ -69,7 +69,6 @@ const server = createServer((req, res) => {
     return;
   }
 
-  // serve index.html for directory requests
   if (existsSync(filePath) && statSync(filePath).isDirectory()) {
     filePath = join(filePath, "index.html");
   }
