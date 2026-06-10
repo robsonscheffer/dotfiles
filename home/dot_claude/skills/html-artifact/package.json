@@ -1,0 +1,17 @@
+{
+  "name": "html-artifact",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite src/showcase.html",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5",
+    "@tailwindcss/vite": "^4.1.8",
+    "tailwindcss": "^4.1.8",
+    "daisyui": "^5.0.35",
+    "vite-plugin-singlefile": "^2.1.0"
+  }
+}
