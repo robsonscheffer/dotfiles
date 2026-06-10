@@ -97,20 +97,297 @@
         </div>
       </div>
 
-      <!-- CONTENT: use .spec-layout for sections with a right rail, or plain divs for prose sections -->
-      <!-- Example with rail:
-  <div class="spec-layout">
-    <div class="spec-body" style="color:var(--mate-frame-text);">
-      <h2 style="font-family:var(--mate-font-display);font-size:28px;font-weight:600;margin:0 0 12px;">Section Title</h2>
-      <p style="color:var(--mate-frame-muted);font-size:14px;line-height:1.7;">...</p>
-      <div class="spec-decision"><strong>Decision —</strong> ...</div>
-    </div>
-    <aside class="spec-rail">
-      <div class="spec-rail-row"><div class="spec-rail-label">Status</div><div class="spec-rail-value"><span class="badge badge-building">building</span></div></div>
-      <div class="spec-rail-row"><div class="spec-rail-label">Ticket</div><div class="spec-rail-value" style="font-family:var(--mate-font-mono);font-size:12px;">TICKET-XXXXX</div></div>
-    </aside>
-  </div>
-  -->
+      <!-- CONTENT -->
+
+      <div class="spec-layout">
+        <div class="spec-body">
+          <h2
+            style="
+              font-family: var(--mate-font-display);
+              font-size: 28px;
+              font-weight: 600;
+              color: var(--mate-frame-text);
+              margin: 0 0 12px;
+            "
+          >
+            Overview
+          </h2>
+          <p
+            style="
+              color: var(--mate-frame-muted);
+              font-size: 14px;
+              line-height: 1.8;
+              margin: 0 0 16px;
+            "
+          >
+            Participants need to download their beneficiary designations as a
+            PDF or CSV for their records. Today they must call support to get a
+            copy. This spec covers the self-serve export flow accessible from
+            the Beneficiaries tab.
+          </p>
+          <div class="spec-decision">
+            <strong>Decision —</strong> CSV only in v1. PDF generation adds a
+            server-side rendering dependency that isn't worth the complexity for
+            the initial release. PDF can follow as a separate ticket.
+          </div>
+        </div>
+        <aside class="spec-rail">
+          <div class="spec-rail-row">
+            <div class="spec-rail-label">Status</div>
+            <div class="spec-rail-value">
+              <span class="badge badge-building">building</span>
+            </div>
+          </div>
+          <div class="spec-rail-row">
+            <div class="spec-rail-label">Ticket</div>
+            <div
+              class="spec-rail-value"
+              style="
+                font-family: var(--mate-font-mono);
+                font-size: 12px;
+                color: var(--mate-primary);
+              "
+            >
+              TICKET-9841
+            </div>
+          </div>
+          <div class="spec-rail-row">
+            <div class="spec-rail-label">Owner</div>
+            <div
+              class="spec-rail-value"
+              style="font-size: 13px; color: var(--mate-frame-text)"
+            >
+              robson
+            </div>
+          </div>
+          <div class="spec-rail-row">
+            <div class="spec-rail-label">Target</div>
+            <div
+              class="spec-rail-value"
+              style="font-family: var(--mate-font-mono); font-size: 12px"
+            >
+              2026-07-01
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="spec-layout" style="margin-top: 40px">
+        <div class="spec-body">
+          <h2
+            style="
+              font-family: var(--mate-font-display);
+              font-size: 28px;
+              font-weight: 600;
+              color: var(--mate-frame-text);
+              margin: 0 0 12px;
+            "
+          >
+            User Flow
+          </h2>
+          <ol
+            style="
+              color: var(--mate-frame-muted);
+              font-size: 14px;
+              line-height: 2;
+              padding-left: 20px;
+              margin: 0 0 16px;
+            "
+          >
+            <li>
+              Participant opens the
+              <strong style="color: var(--mate-frame-text)"
+                >Beneficiaries</strong
+              >
+              tab.
+            </li>
+            <li>
+              Clicks
+              <strong style="color: var(--mate-frame-text)">Export</strong> in
+              the top-right action bar.
+            </li>
+            <li>
+              A modal confirms the scope: all active beneficiaries, current
+              designations only.
+            </li>
+            <li>CSV downloads immediately — no email, no async job.</li>
+          </ol>
+          <div class="spec-decision">
+            <strong>Decision —</strong> Synchronous download, not async + email.
+            The dataset is small (≤20 rows per participant) and instant is
+            better UX than "check your email".
+          </div>
+          <p
+            style="
+              color: var(--mate-frame-muted);
+              font-size: 14px;
+              line-height: 1.8;
+              margin: 16px 0 0;
+            "
+          >
+            The confirmation modal also lets participants cancel. No destructive
+            action occurs — it exists only to set expectations about what the
+            export contains, preventing support calls from participants
+            surprised by the format.
+          </p>
+        </div>
+        <aside class="spec-rail">
+          <div class="spec-rail-row">
+            <div class="spec-rail-label">Affects</div>
+            <div
+              class="spec-rail-value"
+              style="font-size: 13px; color: var(--mate-frame-text)"
+            >
+              Participants only
+            </div>
+          </div>
+          <div class="spec-rail-row">
+            <div class="spec-rail-label">Gate</div>
+            <div
+              class="spec-rail-value"
+              style="font-size: 13px; color: var(--mate-frame-text)"
+            >
+              feature flag
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="spec-layout" style="margin-top: 40px">
+        <div class="spec-body">
+          <h2
+            style="
+              font-family: var(--mate-font-display);
+              font-size: 28px;
+              font-weight: 600;
+              color: var(--mate-frame-text);
+              margin: 0 0 12px;
+            "
+          >
+            CSV Schema
+          </h2>
+          <table
+            class="table w-full"
+            style="
+              font-family: var(--mate-font-body);
+              font-size: 13px;
+              margin-bottom: 16px;
+            "
+          >
+            <thead>
+              <tr>
+                <th style="color: var(--mate-frame-muted)">Column</th>
+                <th style="color: var(--mate-frame-muted)">Type</th>
+                <th style="color: var(--mate-frame-muted)">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td
+                  style="
+                    font-family: var(--mate-font-mono);
+                    color: var(--mate-primary);
+                  "
+                >
+                  name
+                </td>
+                <td style="color: var(--mate-frame-muted)">string</td>
+                <td style="color: var(--mate-frame-muted)">Full legal name</td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    font-family: var(--mate-font-mono);
+                    color: var(--mate-primary);
+                  "
+                >
+                  relationship
+                </td>
+                <td style="color: var(--mate-frame-muted)">string</td>
+                <td style="color: var(--mate-frame-muted)">
+                  Spouse, Child, Other
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    font-family: var(--mate-font-mono);
+                    color: var(--mate-primary);
+                  "
+                >
+                  allocation_pct
+                </td>
+                <td style="color: var(--mate-frame-muted)">decimal</td>
+                <td style="color: var(--mate-frame-muted)">
+                  0–100, two decimal places
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    font-family: var(--mate-font-mono);
+                    color: var(--mate-primary);
+                  "
+                >
+                  type
+                </td>
+                <td style="color: var(--mate-frame-muted)">enum</td>
+                <td style="color: var(--mate-frame-muted)">
+                  primary | contingent
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    font-family: var(--mate-font-mono);
+                    color: var(--mate-primary);
+                  "
+                >
+                  dob
+                </td>
+                <td style="color: var(--mate-frame-muted)">date</td>
+                <td style="color: var(--mate-frame-muted)">
+                  ISO 8601, YYYY-MM-DD
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="spec-decision">
+            <strong>Decision —</strong>
+            <code
+              style="
+                font-family: var(--mate-font-mono);
+                font-size: 12px;
+                color: var(--mate-primary);
+              "
+              >ssn_last4</code
+            >
+            excluded. Export is for participant records, not a compliance
+            artifact — the risk of exposing partial SSN in a downloaded file
+            outweighs the utility.
+          </div>
+        </div>
+        <aside class="spec-rail">
+          <div class="spec-rail-row">
+            <div class="spec-rail-label">Format</div>
+            <div
+              class="spec-rail-value"
+              style="font-family: var(--mate-font-mono); font-size: 12px"
+            >
+              .csv / UTF-8
+            </div>
+          </div>
+          <div class="spec-rail-row">
+            <div class="spec-rail-label">Encoding</div>
+            <div
+              class="spec-rail-value"
+              style="font-family: var(--mate-font-mono); font-size: 12px"
+            >
+              UTF-8 BOM
+            </div>
+          </div>
+        </aside>
+      </div>
 
       <footer
         style="
