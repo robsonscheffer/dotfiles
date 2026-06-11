@@ -17982,8 +17982,14 @@
         font-size: 14px;
         line-height: 1.6;
       }
-      .spec-decision strong {
-        color: var(--mate-frame-text);
+      .spec-decision > strong:first-child {
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--color-primary);
+        margin-bottom: 5px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        display: block;
       }
       .swatch-grid {
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -18166,7 +18172,7 @@
           <!-- TITLE -->
         </h1>
         <div class="meta">
-          <span class="badge badge-open">dashboard</span>
+          <span class="badge badge-ghost">dashboard</span>
           <span
             style="
               color: var(--mate-frame-muted);

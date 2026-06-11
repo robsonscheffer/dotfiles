@@ -17982,8 +17982,14 @@
         font-size: 14px;
         line-height: 1.6;
       }
-      .spec-decision strong {
-        color: var(--mate-frame-text);
+      .spec-decision > strong:first-child {
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--color-primary);
+        margin-bottom: 5px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        display: block;
       }
       .swatch-grid {
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -18167,7 +18173,7 @@
           margin-bottom: 40px;
         "
       >
-        <span class="badge badge-open">prototype</span>
+        <span class="badge badge-ghost">prototype</span>
         <span><!-- DATE --></span>
         <!-- ADDITIONAL META BADGES -->
       </div>
@@ -18676,7 +18682,9 @@
                     Spouse
                   </td>
                   <td>
-                    <span class="badge badge-done" style="font-size: 11px"
+                    <span
+                      class="badge badge-soft badge-done"
+                      style="font-size: 11px"
                       >primary</span
                     >
                   </td>

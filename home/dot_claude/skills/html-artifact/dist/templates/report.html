@@ -17982,8 +17982,14 @@
         font-size: 14px;
         line-height: 1.6;
       }
-      .spec-decision strong {
-        color: var(--mate-frame-text);
+      .spec-decision > strong:first-child {
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--color-primary);
+        margin-bottom: 5px;
+        font-size: 0.65rem;
+        font-weight: 700;
+        display: block;
       }
       .swatch-grid {
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -18167,7 +18173,7 @@
           margin-bottom: 40px;
         "
       >
-        <span class="badge badge-done">report</span>
+        <span class="badge badge-ghost">report</span>
         <span><!-- DATE --></span>
         <!-- ADDITIONAL META BADGES -->
       </div>
@@ -18310,7 +18316,7 @@
               >
                 api/artifacts#show:31
               </td>
-              <td><span class="badge badge-open">open</span></td>
+              <td><span class="badge badge-soft badge-open">open</span></td>
             </tr>
             <tr>
               <td><span class="sev sev-major">major</span></td>
@@ -18327,7 +18333,9 @@
               >
                 publish.mjs:88
               </td>
-              <td><span class="badge badge-building">in review</span></td>
+              <td>
+                <span class="badge badge-soft badge-building">in review</span>
+              </td>
             </tr>
             <tr>
               <td><span class="sev sev-major">major</span></td>
@@ -18344,7 +18352,7 @@
               >
                 server/routes.ts:204
               </td>
-              <td><span class="badge badge-open">open</span></td>
+              <td><span class="badge badge-soft badge-open">open</span></td>
             </tr>
             <tr>
               <td><span class="sev sev-major">major</span></td>
@@ -18361,7 +18369,7 @@
               >
                 models/page.rb:57
               </td>
-              <td><span class="badge badge-done">fixed</span></td>
+              <td><span class="badge badge-soft badge-done">fixed</span></td>
             </tr>
             <tr>
               <td><span class="sev sev-minor">minor</span></td>
@@ -18378,7 +18386,7 @@
               >
                 skill.md publish op
               </td>
-              <td><span class="badge badge-open">open</span></td>
+              <td><span class="badge badge-soft badge-open">open</span></td>
             </tr>
             <tr>
               <td><span class="sev sev-minor">minor</span></td>
@@ -18394,7 +18402,7 @@
               >
                 api/auth#create:19
               </td>
-              <td><span class="badge badge-done">fixed</span></td>
+              <td><span class="badge badge-soft badge-done">fixed</span></td>
             </tr>
             <tr>
               <td><span class="sev sev-minor">minor</span></td>
@@ -18411,7 +18419,7 @@
               >
                 views/publish.html:3
               </td>
-              <td><span class="badge badge-open">open</span></td>
+              <td><span class="badge badge-soft badge-open">open</span></td>
             </tr>
             <tr>
               <td><span class="sev sev-nit">nit</span></td>
@@ -18435,7 +18443,7 @@
               >
                 publish.mjs:61
               </td>
-              <td><span class="badge badge-done">fixed</span></td>
+              <td><span class="badge badge-soft badge-done">fixed</span></td>
             </tr>
             <tr>
               <td><span class="sev sev-nit">nit</span></td>
@@ -18451,7 +18459,7 @@
               >
                 publish.mjs:34
               </td>
-              <td><span class="badge badge-open">open</span></td>
+              <td><span class="badge badge-soft badge-open">open</span></td>
             </tr>
           </tbody>
         </table>
