@@ -1,25 +1,15 @@
 .badge-open {
-  background: rgba(107, 159, 180, 0.15) !important;
-  color: var(--mate-info) !important;
-  border-color: rgba(107, 159, 180, 0.4) !important;
+  --badge-color: var(--color-info);
 }
 .badge-ready {
-  background: rgba(196, 149, 106, 0.15) !important;
-  color: var(--mate-secondary) !important;
-  border-color: rgba(196, 149, 106, 0.4) !important;
+  --badge-color: var(--color-secondary);
 }
 .badge-building {
-  background: rgba(232, 184, 74, 0.15) !important;
-  color: var(--mate-warning) !important;
-  border-color: rgba(232, 184, 74, 0.4) !important;
+  --badge-color: var(--color-warning);
 }
 .badge-done {
-  background: rgba(125, 180, 110, 0.15) !important;
-  color: var(--mate-success) !important;
-  border-color: rgba(125, 180, 110, 0.4) !important;
+  --badge-color: var(--color-success);
 }
 .badge-dropped {
-  background: rgba(133, 115, 99, 0.12) !important;
-  color: var(--mate-frame-dim) !important;
-  border-color: rgba(133, 115, 99, 0.35) !important;
+  --badge-color: var(--color-neutral);
 }

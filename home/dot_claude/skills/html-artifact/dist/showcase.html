@@ -17793,11 +17793,11 @@
         color: var(--mate-frame-text);
       }
       .sev {
+        border-radius: var(--radius-field);
         font-size: 11px;
         font-weight: 700;
         font-family: var(--mate-font-mono);
         border: 1px solid;
-        border-radius: 4px;
         padding: 2px 10px;
         display: inline-flex;
       }
@@ -17822,29 +17822,19 @@
         border-color: #8573634d;
       }
       .badge-open {
-        color: var(--mate-info) !important;
-        background: #6b9fb426 !important;
-        border-color: #6b9fb466 !important;
+        --badge-color: var(--color-info);
       }
       .badge-ready {
-        color: var(--mate-secondary) !important;
-        background: #c4956a26 !important;
-        border-color: #c4956a66 !important;
+        --badge-color: var(--color-secondary);
       }
       .badge-building {
-        color: var(--mate-warning) !important;
-        background: #e8b84a26 !important;
-        border-color: #e8b84a66 !important;
+        --badge-color: var(--color-warning);
       }
       .badge-done {
-        color: var(--mate-success) !important;
-        background: #7db46e26 !important;
-        border-color: #7db46e66 !important;
+        --badge-color: var(--color-success);
       }
       .badge-dropped {
-        color: var(--mate-frame-dim) !important;
-        background: #8573631f !important;
-        border-color: #85736359 !important;
+        --badge-color: var(--color-neutral);
       }
       .stat-delta {
         font-size: 12px;
@@ -18235,34 +18225,35 @@
             <div class="preview-card">
               <div
                 class="navbar rounded-lg"
-                style="background: #f9fafb; border: 1px solid #e5e7eb"
+                style="
+                  background: var(--mate-frame-nav);
+                  border: 1px solid var(--mate-frame-border);
+                "
               >
                 <div class="flex-1 flex items-center gap-4 px-2">
                   <span
                     style="
                       font-family: var(--mate-font-display);
                       font-size: 18px;
-                      color: #111827;
+                      color: var(--mate-frame-text);
                     "
                     >mate-<em
                       style="color: var(--mate-primary); font-weight: 400"
                       >ds</em
                     ></span
                   >
-                  <a class="text-sm" style="color: #374151">Components</a>
-                  <a class="text-sm" style="color: #6b7280">Reports</a>
-                  <a class="text-sm" style="color: #6b7280">Specs</a>
+                  <a class="text-sm" style="color: var(--mate-frame-text)"
+                    >Components</a
+                  >
+                  <a class="text-sm" style="color: var(--mate-frame-muted)"
+                    >Reports</a
+                  >
+                  <a class="text-sm" style="color: var(--mate-frame-muted)"
+                    >Specs</a
+                  >
                 </div>
                 <div class="flex items-center gap-2 px-2">
-                  <span
-                    class="badge badge-outline"
-                    style="
-                      color: #b9430b;
-                      border-color: #fcd34d;
-                      background: #fffbeb;
-                    "
-                    >v1.0</span
-                  >
+                  <span class="badge badge-soft badge-warning">v1.0</span>
                   <button class="btn btn-primary btn-sm">Publish</button>
                 </div>
               </div>
@@ -18431,7 +18422,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
               <div>
                 <div
                   class="flex justify-between text-sm"
-                  style="color: #374151"
+                  style="color: var(--mate-frame-text)"
                 >
                   <span>Plan phase</span><span class="mono">100%</span>
                 </div>
@@ -18444,7 +18435,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
               <div>
                 <div
                   class="flex justify-between text-sm"
-                  style="color: #374151"
+                  style="color: var(--mate-frame-text)"
                 >
                   <span>Build phase</span><span class="mono">68%</span>
                 </div>
@@ -18457,7 +18448,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
               <div>
                 <div
                   class="flex justify-between text-sm"
-                  style="color: #374151"
+                  style="color: var(--mate-frame-text)"
                 >
                   <span>Verify phase</span><span class="mono">22%</span>
                 </div>
@@ -18491,7 +18482,10 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                 <div class="stat">
                   <div class="stat-title">FINDINGS</div>
                   <div class="stat-value">37</div>
-                  <div class="stat-delta" style="color: #6b7280">
+                  <div
+                    class="stat-delta"
+                    style="color: var(--mate-frame-muted)"
+                  >
                     3 critical open
                   </div>
                 </div>
@@ -18503,7 +18497,12 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                 <div class="stat">
                   <div class="stat-title">AVG CYCLE</div>
                   <div class="stat-value">1.4d</div>
-                  <div class="stat-delta" style="color: #6b7280">stable</div>
+                  <div
+                    class="stat-delta"
+                    style="color: var(--mate-frame-muted)"
+                  >
+                    stable
+                  </div>
                 </div>
               </div>
             </div>
@@ -18522,21 +18521,21 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             <div class="preview-card">
               <div
                 class="text-xs uppercase tracking-wider mb-2"
-                style="color: #9ca3af"
+                style="color: var(--mate-frame-muted)"
               >
                 Lifecycle
               </div>
               <div class="preview-row">
-                <span class="badge badge-open">open</span>
-                <span class="badge badge-ready">ready</span>
-                <span class="badge badge-building">building</span>
-                <span class="badge badge-done">done</span>
-                <span class="badge badge-dropped">dropped</span>
+                <span class="badge badge-soft badge-open">open</span>
+                <span class="badge badge-soft badge-ready">ready</span>
+                <span class="badge badge-soft badge-building">building</span>
+                <span class="badge badge-soft badge-done">done</span>
+                <span class="badge badge-soft badge-dropped">dropped</span>
               </div>
               <div class="preview-divider"></div>
               <div
                 class="text-xs uppercase tracking-wider mb-2"
-                style="color: #9ca3af"
+                style="color: var(--mate-frame-muted)"
               >
                 Severity
               </div>
@@ -18741,7 +18740,9 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                   <div class="spec-rail-row">
                     <div class="spec-rail-label">Status</div>
                     <div class="spec-rail-value">
-                      <span class="badge badge-building">building</span>
+                      <span class="badge badge-soft badge-building"
+                        >building</span
+                      >
                     </div>
                   </div>
                   <div class="spec-rail-row">
