@@ -1,27 +1,28 @@
 .diff-block {
   background: var(--mate-frame-sidebar);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--mate-frame-border);
   border-radius: 8px;
   overflow: hidden;
   font-family: var(--mate-font-mono);
   font-size: 12px;
 }
 .diff-file-header {
-  background: rgba(255, 255, 255, 0.04);
+  background: color-mix(in oklab, var(--mate-frame-text) 4%, transparent);
   padding: 8px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--mate-frame-border);
   font-size: 13px;
   color: var(--mate-frame-muted);
 }
 .diff-hunk-header {
-  background: rgba(107, 159, 180, 0.1);
+  background: color-mix(in oklab, var(--color-info) 10%, transparent);
   color: var(--mate-info);
   padding: 4px 16px;
   font-size: 11px;
-  border-bottom: 1px solid rgba(107, 159, 180, 0.25);
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--color-info) 25%, transparent);
 }
 .diff-line {
   display: flex;
@@ -32,7 +33,8 @@
   padding: 2px 8px;
   color: var(--mate-frame-dim);
   user-select: none;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-right: 1px solid
+    color-mix(in oklab, var(--mate-frame-text) 6%, transparent);
   flex-shrink: 0;
 }
 .diff-prefix {
@@ -48,7 +50,7 @@
   color: var(--mate-frame-text);
 }
 .diff-line.added {
-  background: rgba(125, 180, 110, 0.08);
+  background: color-mix(in oklab, var(--color-success) 8%, transparent);
 }
 .diff-line.added .diff-prefix {
   color: var(--mate-success);
@@ -57,7 +59,7 @@
   color: var(--mate-success);
 }
 .diff-line.removed {
-  background: rgba(224, 82, 82, 0.08);
+  background: color-mix(in oklab, var(--color-error) 8%, transparent);
 }
 .diff-line.removed .diff-prefix {
   color: var(--mate-error);

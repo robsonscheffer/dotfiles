@@ -8,22 +8,22 @@
   font-family: var(--mate-font-mono);
 }
 .sev-critical {
-  background: rgba(224, 82, 82, 0.12);
+  background: color-mix(in oklab, var(--color-error) 12%, transparent);
   color: var(--mate-error);
-  border-color: rgba(224, 82, 82, 0.4);
+  border-color: color-mix(in oklab, var(--color-error) 40%, transparent);
 }
 .sev-major {
-  background: rgba(232, 184, 74, 0.12);
+  background: color-mix(in oklab, var(--color-warning) 12%, transparent);
   color: var(--mate-warning);
-  border-color: rgba(232, 184, 74, 0.4);
+  border-color: color-mix(in oklab, var(--color-warning) 40%, transparent);
 }
 .sev-minor {
-  background: rgba(107, 159, 180, 0.12);
+  background: color-mix(in oklab, var(--color-info) 12%, transparent);
   color: var(--mate-info);
-  border-color: rgba(107, 159, 180, 0.4);
+  border-color: color-mix(in oklab, var(--color-info) 40%, transparent);
 }
 .sev-nit {
-  background: rgba(133, 115, 99, 0.12);
+  background: color-mix(in oklab, var(--mate-frame-dim) 12%, transparent);
   color: var(--mate-frame-dim);
-  border-color: rgba(133, 115, 99, 0.3);
+  border-color: color-mix(in oklab, var(--mate-frame-dim) 30%, transparent);
 }
