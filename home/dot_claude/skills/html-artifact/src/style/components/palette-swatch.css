@@ -6,8 +6,8 @@
 .swatch-card {
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
-  background: white;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--mate-frame-sidebar);
 }
 .swatch-color {
   height: 64px;
@@ -18,18 +18,18 @@
 .swatch-name {
   font-size: 12px;
   font-weight: 600;
-  color: #111827;
+  color: var(--mate-frame-text);
   font-family: var(--mate-font-body);
 }
 .swatch-token {
   font-size: 10px;
-  color: #9ca3af;
+  color: var(--mate-frame-muted);
   font-family: var(--mate-font-mono);
   margin-top: 1px;
 }
 .swatch-hex {
   font-size: 11px;
-  color: #6b7280;
+  color: var(--mate-frame-dim);
   font-family: var(--mate-font-mono);
   margin-top: 2px;
 }

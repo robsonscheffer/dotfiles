@@ -1,5 +1,8 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@import "daisyui/base/properties.css";
+@import "daisyui/base/reset.css";
+@import "daisyui/base/rootcolor.css";
+@import "./daisyui-components.css";
 @import "./tokens.css";
 @import "./components/page-layout.css";
 @import "./components/severity-chip.css";

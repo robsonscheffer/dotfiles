@@ -68,8 +68,8 @@ console.log("\ndist/style/ CSS output");
 const cssPath = join(DIST, "style", "main.css");
 assert("dist/style/main.css exists", existsSync(cssPath));
 assert(
-  "dist/style/main.css > 10 KB",
-  fileSize(cssPath) > 10_000,
+  "dist/style/main.css > 15 KB",
+  fileSize(cssPath) > 15_000,
   `got ${fileSize(cssPath)} bytes`,
 );
 const cssContent = fileContent(cssPath);
@@ -91,7 +91,8 @@ console.log("\nCSS source — main.css imports");
 const mainCss = fileContent(join(SRC, "style", "main.css"));
 const expectedImports = [
   '@import "tailwindcss"',
-  '@plugin "daisyui"',
+  "daisyui/base/properties.css",
+  "./daisyui-components.css",
   "./tokens.css",
   "./components/page-layout.css",
   "./components/severity-chip.css",

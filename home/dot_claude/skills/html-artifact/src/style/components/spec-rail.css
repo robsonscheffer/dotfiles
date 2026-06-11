@@ -1,35 +1,33 @@
 .spec-layout {
   display: grid;
-  grid-template-columns: 1fr 240px;
-  gap: 32px;
+  grid-template-columns: 1fr 180px;
+  gap: 24px;
   align-items: start;
 }
 .spec-rail {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid var(--mate-frame-border);
+  border-radius: 6px;
   overflow: hidden;
-  background: white;
-  position: sticky;
-  top: 16px;
+  background: var(--mate-frame-bg);
 }
 .spec-rail-row {
-  padding: 10px 14px;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--mate-frame-border);
 }
 .spec-rail-row:last-child {
   border-bottom: none;
 }
 .spec-rail-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #9ca3af;
+  color: var(--mate-frame-muted);
   font-family: var(--mate-font-body);
   margin-bottom: 2px;
 }
 .spec-rail-value {
-  font-size: 13px;
-  color: #374151;
+  font-size: 12px;
+  color: var(--mate-frame-text);
   font-family: var(--mate-font-body);
 }

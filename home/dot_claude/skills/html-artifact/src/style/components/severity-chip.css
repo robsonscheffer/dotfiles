@@ -8,22 +8,22 @@
   font-family: var(--mate-font-mono);
 }
 .sev-critical {
-  background: #fef2f2;
+  background: rgba(224, 82, 82, 0.12);
   color: var(--mate-error);
-  border-color: #fca5a5;
+  border-color: rgba(224, 82, 82, 0.4);
 }
 .sev-major {
-  background: #fffbeb;
-  color: #c47a0a;
-  border-color: #fcd34d;
+  background: rgba(232, 184, 74, 0.12);
+  color: var(--mate-warning);
+  border-color: rgba(232, 184, 74, 0.4);
 }
 .sev-minor {
-  background: #eff6ff;
+  background: rgba(107, 159, 180, 0.12);
   color: var(--mate-info);
-  border-color: #93c5fd;
+  border-color: rgba(107, 159, 180, 0.4);
 }
 .sev-nit {
-  background: #f9fafb;
-  color: #6b7280;
-  border-color: #d1d5db;
+  background: rgba(133, 115, 99, 0.12);
+  color: var(--mate-frame-dim);
+  border-color: rgba(133, 115, 99, 0.3);
 }

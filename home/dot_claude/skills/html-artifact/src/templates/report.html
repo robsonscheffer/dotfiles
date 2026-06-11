@@ -53,49 +53,41 @@
       </div>
     </header>
 
-    <main style="max-width: 900px; margin: 0 auto; padding: 40px 40px 80px">
-      <div
-        class="artifact-header"
+    <main style="max-width: 960px; margin: 0 auto; padding: 40px 40px 80px">
+      <nav aria-label="Breadcrumb" style="margin-bottom: 24px">
+        <ol class="breadcrumb">
+          <li><a href="#">Artifacts</a></li>
+          <li><a href="#">Reports</a></li>
+          <li aria-current="page"><!-- TITLE --></li>
+        </ol>
+      </nav>
+      <h1
         style="
-          border-bottom: 1px solid var(--mate-frame-border);
-          padding-bottom: 24px;
-          margin-bottom: 32px;
-          background: transparent;
+          font-family: var(--mate-font-display);
+          font-size: 52px;
+          font-weight: 600;
+          color: var(--mate-frame-text);
+          letter-spacing: -0.02em;
+          margin: 0 0 12px;
+          line-height: 1.05;
         "
       >
-        <nav aria-label="Breadcrumb">
-          <ol class="breadcrumb">
-            <li><a href="#">Artifacts</a></li>
-            <li><a href="#">Reports</a></li>
-            <li aria-current="page"><!-- TITLE --></li>
-          </ol>
-        </nav>
-        <h1
-          style="
-            font-family: var(--mate-font-display);
-            font-size: 44px;
-            font-weight: 600;
-            color: var(--mate-frame-text);
-            letter-spacing: -0.015em;
-            margin: 0;
-            line-height: 1.1;
-            min-height: 0;
-          "
-        >
-          <!-- TITLE -->
-        </h1>
-        <div class="meta" style="padding-top: 14px">
-          <span class="badge badge-done">report</span>
-          <span
-            style="
-              color: var(--mate-frame-muted);
-              font-size: 13px;
-              font-family: var(--mate-font-body);
-            "
-            ><!-- DATE --></span
-          >
-          <!-- ADDITIONAL META BADGES -->
-        </div>
+        <!-- TITLE -->
+      </h1>
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-family: var(--mate-font-body);
+          font-size: 13px;
+          color: var(--mate-frame-muted);
+          margin-bottom: 40px;
+        "
+      >
+        <span class="badge badge-done">report</span>
+        <span><!-- DATE --></span>
+        <!-- ADDITIONAL META BADGES -->
       </div>
 
       <!-- CONTENT -->
@@ -196,179 +188,192 @@
         >
       </div>
 
-      <table class="table w-full" style="font-family: var(--mate-font-body)">
-        <thead>
-          <tr>
-            <th style="color: var(--mate-frame-muted); width: 100px">
-              Severity
-            </th>
-            <th style="color: var(--mate-frame-muted)">Finding</th>
-            <th style="color: var(--mate-frame-muted); width: 200px">
-              Location
-            </th>
-            <th style="color: var(--mate-frame-muted); width: 100px">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="sev sev-critical">critical</span></td>
-            <td style="color: var(--mate-frame-text); font-size: 14px">
-              Owner key returned in API response — visible to other users in
-              shared account context
-            </td>
-            <td
-              style="
-                font-family: var(--mate-font-mono);
-                font-size: 12px;
-                color: var(--mate-frame-muted);
-              "
-            >
-              api/artifacts#show:31
-            </td>
-            <td><span class="badge badge-open">open</span></td>
-          </tr>
-          <tr>
-            <td><span class="sev sev-major">major</span></td>
-            <td style="color: var(--mate-frame-text); font-size: 14px">
-              Slug collision not handled — concurrent publishes can overwrite
-              each other silently
-            </td>
-            <td
-              style="
-                font-family: var(--mate-font-mono);
-                font-size: 12px;
-                color: var(--mate-frame-muted);
-              "
-            >
-              publish.mjs:88
-            </td>
-            <td><span class="badge badge-building">in review</span></td>
-          </tr>
-          <tr>
-            <td><span class="sev sev-major">major</span></td>
-            <td style="color: var(--mate-frame-text); font-size: 14px">
-              No rate limiting on publish endpoint — open to resource exhaustion
-            </td>
-            <td
-              style="
-                font-family: var(--mate-font-mono);
-                font-size: 12px;
-                color: var(--mate-frame-muted);
-              "
-            >
-              server/routes.ts:204
-            </td>
-            <td><span class="badge badge-open">open</span></td>
-          </tr>
-          <tr>
-            <td><span class="sev sev-major">major</span></td>
-            <td style="color: var(--mate-frame-text); font-size: 14px">
-              HTML content not sanitized before storage — stored XSS possible if
-              rendered server-side
-            </td>
-            <td
-              style="
-                font-family: var(--mate-font-mono);
-                font-size: 12px;
-                color: var(--mate-frame-muted);
-              "
-            >
-              models/page.rb:57
-            </td>
-            <td><span class="badge badge-done">fixed</span></td>
-          </tr>
-          <tr>
-            <td><span class="sev sev-minor">minor</span></td>
-            <td style="color: var(--mate-frame-text); font-size: 14px">
-              Sidecar file written before publish confirms success — partial
-              state on failure
-            </td>
-            <td
-              style="
-                font-family: var(--mate-font-mono);
-                font-size: 12px;
-                color: var(--mate-frame-muted);
-              "
-            >
-              skill.md publish op
-            </td>
-            <td><span class="badge badge-open">open</span></td>
-          </tr>
-          <tr>
-            <td><span class="sev sev-minor">minor</span></td>
-            <td style="color: var(--mate-frame-text); font-size: 14px">
-              Password field echoed in error response on validation failure
-            </td>
-            <td
-              style="
-                font-family: var(--mate-font-mono);
-                font-size: 12px;
-                color: var(--mate-frame-muted);
-              "
-            >
-              api/auth#create:19
-            </td>
-            <td><span class="badge badge-done">fixed</span></td>
-          </tr>
-          <tr>
-            <td><span class="sev sev-minor">minor</span></td>
-            <td style="color: var(--mate-frame-text); font-size: 14px">
-              Missing CSRF token on publish form — mitigated by same-origin
-              check but not explicit
-            </td>
-            <td
-              style="
-                font-family: var(--mate-font-mono);
-                font-size: 12px;
-                color: var(--mate-frame-muted);
-              "
-            >
-              views/publish.html:3
-            </td>
-            <td><span class="badge badge-open">open</span></td>
-          </tr>
-          <tr>
-            <td><span class="sev sev-nit">nit</span></td>
-            <td style="color: var(--mate-frame-text); font-size: 14px">
-              <code
+      <div
+        style="
+          background: var(--mate-frame-sidebar);
+          border: 1px solid var(--mate-frame-border);
+          border-radius: 8px;
+          overflow: hidden;
+          margin-bottom: 40px;
+        "
+      >
+        <table class="table w-full" style="font-family: var(--mate-font-body)">
+          <thead>
+            <tr>
+              <th style="color: var(--mate-frame-muted); width: 100px">
+                Severity
+              </th>
+              <th style="color: var(--mate-frame-muted)">Finding</th>
+              <th style="color: var(--mate-frame-muted); width: 200px">
+                Location
+              </th>
+              <th style="color: var(--mate-frame-muted); width: 100px">
+                Status
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="sev sev-critical">critical</span></td>
+              <td style="color: var(--mate-frame-text); font-size: 14px">
+                Owner key returned in API response — visible to other users in
+                shared account context
+              </td>
+              <td
                 style="
                   font-family: var(--mate-font-mono);
                   font-size: 12px;
-                  color: var(--mate-primary);
+                  color: var(--mate-frame-muted);
                 "
-                >console.log</code
               >
-              left in publish flow leaks slug + owner key to stdout
-            </td>
-            <td
-              style="
-                font-family: var(--mate-font-mono);
-                font-size: 12px;
-                color: var(--mate-frame-muted);
-              "
-            >
-              publish.mjs:61
-            </td>
-            <td><span class="badge badge-done">fixed</span></td>
-          </tr>
-          <tr>
-            <td><span class="sev sev-nit">nit</span></td>
-            <td style="color: var(--mate-frame-text); font-size: 14px">
-              Timeout not set on outbound HTTP request to publish endpoint
-            </td>
-            <td
-              style="
-                font-family: var(--mate-font-mono);
-                font-size: 12px;
-                color: var(--mate-frame-muted);
-              "
-            >
-              publish.mjs:34
-            </td>
-            <td><span class="badge badge-open">open</span></td>
-          </tr>
-        </tbody>
-      </table>
+                api/artifacts#show:31
+              </td>
+              <td><span class="badge badge-open">open</span></td>
+            </tr>
+            <tr>
+              <td><span class="sev sev-major">major</span></td>
+              <td style="color: var(--mate-frame-text); font-size: 14px">
+                Slug collision not handled — concurrent publishes can overwrite
+                each other silently
+              </td>
+              <td
+                style="
+                  font-family: var(--mate-font-mono);
+                  font-size: 12px;
+                  color: var(--mate-frame-muted);
+                "
+              >
+                publish.mjs:88
+              </td>
+              <td><span class="badge badge-building">in review</span></td>
+            </tr>
+            <tr>
+              <td><span class="sev sev-major">major</span></td>
+              <td style="color: var(--mate-frame-text); font-size: 14px">
+                No rate limiting on publish endpoint — open to resource
+                exhaustion
+              </td>
+              <td
+                style="
+                  font-family: var(--mate-font-mono);
+                  font-size: 12px;
+                  color: var(--mate-frame-muted);
+                "
+              >
+                server/routes.ts:204
+              </td>
+              <td><span class="badge badge-open">open</span></td>
+            </tr>
+            <tr>
+              <td><span class="sev sev-major">major</span></td>
+              <td style="color: var(--mate-frame-text); font-size: 14px">
+                HTML content not sanitized before storage — stored XSS possible
+                if rendered server-side
+              </td>
+              <td
+                style="
+                  font-family: var(--mate-font-mono);
+                  font-size: 12px;
+                  color: var(--mate-frame-muted);
+                "
+              >
+                models/page.rb:57
+              </td>
+              <td><span class="badge badge-done">fixed</span></td>
+            </tr>
+            <tr>
+              <td><span class="sev sev-minor">minor</span></td>
+              <td style="color: var(--mate-frame-text); font-size: 14px">
+                Sidecar file written before publish confirms success — partial
+                state on failure
+              </td>
+              <td
+                style="
+                  font-family: var(--mate-font-mono);
+                  font-size: 12px;
+                  color: var(--mate-frame-muted);
+                "
+              >
+                skill.md publish op
+              </td>
+              <td><span class="badge badge-open">open</span></td>
+            </tr>
+            <tr>
+              <td><span class="sev sev-minor">minor</span></td>
+              <td style="color: var(--mate-frame-text); font-size: 14px">
+                Password field echoed in error response on validation failure
+              </td>
+              <td
+                style="
+                  font-family: var(--mate-font-mono);
+                  font-size: 12px;
+                  color: var(--mate-frame-muted);
+                "
+              >
+                api/auth#create:19
+              </td>
+              <td><span class="badge badge-done">fixed</span></td>
+            </tr>
+            <tr>
+              <td><span class="sev sev-minor">minor</span></td>
+              <td style="color: var(--mate-frame-text); font-size: 14px">
+                Missing CSRF token on publish form — mitigated by same-origin
+                check but not explicit
+              </td>
+              <td
+                style="
+                  font-family: var(--mate-font-mono);
+                  font-size: 12px;
+                  color: var(--mate-frame-muted);
+                "
+              >
+                views/publish.html:3
+              </td>
+              <td><span class="badge badge-open">open</span></td>
+            </tr>
+            <tr>
+              <td><span class="sev sev-nit">nit</span></td>
+              <td style="color: var(--mate-frame-text); font-size: 14px">
+                <code
+                  style="
+                    font-family: var(--mate-font-mono);
+                    font-size: 12px;
+                    color: var(--mate-primary);
+                  "
+                  >console.log</code
+                >
+                left in publish flow leaks slug + owner key to stdout
+              </td>
+              <td
+                style="
+                  font-family: var(--mate-font-mono);
+                  font-size: 12px;
+                  color: var(--mate-frame-muted);
+                "
+              >
+                publish.mjs:61
+              </td>
+              <td><span class="badge badge-done">fixed</span></td>
+            </tr>
+            <tr>
+              <td><span class="sev sev-nit">nit</span></td>
+              <td style="color: var(--mate-frame-text); font-size: 14px">
+                Timeout not set on outbound HTTP request to publish endpoint
+              </td>
+              <td
+                style="
+                  font-family: var(--mate-font-mono);
+                  font-size: 12px;
+                  color: var(--mate-frame-muted);
+                "
+              >
+                publish.mjs:34
+              </td>
+              <td><span class="badge badge-open">open</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <footer
         style="

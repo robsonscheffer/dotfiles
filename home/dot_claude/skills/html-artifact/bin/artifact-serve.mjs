@@ -41,9 +41,12 @@ const MIME = {
 };
 
 const server = createServer((req, res) => {
-  const url = normalize(req.url || "/").replace(/\\/g, "/");
+  const url = normalize(new URL(req.url || "/", "http://h").pathname).replace(
+    /\\/g,
+    "/",
+  );
 
-  if (url === "/" || url === "") {
+  if (url === "/") {
     const target = baseDir ? "/artifacts/index.html" : "/showcase.html";
     res.writeHead(302, { Location: target });
     res.end();

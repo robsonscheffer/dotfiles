@@ -13,11 +13,10 @@ if (!existsSync(filePath)) {
 
 const raw = readFileSync(filePath, "utf8");
 
-// Blank out <pre> and <code> blocks to avoid false positives on documented examples.
-// Replace with spaces to preserve line numbers.
+// Replace <pre>/<code> content with spaces to skip false positives; preserve newlines for accurate line numbers.
 const sanitized = raw
-  .replace(/<pre[\s\S]*?<\/pre>/gi, (m) => " ".repeat(m.length))
-  .replace(/<code[\s\S]*?<\/code>/gi, (m) => " ".repeat(m.length));
+  .replace(/<pre[\s\S]*?<\/pre>/gi, (m) => m.replace(/[^\n]/g, " "))
+  .replace(/<code[\s\S]*?<\/code>/gi, (m) => m.replace(/[^\n]/g, " "));
 
 const lines = sanitized.split("\n");
 const violations = [];
@@ -70,10 +69,7 @@ lines.forEach((line, i) => {
 const SMALL_FONT_EXEMPT =
   /spec-rail-label|<th|badge|breadcrumb|footer|font-mono|stat-title|sev-/;
 lines.forEach((line, i) => {
-  if (
-    (line.includes("font-size:12px") || line.includes("font-size:13px")) &&
-    !SMALL_FONT_EXEMPT.test(line)
-  ) {
+  if (/font-size:\s*1[23]px/.test(line) && !SMALL_FONT_EXEMPT.test(line)) {
     hit(i + 1, "small-font", "font-size 12/13px on body element — use 14px+");
   }
 });
