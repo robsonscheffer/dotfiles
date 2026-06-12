@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+import { existsSync, readFileSync } from "fs";
+import { resolve } from "path";
+import { homedir } from "os";
+import { spawn } from "child_process";
+
+const args = process.argv.slice(2);
+const urlOnly = args.includes("--url");
+const positional = args.filter((a) => !a.startsWith("--"));
+
+if (positional.length === 0) {
+  console.error("Usage: mdview [--url] <path-to-markdown>");
+  process.exit(2);
+}
+
+const rawPath = positional[0];
+const expanded =
+  rawPath.startsWith("~/") || rawPath === "~"
+    ? rawPath.replace(/^~/, homedir())
+    : rawPath;
+const absolute = resolve(expanded);
+
+if (!existsSync(absolute)) {
+  console.error(`error: file not found: ${absolute}`);
+  process.exit(1);
+}
+
+const CONFIG_PATH = `${homedir()}/.config/html-artifact.json`;
+let port = 52010;
+if (existsSync(CONFIG_PATH)) {
+  try {
+    const cfg = JSON.parse(readFileSync(CONFIG_PATH, "utf8"));
+    if (typeof cfg.port === "number") port = cfg.port;
+  } catch {}
+}
+
+const url = `http://localhost:${port}/md?path=${encodeURIComponent(absolute)}`;
+
+if (urlOnly) {
+  console.log(url);
+  process.exit(0);
+}
+
+const child = spawn("open", [url], { stdio: "inherit" });
+child.on("exit", (code) => process.exit(code ?? 0));

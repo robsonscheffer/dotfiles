@@ -4,6 +4,7 @@ import { createServer } from "http";
 import { extname, join, resolve, normalize, dirname } from "path";
 import { fileURLToPath } from "url";
 import { homedir } from "os";
+import { renderMarkdownFile, resolveMdPath } from "../lib/md-render.mjs";
 
 const SKILL_DIR = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = join(SKILL_DIR, "dist");
@@ -21,8 +22,8 @@ const PORT = config.port ?? 52010;
 const baseDir = config.base_dir
   ? config.base_dir.replace(/^~/, homedir())
   : null;
+const mdRoots = Array.isArray(config.md_roots) ? config.md_roots : [];
 
-// Ordered roots: first match wins
 const roots = [{ prefix: "/", fsPath: DIST }];
 if (!serveShowcase && baseDir) {
   roots.unshift(
@@ -40,11 +41,47 @@ const MIME = {
   ".svg": "image/svg+xml",
 };
 
+function sendError(res, status, message) {
+  res.writeHead(status, { "Content-Type": "text/plain; charset=utf-8" });
+  res.end(`${status} ${message}`);
+}
+
+function handleMdRoute(req, res) {
+  const requestUrl = new URL(req.url || "/", "http://h");
+  const rawPath = requestUrl.searchParams.get("path");
+
+  if (mdRoots.length === 0) {
+    sendError(
+      res,
+      500,
+      "md_roots not configured. Add md_roots: [<paths>] to ~/.config/html-artifact.json",
+    );
+    return;
+  }
+
+  const resolved = resolveMdPath(rawPath, mdRoots);
+  if (!resolved.ok) {
+    sendError(res, resolved.status, resolved.error);
+    return;
+  }
+
+  try {
+    const html = renderMarkdownFile(resolved.absolute, mdRoots);
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(html);
+  } catch (err) {
+    sendError(res, 500, `render failed: ${err.message}`);
+  }
+}
+
 const server = createServer((req, res) => {
-  const url = normalize(new URL(req.url || "/", "http://h").pathname).replace(
-    /\\/g,
-    "/",
-  );
+  const parsedUrl = new URL(req.url || "/", "http://h");
+  const url = normalize(parsedUrl.pathname).replace(/\\/g, "/");
+
+  if (url === "/md") {
+    handleMdRoute(req, res);
+    return;
+  }
 
   if (url === "/") {
     const target = baseDir ? "/artifacts/index.html" : "/showcase.html";
@@ -59,8 +96,7 @@ const server = createServer((req, res) => {
     let filePath = join(fsPath, rel);
 
     if (!resolve(filePath).startsWith(resolve(fsPath))) {
-      res.writeHead(403, { "Content-Type": "text/plain" });
-      res.end("Forbidden");
+      sendError(res, 403, "Forbidden");
       return;
     }
 
@@ -75,8 +111,7 @@ const server = createServer((req, res) => {
     return;
   }
 
-  res.writeHead(404, { "Content-Type": "text/plain" });
-  res.end("Not found");
+  sendError(res, 404, "Not found");
 });
 
 server.on("error", (err) => {
@@ -96,4 +131,8 @@ server.listen(PORT, "127.0.0.1", () => {
   else if (baseDir)
     console.log(`  artifacts http://localhost:${PORT}/artifacts/`);
   console.log(`  style     http://localhost:${PORT}/style/main.css`);
+  if (mdRoots.length > 0)
+    console.log(
+      `  md        http://localhost:${PORT}/md?path=<path> (roots: ${mdRoots.length})`,
+    );
 });

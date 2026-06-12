@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en" data-theme="mate">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><!-- TITLE --></title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/style/main.css" />
+    <style>
+      .md-prose {
+        color: var(--mate-frame-text);
+        font-family: var(--mate-font-body);
+        font-size: 15px;
+        line-height: 1.75;
+      }
+      .md-prose h1 {
+        font-family: var(--mate-font-display);
+        font-size: 42px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin: 0 0 16px;
+        color: var(--mate-frame-text);
+      }
+      .md-prose h2 {
+        font-family: var(--mate-font-display);
+        font-size: 26px;
+        font-weight: 600;
+        margin: 28px 0 12px;
+        color: var(--mate-frame-text);
+      }
+      .md-prose h3 {
+        font-family: var(--mate-font-display);
+        font-size: 20px;
+        font-weight: 600;
+        margin: 22px 0 8px;
+        color: var(--mate-frame-text);
+      }
+      .md-prose h4 {
+        font-family: var(--mate-font-body);
+        font-size: 16px;
+        font-weight: 600;
+        margin: 18px 0 6px;
+        color: var(--mate-frame-text);
+      }
+      .md-prose p {
+        margin: 0 0 14px;
+      }
+      .md-prose ul,
+      .md-prose ol {
+        margin: 0 0 14px;
+        padding-left: 24px;
+      }
+      .md-prose li {
+        margin: 4px 0;
+      }
+      .md-prose li::marker {
+        color: var(--mate-frame-muted);
+      }
+      .md-prose code {
+        font-family: var(--mate-font-mono);
+        background: rgba(255, 255, 255, 0.06);
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 14px;
+      }
+      .md-prose pre {
+        background: var(--mate-frame-nav);
+        padding: 14px 16px;
+        border-radius: 6px;
+        overflow-x: auto;
+        margin: 0 0 14px;
+        border: 1px solid var(--mate-frame-border);
+      }
+      .md-prose pre code {
+        background: transparent;
+        padding: 0;
+        font-size: 14px;
+        line-height: 1.65;
+      }
+      .md-prose a {
+        color: var(--mate-primary);
+        text-decoration: none;
+      }
+      .md-prose a:hover {
+        text-decoration: underline;
+      }
+      .md-prose blockquote {
+        border-left: 3px solid var(--mate-primary);
+        padding: 4px 16px;
+        margin: 0 0 14px;
+        color: var(--mate-frame-text);
+        background: rgba(212, 118, 78, 0.06);
+        border-radius: 0 4px 4px 0;
+      }
+      .md-prose table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 0 0 14px;
+        font-size: 14px;
+      }
+      .md-prose th {
+        color: var(--mate-frame-muted);
+        font-family: var(--mate-font-body);
+        font-weight: 500;
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--mate-frame-border);
+      }
+      .md-prose td {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--mate-frame-border);
+        color: var(--mate-frame-text);
+      }
+      .md-prose hr {
+        border: 0;
+        border-top: 1px solid var(--mate-frame-border);
+        margin: 28px 0;
+      }
+      .md-prose strong {
+        color: var(--mate-frame-text);
+        font-weight: 600;
+      }
+      .md-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 220px;
+        gap: 28px;
+        align-items: start;
+      }
+      @media (max-width: 920px) {
+        .md-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main style="max-width: 1080px; margin: 0 auto; padding: 40px 40px 80px">
+      <nav aria-label="Breadcrumb" style="margin-bottom: 28px">
+        <ol class="breadcrumb">
+          <li><a href="/artifacts/index.html">Artifacts</a></li>
+          <li>
+            <a
+              href="#"
+              onclick="
+                history.back();
+                return false;
+              "
+              >Back</a
+            >
+          </li>
+          <li aria-current="page"><!-- TITLE --></li>
+        </ol>
+      </nav>
+
+      <div class="md-layout">
+        <div class="md-prose">
+          <!-- CONTENT -->
+        </div>
+        <aside class="spec-rail">
+          <!-- RAIL -->
+        </aside>
+      </div>
+
+      <footer
+        style="
+          margin-top: 80px;
+          border-top: 1px solid var(--mate-frame-border);
+          padding-top: 16px;
+          font-family: var(--mate-font-mono);
+          font-size: 14px;
+          color: var(--mate-frame-dim);
+        "
+      >
+        <!-- SOURCE_PATH -->
+      </footer>
+    </main>
+  </body>
+</html>

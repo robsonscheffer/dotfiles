@@ -97,7 +97,12 @@ Legal `(status, needs)` pairs only — anything else fails lint. Common pairs fo
    - 5-stat header: Total, Done, Building, Open, Progress %
    - Per-phase cards with progress bars (one card per phase)
    - One table per phase, columns: ID, Title, Status badge, Needs, Depends (Phase 0/1) or Audit ref / Spec section / Tag (later phases)
-   - "How to update" footer with the sync command
+   - **Every ticket-ID cell wraps the ID in `<a href="/md?path=<abs-path>">…</a>`** — the path is the absolute README.md path (active or done). The `/md` route renders the markdown live with mate theme + frontmatter rail.
+   - **Epic-doc link in the meta line:** `<a href="/md?path=<abs-path-to-epic.md>">epic: docs/epics/<name>.md</a>`.
+   - "How to update" footer with the sync command.
+
+   The `md_roots` field in `~/.config/html-artifact.json` must include the repo root or a parent dir of the ticket paths, otherwise the `/md` route returns 403.
+
 6. **Register the dashboard** in `~/brain/wiki/artifact/index.html`'s `ARTIFACTS` array.
 7. **Commit each piece separately** so git history is greppable: `tickets: scaffold <prefix> epic + phase 0 stubs`, `chore: add <prefix> burndown dashboard artifact`.
 8. **Lint:** run `node ~/.claude/skills/html-artifact/bin/lint-artifact.mjs <dashboard-path>` and fix violations.
@@ -161,4 +166,9 @@ node ~/.claude/skills/html-artifact/bin/lint-artifact.mjs <dashboard-path>
 
 # view dashboard live (artifact-serve runs persistent on :52010)
 open http://localhost:52010/artifacts/dashboard/<filename>.html
+
+# view a single ticket md rendered live in browser
+mdview <repo>/docs/plans/active/<PREFIX>-NNN-<slug>/README.md
+# or get the URL only
+mdview --url <path-to-md>
 ```
