@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { mkdtempSync, writeFileSync, rmSync } from "fs";
+import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 import { strict as assert } from "assert";
@@ -140,6 +140,51 @@ test("renderMarkdownFile escapes HTML in frontmatter values", () => {
   const html = renderMarkdownFile(f, allowedRoots);
   assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/);
   assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+});
+
+test("renderMarkdownFile detects ticket context and renders prev/next", () => {
+  const repo = join(tmp, "ticket-repo-1");
+  for (const id of ["DEMO-001", "DEMO-002", "DEMO-003"]) {
+    const dir = join(repo, "docs", "plans", "active", `${id}-slug`);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
+      join(dir, "README.md"),
+      `---\nid: ${id}\nstatus: open\nneeds: spec\nepic: docs/epics/demo.md\n---\n\n# ${id}\n`,
+    );
+  }
+  const epicDir = join(repo, "docs", "epics");
+  mkdirSync(epicDir, { recursive: true });
+  writeFileSync(join(epicDir, "demo.md"), "# Demo Epic\n");
+  const middle = join(
+    repo,
+    "docs",
+    "plans",
+    "active",
+    "DEMO-002-slug",
+    "README.md",
+  );
+  const html = renderMarkdownFile(middle, [repo]);
+  assert.match(html, /DEMO-001/);
+  assert.match(html, /DEMO-003/);
+  assert.match(html, /<nav class="md-context-nav"/);
+  assert.match(html, /demo\.md/);
+});
+
+test("renderMarkdownFile detects epic context", () => {
+  const repo = join(tmp, "epic-repo-1");
+  mkdirSync(join(repo, "docs", "epics"), { recursive: true });
+  const epic = join(repo, "docs", "epics", "test-epic.md");
+  writeFileSync(epic, "# Test Epic\n\nbody");
+  const html = renderMarkdownFile(epic, [repo]);
+  assert.match(html, /epic \/ test-epic/);
+  assert.match(html, /<nav class="md-context-nav"/);
+});
+
+test("renderMarkdownFile renders generic md without context-nav", () => {
+  const f = join(tmp, "loose.md");
+  writeFileSync(f, "# Loose note\n\nbody");
+  const html = renderMarkdownFile(f, allowedRoots);
+  assert.doesNotMatch(html, /<nav class="md-context-nav"/);
 });
 
 test("renderMarkdownFile renders tables, code, lists", () => {

@@ -10,6 +10,86 @@
     />
     <link rel="stylesheet" href="/style/main.css" />
     <style>
+      .md-top-nav {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 14px 28px;
+        background: var(--mate-frame-nav);
+        border-bottom: 1px solid var(--mate-frame-border);
+        font-family: var(--mate-font-body);
+        font-size: 14px;
+      }
+      .md-top-nav .brand {
+        font-family: var(--mate-font-display);
+        font-weight: 600;
+        font-size: 18px;
+        color: var(--mate-frame-text);
+        text-decoration: none;
+      }
+      .md-top-nav .brand .ac {
+        color: var(--mate-primary);
+        font-style: italic;
+      }
+      .md-top-nav .sep {
+        opacity: 0.4;
+      }
+      .md-top-nav .crumb-link {
+        color: var(--mate-frame-text);
+        text-decoration: none;
+        font-family: var(--mate-font-mono);
+        font-size: 14px;
+      }
+      .md-top-nav .crumb-link:hover {
+        color: var(--mate-primary);
+      }
+      .md-top-nav .crumb-here {
+        color: var(--mate-frame-muted);
+        font-family: var(--mate-font-mono);
+        font-size: 14px;
+      }
+      .md-top-nav .spacer {
+        flex: 1;
+      }
+      .md-top-nav .nav-meta {
+        color: var(--mate-frame-dim);
+        font-family: var(--mate-font-mono);
+        font-size: 14px;
+      }
+
+      .md-context-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 28px;
+        background: rgba(0, 0, 0, 0.15);
+        border-bottom: 1px solid var(--mate-frame-border);
+        font-family: var(--mate-font-mono);
+        font-size: 14px;
+      }
+      .md-context-nav a {
+        color: var(--mate-primary);
+        text-decoration: none;
+        padding: 4px 10px;
+        border-radius: 4px;
+        border: 1px solid var(--mate-frame-border);
+        background: rgba(212, 118, 78, 0.06);
+      }
+      .md-context-nav a:hover {
+        background: rgba(212, 118, 78, 0.16);
+      }
+      .md-context-nav a.disabled {
+        opacity: 0.4;
+        pointer-events: none;
+      }
+      .md-context-nav .ctx-spacer {
+        flex: 1;
+      }
+      .md-context-nav .ctx-label {
+        color: var(--mate-frame-muted);
+        margin-right: 6px;
+      }
+
       .md-prose {
         color: var(--mate-frame-text);
         font-family: var(--mate-font-body);
@@ -137,24 +217,18 @@
     </style>
   </head>
   <body>
-    <main style="max-width: 1080px; margin: 0 auto; padding: 40px 40px 80px">
-      <nav aria-label="Breadcrumb" style="margin-bottom: 28px">
-        <ol class="breadcrumb">
-          <li><a href="/artifacts/index.html">Artifacts</a></li>
-          <li>
-            <a
-              href="#"
-              onclick="
-                history.back();
-                return false;
-              "
-              >Back</a
-            >
-          </li>
-          <li aria-current="page"><!-- TITLE --></li>
-        </ol>
-      </nav>
+    <nav class="md-top-nav" role="navigation" aria-label="Artifact navigation">
+      <a class="brand" href="/artifacts/index.html"
+        >m<span class="ac">ate</span></a
+      >
+      <!-- BREADCRUMB -->
+      <div class="spacer"></div>
+      <span class="nav-meta"><!-- NAV_META --></span>
+    </nav>
 
+    <!-- CONTEXT_NAV -->
+
+    <main style="max-width: 1080px; margin: 0 auto; padding: 32px 40px 80px">
       <div class="md-layout">
         <div class="md-prose">
           <!-- CONTENT -->
