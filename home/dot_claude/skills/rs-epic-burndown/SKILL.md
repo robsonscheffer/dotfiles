@@ -109,14 +109,25 @@ Legal `(status, needs)` pairs only — anything else fails lint. Common pairs fo
 
 ## `sync` mode — rebuild dashboard
 
-Re-read every ticket frontmatter in `<repo>/docs/plans/active/<PREFIX>-*/README.md` and `done/<PREFIX>-*`. Recompute:
+Run the `burndown-sync` CLI (ships with the `html-artifact` skill):
 
-- Total / Done / Building / Open counts
-- Per-phase counts (use `tags:` to identify phase — e.g. `phase-0`, `phase-1`)
-- Progress %
-- Per-row Status + Needs badge
+```sh
+burndown-sync \
+  --repo <repo-root> \
+  --prefix <PREFIX> \
+  --epic <repo-root>/docs/epics/<slug>.md \
+  --out ~/brain/wiki/artifact/dashboard/<YYYY-MM-DD>-<slug>-epic.html
+```
 
-Rewrite only the changed sections of the dashboard HTML. Keep the same file (don't bump date). Commit: `chore: sync <prefix> burndown dashboard`.
+What it does:
+
+1. Scans `<repo>/docs/plans/{active,done}/<PREFIX>-*/README.md` for tickets.
+2. Parses frontmatter via `gray-matter`.
+3. Buckets tickets by phase via `tags:` (looks for `phase-N` tag).
+4. Reads phase titles from epic md `## Phase N · <title>` headings.
+5. Re-renders the dashboard from `dist/templates/burndown.html`, replacing the previous file in place. Manual edits to the dashboard HTML are blown away by intent — the dashboard is a derived artifact.
+6. Lint with `node ~/.claude/skills/html-artifact/bin/lint-artifact.mjs <out>`.
+7. Commit: `chore: sync <prefix> burndown dashboard`.
 
 Status badge mapping:
 | Status | Badge class |

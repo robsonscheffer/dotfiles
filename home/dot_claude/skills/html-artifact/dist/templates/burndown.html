@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en" data-theme="mate">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><!-- EPIC_TITLE --> — Burndown</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/style/main.css" />
+  </head>
+  <body>
+    <main style="max-width: 1080px; margin: 0 auto; padding: 40px 40px 80px">
+      <nav aria-label="Breadcrumb" style="margin-bottom: 24px">
+        <ol class="breadcrumb">
+          <li><a href="../index.html">Artifacts</a></li>
+          <li><a href="../index.html">Dashboards</a></li>
+          <li aria-current="page"><!-- EPIC_TITLE --></li>
+        </ol>
+      </nav>
+
+      <h1
+        style="
+          font-family: var(--mate-font-display);
+          font-size: 52px;
+          font-weight: 600;
+          color: var(--mate-frame-text);
+          letter-spacing: -0.02em;
+          margin: 0 0 12px;
+          line-height: 1.05;
+        "
+      >
+        <!-- EPIC_TITLE -->
+      </h1>
+
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-family: var(--mate-font-body);
+          font-size: 14px;
+          color: var(--mate-frame-muted);
+          margin-bottom: 32px;
+        "
+      >
+        <!-- META -->
+      </div>
+
+      <div
+        style="
+          background: var(--mate-frame-sidebar);
+          border: 1px solid var(--mate-frame-border);
+          border-radius: 8px;
+          padding: 24px 28px;
+          margin: 0 0 28px;
+        "
+      >
+        <h2
+          style="
+            font-family: var(--mate-font-display);
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--mate-frame-text);
+            margin: 0 0 14px;
+          "
+        >
+          Overall burndown
+        </h2>
+        <div
+          style="
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+          "
+        >
+          <div>
+            <div
+              style="
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--mate-frame-muted);
+                font-family: var(--mate-font-body);
+                margin-bottom: 4px;
+              "
+            >
+              Total
+            </div>
+            <div
+              style="
+                font-family: var(--mate-font-display);
+                font-size: 36px;
+                font-weight: 600;
+                color: var(--mate-frame-text);
+                line-height: 1;
+              "
+            >
+              <!-- STAT_TOTAL -->
+            </div>
+          </div>
+          <div>
+            <div
+              style="
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--mate-frame-muted);
+                font-family: var(--mate-font-body);
+                margin-bottom: 4px;
+              "
+            >
+              Done
+            </div>
+            <div
+              style="
+                font-family: var(--mate-font-display);
+                font-size: 36px;
+                font-weight: 600;
+                color: var(--mate-success);
+                line-height: 1;
+              "
+            >
+              <!-- STAT_DONE -->
+            </div>
+          </div>
+          <div>
+            <div
+              style="
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--mate-frame-muted);
+                font-family: var(--mate-font-body);
+                margin-bottom: 4px;
+              "
+            >
+              Building
+            </div>
+            <div
+              style="
+                font-family: var(--mate-font-display);
+                font-size: 36px;
+                font-weight: 600;
+                color: var(--mate-warning);
+                line-height: 1;
+              "
+            >
+              <!-- STAT_BUILDING -->
+            </div>
+          </div>
+          <div>
+            <div
+              style="
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--mate-frame-muted);
+                font-family: var(--mate-font-body);
+                margin-bottom: 4px;
+              "
+            >
+              Open
+            </div>
+            <div
+              style="
+                font-family: var(--mate-font-display);
+                font-size: 36px;
+                font-weight: 600;
+                color: var(--mate-info);
+                line-height: 1;
+              "
+            >
+              <!-- STAT_OPEN -->
+            </div>
+          </div>
+          <div>
+            <div
+              style="
+                font-size: 11px;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                color: var(--mate-frame-muted);
+                font-family: var(--mate-font-body);
+                margin-bottom: 4px;
+              "
+            >
+              Progress
+            </div>
+            <div
+              style="
+                font-family: var(--mate-font-display);
+                font-size: 36px;
+                font-weight: 600;
+                color: var(--mate-frame-text);
+                line-height: 1;
+              "
+            >
+              <!-- STAT_PROGRESS -->
+            </div>
+          </div>
+        </div>
+        <progress
+          class="progress progress-primary"
+          value="<!-- PROGRESS_VALUE -->"
+          max="<!-- PROGRESS_MAX -->"
+          style="width: 100%; margin-top: 18px; height: 8px"
+        ></progress>
+      </div>
+
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 14px;
+          margin: 0 0 32px;
+        "
+      >
+        <!-- PHASE_CARDS -->
+      </div>
+
+      <!-- PHASE_TABLES -->
+
+      <div
+        style="
+          background: var(--mate-frame-sidebar);
+          border: 1px solid var(--mate-frame-border);
+          border-radius: 8px;
+          padding: 20px 24px;
+          margin: 24px 0 0;
+        "
+      >
+        <div
+          style="
+            font-size: 14px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--mate-frame-muted);
+            font-family: var(--mate-font-body);
+            margin-bottom: 8px;
+          "
+        >
+          How to update this dashboard
+        </div>
+        <p
+          style="
+            color: var(--mate-frame-text);
+            font-size: 14px;
+            line-height: 1.7;
+            margin: 0 0 8px;
+          "
+        >
+          Run <code>burndown-sync</code> after any ticket status change. The
+          script re-reads every ticket frontmatter under
+          <code>docs/plans/{active,done}/</code>, recomputes counts + per-phase
+          progress, and rewrites this file from the template.
+        </p>
+      </div>
+
+      <footer
+        style="
+          margin-top: 80px;
+          border-top: 1px solid var(--mate-frame-border);
+          padding-top: 16px;
+          display: flex;
+          justify-content: space-between;
+          font-size: 14px;
+          color: var(--mate-frame-dim);
+          font-family: var(--mate-font-body);
+          background: transparent;
+        "
+      >
+        <span
+          >burndown-sync ·
+          <!-- EPIC_TITLE --></span
+        >
+      </footer>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+#!/usr/bin/env node
+import { writeFileSync, existsSync, readFileSync } from "fs";
+import { dirname, resolve, join, basename } from "path";
+import { fileURLToPath } from "url";
+import { homedir } from "os";
+import {
+  scanTickets,
+  parseEpicPhases,
+  renderBurndown,
+} from "../lib/burndown.mjs";
+
+const SKILL_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const TEMPLATE = resolve(SKILL_DIR, "dist/templates/burndown.html");
+
+function arg(name, fallback = null) {
+  const i = process.argv.indexOf(`--${name}`);
+  return i >= 0 ? process.argv[i + 1] : fallback;
+}
+
+function expand(p) {
+  if (!p) return p;
+  return p.startsWith("~/") || p === "~" ? p.replace(/^~/, homedir()) : p;
+}
+
+function usage() {
+  console.error(`Usage:
+  burndown-sync --repo <repo-root> --prefix <PREFIX> --epic <epic.md> --out <dashboard.html>
+
+Required:
+  --repo     path to repo containing docs/plans/{active,done}/
+  --prefix   ticket prefix (e.g. CANVAS)
+  --epic     path to docs/epics/<slug>.md
+  --out      output dashboard HTML path
+
+Optional:
+  --title    epic title (default: read from first heading in epic md)
+  --date     generation date YYYY-MM-DD (default: today)`);
+  process.exit(2);
+}
+
+const repo = expand(arg("repo"));
+const prefix = arg("prefix");
+const epic = expand(arg("epic"));
+const out = expand(arg("out"));
+const explicitTitle = arg("title");
+const explicitDate = arg("date");
+
+if (!repo || !prefix || !epic || !out) usage();
+if (!existsSync(repo)) {
+  console.error(`error: repo not found: ${repo}`);
+  process.exit(1);
+}
+if (!existsSync(epic)) {
+  console.error(`error: epic md not found: ${epic}`);
+  process.exit(1);
+}
+
+const tickets = scanTickets(repo, prefix);
+if (tickets.length === 0) {
+  console.error(
+    `warning: no tickets found for prefix ${prefix} under ${repo}/docs/plans/`,
+  );
+}
+const phaseTitles = parseEpicPhases(epic);
+
+let epicTitle = explicitTitle;
+if (!epicTitle) {
+  const h1 = readFileSync(epic, "utf8").match(/^#\s+(.+?)\s*$/m);
+  epicTitle = h1
+    ? h1[1].replace(/^Epic:\s*/i, "").trim()
+    : basename(epic, ".md");
+}
+
+const generatedDate = explicitDate || new Date().toISOString().slice(0, 10);
+
+const html = renderBurndown({
+  templatePath: TEMPLATE,
+  epicTitle,
+  epicSlug: basename(epic, ".md"),
+  epicPath: epic,
+  generatedDate,
+  tickets,
+  phaseTitles,
+});
+
+writeFileSync(out, html);
+
+console.log(`wrote ${out}`);
+console.log(`  tickets: ${tickets.length}`);
+const byStatus = tickets.reduce((acc, t) => {
+  acc[t.status] = (acc[t.status] || 0) + 1;
+  return acc;
+}, {});
+for (const [s, n] of Object.entries(byStatus)) console.log(`  ${s}: ${n}`);
