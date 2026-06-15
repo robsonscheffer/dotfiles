@@ -149,6 +149,42 @@ use tokens only.
 Read `~/.config/html-artifact.json` at the start of every operation.
 If the file does not exist, run the **First-Run Wizard** before proceeding.
 
+> **Before converting external content to HTML:** check whether the server already
+> has a route for it. Markdown files in `md_roots` → use **link-md** below.
+> Only generate an HTML artifact when the content genuinely needs the mate design
+> system rendered as a standalone page.
+
+### link-md
+
+Use this when the user asks to add a **markdown file** to the artifact index
+(e.g. a plan, a spec, a ticket). The server renders it at request time — no
+HTML conversion needed.
+
+**Requirements:** the file's absolute path must fall under one of the `md_roots`
+entries in `~/.config/html-artifact.json`. Check first:
+
+```bash
+cat ~/.config/html-artifact.json | jq '.md_roots'
+```
+
+If the path isn't covered, add it to `md_roots` before continuing.
+
+**Get the server URL for the file:**
+
+```bash
+mdview --url <absolute-path-to-file>
+# → http://localhost:52010/md?path=%2FUsers%2F...%2Ffile.md
+```
+
+**Add to the index ARTIFACTS array** — use the `/md?path=` URL as the `file` value:
+
+```js
+{ title: 'My Plan', type: 'spec', tier: 'wiki', created: '2026-06-15',
+  url: null, file: '/md?path=/Users/robson.scheffer/.../file.md' },
+```
+
+Commit only the updated `index.html`. No HTML file is created or committed.
+
 ### new
 
 1. `AskUserQuestion`: "Scratch (ephemeral) or wiki (committed)?" → `scratch` / `wiki`
@@ -212,9 +248,17 @@ Triggers when `~/.config/html-artifact.json` is missing.
 2. `AskUserQuestion`: "Where should shared assets live? (default: <base_dir>/assets)"
    → store as `assets_dir`
 3. Create `~/.config/` if needed, then write `~/.config/html-artifact.json`:
+
    ```json
    { "base_dir": "<answer1>", "assets_dir": "<answer2>" }
    ```
+
+   **Optional config keys:**
+   - `port` — default `52010`
+   - `md_roots` — array of absolute paths the `/md` route is allowed to serve from.
+     Add any repo's `docs/` directory here to enable `link-md` for its markdown files.
+     Example: `"md_roots": ["/Users/me/brain", "/Users/me/apps/myrepo/docs"]`
+
 4. Create directories:
    ```
    <base_dir>/wiki/artifact/spec/
