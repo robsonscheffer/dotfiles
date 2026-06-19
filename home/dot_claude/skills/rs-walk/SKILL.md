@@ -85,62 +85,81 @@ Store as: `PR_META` (JSON), `PR_DIFF` (text).
 
 ---
 
-## Step 3 — Generate slide content
+## Step 3 — Generate slide content via parallel subagents
 
-You are the author of these slides. Generate all content now — no user prompts
-mid-generation. Use the PR data to write each phase.
+Dispatch 3 subagents simultaneously using the Agent tool. Each reads the full
+PR data independently — no anchoring from each other's output. Collect all
+results before assembling.
 
-### Phase A — Intent (2 slides)
+Pass to every agent: `PR_META` (full JSON), `PR_DIFF` (truncated diff text),
+`PR_URL`.
 
-**Slide A1 — Title**
+---
 
-```
-title: {PR_META.title}
-author: {PR_META.author.login}
-pr: #{PR_META.number}
-url: {PR_URL}
-base: {PR_META.baseRefName} ← {PR_META.headRefName}
-```
+### Agent 1 — Intent + Changes
 
-**Slide A2 — Intent summary**
+**Task:** Produce the Intent summary and Changes slides.
 
-Summarize the PR body in 3–5 bullets. What is this PR doing and why?
-If the body is empty, write "No description provided." and infer intent from
-the diff.
+Intent (slide A2):
 
-### Phase B — Changes (1–5 slides)
+- Summarize the PR body in 3–5 bullets: what is this PR doing and why?
+- If the body is empty, infer intent from the diff.
 
-Group the changed files into logical areas (1 group per slide, max 5 slides).
-Name each group by what it does, not where the files live.
+Changes (1–5 slides):
 
-For each group:
+- Group changed files into logical areas by what they do, not where they live.
+- Per group: short action-phrase title, list of files, 2–4 narrative bullets.
+- Include relevant diff excerpt in speaker notes (max 40 lines, inside `<!-- ... -->`).
+- Diff excerpts never appear in the slide body.
 
-- Title: short action phrase (e.g. "Add retry logic to auth service")
-- Files: list the relevant file paths
-- Bullets: 2–4 narrative beats explaining what changed and why
-- Speaker notes: relevant diff excerpt (max 40 lines, inside `<!-- ... -->`)
+**Return:** raw Marp markdown for slides A2 through B-last (no frontmatter,
+no `---` at start or end — just the slide bodies separated by `\n---\n`).
 
-### Phase C — Comprehension (2–3 slides)
+---
 
-Write 2–3 questions a careful reviewer would ask about this PR. Questions
-should target _why_, not _what_. One question per slide.
+### Agent 2 — Comprehension questions
 
-For each question:
+**Task:** Write 2–3 questions a careful reviewer would ask. Read the diff
+fresh — do not restate what Agent 1 would say.
 
-- Title: short label for the question
-- Question text: 1–2 sentences
-- Answer: leave blank — render as `_Not yet answered_`
+- Questions target _why_, not _what_.
+- One question per slide: short title + 1–2 sentence question body.
+- Answer field: leave blank, render as `_Not yet answered_`.
 
-### Phase D — Judgment (1 slide)
+**Return:** raw Marp markdown for comprehension slides (same format as
+Agent 1 — slide bodies separated by `\n---\n`).
 
-Write a collapsed verdict slide:
+---
+
+### Agent 3 — Judgment
+
+**Task:** Write an honest verdict based on the diff and PR description alone.
+Do not soften findings. Do not inflate confidence.
 
 - Fit: does this approach solve the right problem?
 - Confidence: how complete is the implementation?
-- Gaps: what is missing or risky?
+- Gaps: what is missing, risky, or untested? ("None identified" only if genuinely true.)
 
-Base these on the diff and PR description. Be honest. If the PR looks solid,
-say so. If something is missing, name it.
+**Return:** raw Marp markdown for the single judgment slide.
+
+---
+
+### Assembly
+
+Wait for all 3 agents. Then combine:
+
+**Title slide (A1) — you write this inline:**
+
+```markdown
+<!-- _class: centered invert -->
+
+<div class="slide-hero">{PR_META.title}</div>
+<div class="intro">By {PR_META.author.login} · #{PR_META.number}</div>
+<div class="slide-small"><a href="{PR_URL}">#{PR_META.number}</a></div>
+```
+
+Then append Agent 1 output, Agent 2 output, Agent 3 output in order,
+each block separated by `\n---\n`.
 
 ---
 
