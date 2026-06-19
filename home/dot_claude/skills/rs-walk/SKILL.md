@@ -10,9 +10,12 @@ version: 0.1.0
 
 # rs-walk — Convert a mate walk session into a Decklet HTML slide deck
 
-Pure rehydration: read existing phase `.md` files from a completed or
-in-progress `mate walk` session and transform them into a self-contained
-Decklet HTML slide deck. No AI re-generation of content.
+Pure rehydration: read existing phase `.md` files from a walk session at
+`~/.mate/sessions/pr-{N}/walk/` and transform them into a self-contained
+Decklet HTML slide deck. No AI re-generation of content. No mate commands.
+
+If no session exists for the given PR, the skill stops and says so — it does
+not create sessions.
 
 ---
 
@@ -44,15 +47,24 @@ Never hardcode an absolute path with an org or repo name in it.
 
 ## Step 1 — Resolve review_id
 
-```
-If <review-id> was provided as an explicit argument → use it directly.
+No mate commands. Derive purely from the argument and the filesystem.
 
-Else:
-  Run: mate walk status -f json
-  Parse the JSON output → extract the "review_id" field.
-  If the command fails or returns empty / null:
-    Stop with: "No active walk session found. Start one with `mate walk <pr>`
-    or pass a review-id explicitly."
+```
+Priority order:
+
+1. PR URL (e.g. https://github.com/org/repo/pull/12345 or .../pull/12345/):
+     Extract the numeric PR number from the URL path.
+     REVIEW_ID = "pr-{number}"
+
+2. Plain review_id (e.g. "pr-16310"):
+     Use as-is.
+
+3. Nothing provided:
+     List ~/.mate/sessions/pr-* sorted by modification time (newest first).
+     If exactly one entry exists → confirm with user and use it.
+     If multiple → show the list and ask which one.
+     If none → stop with: "No walk sessions found in ~/.mate/sessions/.
+     Pass a PR URL to use this skill."
 ```
 
 Name the resolved value `REVIEW_ID`.
