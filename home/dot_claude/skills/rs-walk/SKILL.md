@@ -1,303 +1,234 @@
 ---
 name: rs-walk
 description: >-
-  Convert a mate walk PR-review session into a Decklet HTML slide deck.
-  Triggers on: "slide deck for this walk", "render walk as slides",
-  "make a deck from this review", "walk slides", "decklet this PR".
+  Generate a structured PR review slide deck from a GitHub PR URL using Decklet.
+  Triggers on: "walk slides for this PR", "review deck", "slide deck for this PR",
+  "walk this PR", "make a deck from this PR".
   Does NOT trigger on generic "make me a deck" / "create slides".
-version: 0.1.0
+version: 0.2.0
 ---
 
-# rs-walk — Convert a mate walk session into a Decklet HTML slide deck
+# rs-walk — PR review slide deck from a GitHub PR URL
 
-Pure rehydration: read existing phase `.md` files from a walk session at
-`~/.mate/sessions/pr-{N}/walk/` and transform them into a self-contained
-Decklet HTML slide deck. No AI re-generation of content. No mate commands.
+Takes a PR URL, fetches the PR data, and generates a structured Decklet HTML
+slide deck organized as: Intent → Changes → Comprehension → Judgment.
 
-If no session exists for the given PR, the skill stops and says so — it does
-not create sessions.
+No sessions. No mate. Requires `gh` CLI and Decklet.
 
 ---
 
-## Step 0 — Locate decklet
+## Step 0 — Preflight
 
-Resolve the decklet binary path — check in order, first match wins:
+### Locate decklet
 
 ```bash
-# 1. Explicit symlink override
+# 1. Symlink override
 DECKLET_SKILL_LINK=~/.claude/skills/decklet
 if [ -L "${DECKLET_SKILL_LINK}" ]; then
   DECKLET_BIN="$(readlink "${DECKLET_SKILL_LINK}")/bin"
 
-# 2. Discover via find — works regardless of the parent dir name
+# 2. Discover under ~/apps
 elif DECKLET_PLUGIN=$(find ~/apps -maxdepth 5 -type d -name "decklet" 2>/dev/null | grep "plugins/decklet$" | head -1); [ -n "$DECKLET_PLUGIN" ]; then
   DECKLET_BIN="${DECKLET_PLUGIN}/bin"
 
 else
-  echo "Decklet not found under ~/apps. Install the decklet plugin or set a ~/.claude/skills/decklet symlink." >&2
+  echo "Decklet not found. Install the decklet plugin or create a ~/.claude/skills/decklet symlink." >&2
   exit 1
 fi
 ```
 
-If `${DECKLET_BIN}/build` is not executable after resolution, stop with the same error.
+If `${DECKLET_BIN}/build` is not executable, stop.
 
-Never hardcode an absolute path with an org or repo name in it.
+### Verify gh CLI
+
+```bash
+gh auth status 2>/dev/null || echo "gh not authenticated"
+```
+
+If `gh` is missing or not authenticated, stop with:
+
+> "`gh` CLI required. Install with `brew install gh` then `gh auth login`."
 
 ---
 
-## Step 1 — Resolve review_id
+## Step 1 — Resolve PR URL
 
-No mate commands. Derive purely from the argument and the filesystem.
+Accept:
 
-```
-Priority order:
+- Full URL: `https://github.com/org/repo/pull/123`
+- Short form: `org/repo#123`
 
-1. PR URL (e.g. https://github.com/org/repo/pull/12345 or .../pull/12345/):
-     Extract the numeric PR number from the URL path.
-     REVIEW_ID = "pr-{number}"
+Extract: `PR_URL` (canonical full URL), `PR_NUMBER`, `REPO` (`org/repo`).
 
-2. Plain review_id (e.g. "pr-16310"):
-     Use as-is.
-
-3. Nothing provided:
-     List ~/.mate/sessions/pr-* sorted by modification time (newest first).
-     If exactly one entry exists → confirm with user and use it.
-     If multiple → show the list and ask which one.
-     If none → stop with: "No walk sessions found in ~/.mate/sessions/.
-     Pass a PR URL to use this skill."
-```
-
-Name the resolved value `REVIEW_ID`.
+If no argument provided, ask: "Which PR? (paste the URL)"
 
 ---
 
-## Step 2 — Locate and verify session files
+## Step 2 — Fetch PR data
 
+```bash
+gh pr view "${PR_URL}" --json \
+  number,title,body,author,headRefName,baseRefName,\
+  additions,deletions,changedFiles,url,commits \
+  2>/dev/null
 ```
-SESSION_DIR=~/.mate/sessions/${REVIEW_ID}/walk
+
+Also fetch the diff — truncate to 600 lines if larger:
+
+```bash
+gh pr diff "${PR_URL}" 2>/dev/null | head -600
 ```
 
-1. `${SESSION_DIR}/session.md` — if absent: stop with "No walk session found for `${REVIEW_ID}`."
-2. `${SESSION_DIR}/intent.md` — if absent: stop with the same error.
-3. `${SESSION_DIR}/changes.md` — if absent: warn and prompt "Continue without changes slides? [y/N]". Stop on N.
-4. `${SESSION_DIR}/comprehension.md` — same warn-and-prompt.
-5. `${SESSION_DIR}/judgment.md` — same warn-and-prompt.
+If the PR cannot be fetched (private repo, auth issue), stop with the gh error verbatim.
 
-Never silently skip a phase. Never call `mate walk prepare` without asking — it triggers AI calls.
+Store as: `PR_META` (JSON), `PR_DIFF` (text).
 
 ---
 
-## Step 3 — Load session metadata
+## Step 3 — Generate slide content
 
-Parse YAML frontmatter from `${SESSION_DIR}/session.md` (between the opening `---` and the next `---`).
+You are the author of these slides. Generate all content now — no user prompts
+mid-generation. Use the PR data to write each phase.
 
-| Field       | Used for                                           |
-| ----------- | -------------------------------------------------- |
-| `pr_title`  | Marp `title:` and title slide hero text            |
-| `pr_url`    | Title slide link — use verbatim, no reconstruction |
-| `prid`      | Title slide subtitle (e.g. `#16310`)               |
-| `author`    | Title slide subtitle                               |
-| `outcome`   | Judgment slide verdict                             |
-| `flags[]`   | Judgment slide flag count                          |
-| `answers[]` | Indexed answers for comprehension + judgment       |
+### Phase A — Intent (2 slides)
 
-**`pr_url` is the canonical link source.** Never reconstruct a GitHub URL from
-org/repo assumptions. If `pr_url` is absent, omit the link entirely rather
-than guessing.
+**Slide A1 — Title**
 
-`answers[]` is ordered. Index `i` maps to question `i` across comprehension
-then judgment slides (in phase order). Use index-safe lookup: `answers[i]` if
-`i < len(answers)` else nil.
+```
+title: {PR_META.title}
+author: {PR_META.author.login}
+pr: #{PR_META.number}
+url: {PR_URL}
+base: {PR_META.baseRefName} ← {PR_META.headRefName}
+```
+
+**Slide A2 — Intent summary**
+
+Summarize the PR body in 3–5 bullets. What is this PR doing and why?
+If the body is empty, write "No description provided." and infer intent from
+the diff.
+
+### Phase B — Changes (1–5 slides)
+
+Group the changed files into logical areas (1 group per slide, max 5 slides).
+Name each group by what it does, not where the files live.
+
+For each group:
+
+- Title: short action phrase (e.g. "Add retry logic to auth service")
+- Files: list the relevant file paths
+- Bullets: 2–4 narrative beats explaining what changed and why
+- Speaker notes: relevant diff excerpt (max 40 lines, inside `<!-- ... -->`)
+
+### Phase C — Comprehension (2–3 slides)
+
+Write 2–3 questions a careful reviewer would ask about this PR. Questions
+should target _why_, not _what_. One question per slide.
+
+For each question:
+
+- Title: short label for the question
+- Question text: 1–2 sentences
+- Answer: leave blank — render as `_Not yet answered_`
+
+### Phase D — Judgment (1 slide)
+
+Write a collapsed verdict slide:
+
+- Fit: does this approach solve the right problem?
+- Confidence: how complete is the implementation?
+- Gaps: what is missing or risky?
+
+Base these on the diff and PR description. Be honest. If the PR looks solid,
+say so. If something is missing, name it.
 
 ---
 
-## Step 4 — Parse phase files
-
-Each phase file contains multiple slides separated by:
-
-```
----
----
-```
-
-**Split rule:** split on `\n---\n---\n` (or `---\n---\n` at file start). This
-yields raw chunks. Do not confuse with a single `\n---\n` (Marp slide separator).
-
-**Per-chunk parsing:**
-
-1. Strip any leading `---\n`.
-2. Parse the YAML frontmatter block (up to the first standalone `---`).
-3. Remainder after the closing `---` is the body text.
-
-Fields used per chunk:
-
-```yaml
-kind: # "intent" | "changes" | "comprehension" | "judgment"
-title: # slide heading
-files: [] # file paths (changes slides)
-diff_excerpt: # raw diff — SPEAKER NOTES ONLY, never in slide body
-beats:
-  - narrative: # bullet shown in slide body
-    range: # file range (speaker notes only)
-context: # code snippet for comprehension slides (truncate to 20 lines)
-language: # syntax hint for context block
-prompt: # question text for comprehension slides
-```
-
-**Truncation:**
-
-- `diff_excerpt` → speaker notes only; if > 50 lines, keep first 50 and append `[TRUNCATED: N more lines]`.
-- `context` → inline code block; if > 20 lines, truncate to 20 and append `[… truncated]`.
-
----
-
-## Step 5 — Transform to Marp slides
-
-### intent.md → 2 slides
-
-**Slide 1 — Title** (`<!-- _class: centered invert -->`):
-
-```markdown
-<!-- _class: centered invert -->
-
-<div class="slide-hero">{pr_title}</div>
-<div class="intro">By {author} · {prid}</div>
-<div class="slide-small"><a href="{pr_url}">{prid}</a></div>
-```
-
-If `pr_url` is absent, omit the `<div class="slide-small">` line entirely.
-
-**Slide 2 — Intent summary:**
-
-```markdown
-## Intent
-
-{body text from intent.md chunk}
-```
-
-### changes.md → 1 slide per chunk
-
-```markdown
-###### CHANGES
-
-## {title}
-
-**Files:** {files joined by ", "}
-
-{beats[].narrative as bullet list, one `-` per beat}
-
-<!-- {diff_excerpt — TRUNCATED if > 50 lines} -->
-```
-
-`diff_excerpt` lives inside `<!-- ... -->` only. It must never appear outside
-a comment block. If a future revision accidentally places it in the body,
-that is a bug.
-
-### comprehension.md → 1 slide per chunk
-
-Answer index `i` = 0-based position of this chunk within the comprehension
-phase. Map to `answers[i]`.
-
-````markdown
-###### COMPREHENSION
-
-## {title}
-
-{prompt}
-
-```{language}
-{context — max 20 lines}
-```
-
-**Answer:** {answers[i].text} ← if answered
-_Not yet answered_ ← if absent or empty
-
-<!-- Speaker notes: comprehension answer {i} -->
-````
-
-### judgment.md → 1 slide (all judgment chunks collapsed)
-
-```markdown
-<!-- _class: centered invert -->
-
-###### JUDGMENT
-
-## Verdict: {outcome}
-
-**Flags:** {len(flags)} findings
-
-- Fit: {answers[comprehension_count + 0].text or "not answered"}
-- Confidence: {answers[comprehension_count + 1].text or "not answered"}
-- Gaps: {answers[comprehension_count + 2].text or "not answered"}
-```
-
-`comprehension_count` = number of comprehension slides generated.
-
-If `outcome` is absent or empty → `"in-progress"`.
-If `flags[]` is empty → `"0 findings"`.
-
----
-
-## Step 6 — Assemble src/deck.md
+## Step 4 — Assemble src/deck.md
 
 ```markdown
 ---
 marp: true
 theme: structured
 paginate: true
-title: { pr_title }
+title: { title }
 ---
 
-{title slide}
+<!-- _class: centered invert -->
 
----
-
-{intent slide}
-
----
-
-{changes slide 1}
+<div class="slide-hero">{PR_META.title}</div>
+<div class="intro">By {author} · #{number}</div>
+<div class="slide-small"><a href="{PR_URL}">#{number}</a></div>
 
 ---
 
-{changes slide 2}
+## Intent
+
+{A2 bullet summary}
 
 ---
 
-...
+###### CHANGES
 
-{comprehension slide 1}
+## {B1 group title}
+
+**Files:** {files}
+
+{narrative bullets}
+
+<!-- diff excerpt -->
 
 ---
 
-...
+... (one --- between every slide)
 
-{judgment slide}
+---
+
+###### COMPREHENSION
+
+## {C1 question title}
+
+{question text}
+
+_Not yet answered_
+
+---
+
+... remaining comprehension slides ...
+
+---
+
+<!-- _class: centered invert -->
+
+###### JUDGMENT
+
+- **Fit:** {fit assessment}
+- **Confidence:** {confidence assessment}
+- **Gaps:** {gaps or "None identified"}
 ```
 
 Rules:
 
-- Exactly `marp: true`, `theme: structured`, `paginate: true`, `title` — no other keys.
-- One `---` separator between every slide.
-- Skipped phases produce no slides and no extra separators.
+- `marp: true`, `theme: structured`, `paginate: true`, `title` — no other frontmatter keys.
+- Exactly one `---` between every slide.
+- Diff excerpts inside `<!-- ... -->` only — never in the slide body.
 
 ---
 
-## Step 7 — Scaffold, build, open
+## Step 5 — Build
 
 ```bash
-DECK_PATH=~/.decklet/walk-${REVIEW_ID}
+DECK_SLUG="pr-$(echo ${PR_URL} | grep -oE '[0-9]+$' | head -1)"
+DECK_PATH=~/.decklet/${DECK_SLUG}
 
 ${DECKLET_BIN}/new ${DECK_PATH}
 # Write assembled deck.md to ${DECK_PATH}/src/deck.md
 ${DECKLET_BIN}/build ${DECK_PATH} < /dev/null
 ```
 
-The `< /dev/null` on build is required — Marp hangs on inherited stdin when
-called from a background context.
+`< /dev/null` on build is required — Marp hangs on inherited stdin.
 
-If build exits non-zero or `deck.html` does not exist, surface the full error
-verbatim. Do not call `open`.
+If build fails, surface the full error verbatim. Do not open.
 
 On success:
 
@@ -307,9 +238,7 @@ open ${DECK_PATH}/deck.html
 
 ---
 
-## Step 8 — Offer to publish
-
-After a successful build, ask:
+## Step 6 — Offer to publish
 
 > "Deck opened. Publish to get a share URL? [y/N]"
 
@@ -319,29 +248,26 @@ If yes:
 ${DECKLET_BIN}/publish ${DECK_PATH}
 ```
 
-The publish script reads/writes `deck.yml` (slug + owner_key) automatically.
-On success it prints the URL — relay it to the user verbatim.
+Relay the URL verbatim.
 
 ---
 
 ## Completion message
 
-> "Walk deck ready — {N} slides ({title}, intent, {X} changes, {Y} comprehension, judgment)."
->
-> If published: "Share URL: {url}"
+> "Walk deck for #{number} ready — {N} slides (intent, {X} changes,
+> {Y} comprehension, judgment). Deck at `~/.decklet/{slug}/deck.html`."
+
+If published: append "Share URL: {url}"
 
 ---
 
 ## Edge cases
 
-| Situation                          | Behavior                                                                                      |
-| ---------------------------------- | --------------------------------------------------------------------------------------------- |
-| Only `intent.md` exists            | Generate title + intent only; warn + prompt for missing phases                                |
-| `diff_excerpt` in slide body       | Bug — must be inside `<!-- ... -->` only                                                      |
-| `pr_url` absent                    | Omit link; never reconstruct from org/repo                                                    |
-| `outcome` absent                   | Show "in-progress"                                                                            |
-| `flags[]` empty                    | Show "0 findings"                                                                             |
-| Some answers missing               | Show "Not yet answered" per slide                                                             |
-| Decklet not found                  | Stop at Step 0                                                                                |
-| Build fails                        | Surface error verbatim; do not open                                                           |
-| Deck already exists at `DECK_PATH` | `bin/new` will error — ask user if they want to overwrite (`rm -rf ${DECK_PATH}` then re-run) |
+| Situation                | Behavior                                                        |
+| ------------------------ | --------------------------------------------------------------- |
+| PR body empty            | Infer intent from diff; note "No description" on intent slide   |
+| Diff > 600 lines         | Truncate; note "[diff truncated at 600 lines]" in speaker notes |
+| > 20 changed files       | Group aggressively; cap at 5 change slides                      |
+| Private repo / auth fail | Stop with gh error verbatim                                     |
+| Deck already exists      | Ask: "Overwrite existing deck at `~/.decklet/{slug}/`? [y/N]"   |
+| Decklet build fails      | Surface error verbatim; do not open                             |
