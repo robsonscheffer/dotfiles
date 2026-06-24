@@ -370,7 +370,7 @@ The rail is sticky — it follows the user as they scroll. Apply this CSS overri
 
     <!-- CONTEXT SECTION -->
     <section style="margin-bottom:2rem;">
-      <h2 style="font-family:var(--mate-font-display);font-size:1.1rem;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem;">Context</h2>
+      <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">Context</h2>
       <!-- If CONTEXT_RESULTS has entries, render as a list -->
       <!-- If nothing found, render the "first walk" message in muted text -->
       {CONTEXT_RESULTS rendered as <ul> or <p style="color:var(--mate-frame-muted);">}
@@ -378,14 +378,18 @@ The rail is sticky — it follows the user as they scroll. Apply this CSS overri
 
     <!-- STORY SECTION -->
     <section style="margin-bottom:2.5rem;">
-      <h2 style="font-family:var(--mate-font-display);font-size:1.1rem;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem;">The story</h2>
+      <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">The story</h2>
       <p style="font-size:15px;line-height:1.7;color:var(--mate-frame-text);">{story}</p>
     </section>
 
     <!-- DIFF SECTIONS — one per group from Agent 1 -->
+    <!-- Section label: Inter bold uppercase (body font at small size reads better than display serif at uppercase) -->
+    <!-- Group title: Cormorant at 1.4rem/600 weight. Number rendered as a small Inter chip before the title text. -->
     {for each group:}
     <section style="margin-bottom:2.5rem;">
-      <h2 style="font-family:var(--mate-font-display);font-size:1.25rem;margin-bottom:0.25rem;">{group.title}</h2>
+      <h2 style="font-family:var(--mate-font-display);font-size:1.4rem;font-weight:600;margin-bottom:0.25rem;line-height:1.2;">
+        <span style="font-size:0.7rem;font-family:var(--mate-font-body);font-weight:700;color:var(--mate-frame-muted);letter-spacing:0.1em;vertical-align:middle;margin-right:0.5em;">{group_number}</span>{group.title}
+      </h2>
       <p style="font-size:14px;color:var(--mate-frame-muted);margin-bottom:1rem;">{group.framing}</p>
 
       {if group.note:}
@@ -409,7 +413,7 @@ The rail is sticky — it follows the user as they scroll. Apply this CSS overri
 
     <!-- QUESTIONS -->
     <section style="margin-bottom:2.5rem;">
-      <h2 style="font-family:var(--mate-font-display);font-size:1.1rem;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:1rem;">Bring your questions</h2>
+      <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:1rem;">Bring your questions</h2>
       {for each question:}
       <div class="spec-decision" style="margin-bottom:1rem;">
         <strong style="font-size:14px;">{question.title}</strong>
@@ -420,7 +424,7 @@ The rail is sticky — it follows the user as they scroll. Apply this CSS overri
 
     <!-- YOUR NOTES -->
     <section style="margin-bottom:2.5rem;border-top:1px solid rgba(255,255,255,0.06);padding-top:2rem;">
-      <h2 style="font-family:var(--mate-font-display);font-size:1.1rem;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem;">Your notes</h2>
+      <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">Your notes</h2>
       <p style="color:var(--mate-frame-dim);font-size:14px;font-style:italic;">Fill in as you read. What you caught, what you approved, what surprised you.</p>
       <div style="margin-top:0.75rem;min-height:4rem;border-bottom:1px solid rgba(255,255,255,0.08);"></div>
     </section>
