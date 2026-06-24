@@ -3,7 +3,7 @@ name: rs-walk
 description: >-
   PR walkthrough — generates a scrollable review document you read instead of the GitHub diff.
   The document IS the review: context from brain, the author's story, curated diff in reading order,
-  inline risk flags, questions to bring, your notes, and a hidden judgment revealed at the end.
+  sticky-rail risks, questions to bring, your notes, and a hidden judgment revealed at the end.
   Submits the review to GitHub as the final step.
   Triggers on: "walk this PR", "review deck", "walk PR", "/rs-walk <url>".
 version: 0.3.0
@@ -305,7 +305,7 @@ Add expand/collapse controls above each group's diff blocks:
 </div>
 ```
 
-If a group has a risk flag from Agent 3 whose `file` matches one of the group's files, render the risk callout **before** the diff block for that file.
+Risks from Agent 3 are collected and rendered in the sticky right rail (not inline before diffs).
 
 ### Build the HTML document
 
@@ -343,10 +343,26 @@ Walk: #{number} · {title}
 ### Walkthrough content structure
 
 **IMPORTANT — grid column order:**
-`.spec-layout` CSS is `grid-template-columns: 1fr 180px`.
-First child → wide content column. Second child → narrow rail.
+`.spec-layout` CSS is `grid-template-columns: 1fr 220px`.
+First child → wide content column. Second child → narrow sticky rail.
 The `<div>` (main content) MUST come first; `<aside class="spec-rail">` MUST come second.
-Swapping them crushes the content into 180px.
+Swapping them crushes the content into 220px.
+
+The rail is sticky — it follows the user as they scroll. Apply this CSS override after injecting content:
+
+```html
+<style>
+  .spec-layout {
+    grid-template-columns: 1fr 220px;
+  }
+  .spec-rail {
+    position: sticky;
+    top: 3.5rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+  }
+</style>
+```
 
 ```html
 <div class="spec-layout">
@@ -375,13 +391,6 @@ Swapping them crushes the content into 180px.
       {if group.note:}
       <div class="spec-decision" style="margin-bottom:1rem;">
         {group.note}
-      </div>
-
-      {if risk flag matches this group's file:}
-      <div class="alert" style="background:rgba(232,184,74,0.08);border-left:3px solid var(--mate-warning);padding:0.75rem 1rem;margin-bottom:1rem;border-radius:4px;">
-        <strong style="color:var(--mate-warning);">⚠ {risk.title}</strong>
-        <p style="margin:0.25rem 0 0;font-size:14px;">{risk.description}</p>
-        <p style="margin:0.25rem 0 0;font-size:14px;color:var(--mate-frame-muted);">Blast radius: {risk.blast_radius}</p>
       </div>
 
       <!-- Collapsible diff block for each file in this group (open by default) -->
@@ -439,7 +448,7 @@ Swapping them crushes the content into 180px.
 
   </div>
 
-  <!-- RAIL — second child gets the 180px column -->
+  <!-- RAIL — second child gets the 220px column. Sticky: follows the user. -->
   <aside class="spec-rail">
     <div class="spec-rail-row">
       <span class="spec-rail-label">AUTHOR</span>
@@ -470,6 +479,17 @@ Swapping them crushes the content into 180px.
     <div class="spec-rail-row">
       <span class="spec-rail-label">CONTEXT</span>
       <span class="spec-rail-value">{CONTEXT_MODE}</span>
+    </div>
+    {if risks non-empty:}
+    <div class="spec-rail-row" style="border-top:1px solid var(--mate-frame-border);">
+      <span class="spec-rail-label">RISKS</span>
+    </div>
+    <div class="spec-rail-row">
+      {for each risk:}
+      <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:10px;">
+        <span style="color:var(--mate-warning);font-size:11px;flex-shrink:0;margin-top:1px;">⚠</span>
+        <span style="font-size:11px;color:var(--mate-frame-text);line-height:1.4;">{risk.title}</span>
+      </div>
     </div>
   </aside>
 
