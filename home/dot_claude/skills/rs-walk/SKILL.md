@@ -228,14 +228,82 @@ For each file in each group returned by Agent 1, render the diff using the scrip
 
 ```bash
 bash "${SKILL_BIN}/render-diff.sh" "/tmp/walk-${PR_NUMBER}.diff" "{filepath}"
-# Returns inner HTML for a .diff-block — wrap it:
-# <div class="diff-block">
-#   <div class="diff-file-header">{filepath}</div>
-#   {script output}
-# </div>
 ```
 
-The script handles: awk extraction, HTML escaping, line classification, 80-line cap, truncation notice.
+Wrap the output in a collapsible `<details>` block (open by default). Show the basename in the
+summary; show the directory path muted on the right. Chevron rotates on toggle via JS.
+
+```html
+<details open class="diff-block" style="margin-bottom:1.25rem;">
+  <summary
+    style="list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;"
+    title="{filepath}"
+  >
+    <div
+      class="diff-file-header"
+      style="flex:1;margin:0;border-radius:0;border-bottom:none;display:flex;align-items:center;gap:0.5rem;"
+    >
+      <span
+        class="diff-toggle-icon"
+        style="font-size:11px;color:var(--mate-frame-dim);display:inline-block;"
+        >&#x25BC;</span
+      >
+      <span style="font-family:var(--mate-font-mono);font-size:14px;"
+        >{basename}</span
+      >
+      <span
+        style="font-size:14px;color:var(--mate-frame-dim);font-family:var(--mate-font-mono);margin-left:auto;opacity:0.5;"
+        >{dirname}/</span
+      >
+    </div>
+  </summary>
+  {script output}
+</details>
+```
+
+Add this JS once before the first group (via a `<script>` block injected into the content):
+
+```html
+<script>
+  (function () {
+    document.addEventListener("DOMContentLoaded", function () {
+      document.querySelectorAll("details.diff-block").forEach((d) => {
+        d.addEventListener("toggle", function () {
+          const icon = this.querySelector(".diff-toggle-icon");
+          if (icon)
+            icon.style.transform = this.open
+              ? "rotate(0deg)"
+              : "rotate(-90deg)";
+        });
+      });
+    });
+    window.__walkToggleAll = function (open) {
+      document.querySelectorAll("details.diff-block").forEach((d) => {
+        d.open = open;
+      });
+    };
+  })();
+</script>
+```
+
+Add expand/collapse controls above each group's diff blocks:
+
+```html
+<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+  <button
+    onclick="__walkToggleAll(true)"
+    style="font-size:14px;font-family:var(--mate-font-body);color:var(--mate-frame-muted);background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;"
+  >
+    expand all
+  </button>
+  <button
+    onclick="__walkToggleAll(false)"
+    style="font-size:14px;font-family:var(--mate-font-body);color:var(--mate-frame-muted);background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;"
+  >
+    collapse all
+  </button>
+</div>
+```
 
 If a group has a risk flag from Agent 3 whose `file` matches one of the group's files, render the risk callout **before** the diff block for that file.
 
@@ -316,12 +384,18 @@ Swapping them crushes the content into 180px.
         <p style="margin:0.25rem 0 0;font-size:14px;color:var(--mate-frame-muted);">Blast radius: {risk.blast_radius}</p>
       </div>
 
-      <!-- Diff block for each file in this group -->
+      <!-- Collapsible diff block for each file in this group (open by default) -->
       {for each file in group.files:}
-      <div class="diff-block">
-        <div class="diff-file-header">{file}</div>
+      <details open class="diff-block" style="margin-bottom:1.25rem;">
+        <summary style="list-style:none;cursor:pointer;..." title="{filepath}">
+          <div class="diff-file-header" style="flex:1;...">
+            <span class="diff-toggle-icon">&#x25BC;</span>
+            <span>{basename}</span>
+            <span style="margin-left:auto;opacity:0.5;">{dirname}/</span>
+          </div>
+        </summary>
         {rendered diff lines}
-      </div>
+      </details>
     </section>
 
     <!-- QUESTIONS -->
