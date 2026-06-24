@@ -512,12 +512,23 @@ The report template has a hardcoded stats block and example issue table that app
 
 ```python
 import re
+
 with open(WALK_HTML) as f: html = f.read()
-# Remove everything from the stats block to just before <footer
+
+# 1. Remove template's hardcoded stats block + example issue table
 html = re.sub(
     r'\n\s*<div\s+class="stats shadow[^"]*".*?</div>\s*\n\s*(?=<footer)',
     '\n      ', html, flags=re.DOTALL
 )
+
+# 2. Open all links in a new tab
+def add_target(m):
+    tag = m.group(0)
+    if 'target=' in tag:
+        return tag
+    return tag[:-1] + ' target="_blank" rel="noopener noreferrer">'
+html = re.sub(r'<a\s[^>]+>', add_target, html)
+
 with open(WALK_HTML, 'w') as f: f.write(html)
 ```
 
