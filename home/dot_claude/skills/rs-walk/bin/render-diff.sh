@@ -47,20 +47,35 @@ if [ "${TOTAL_LINES}" -gt "${MAX_LINES}" ]; then
   FILE_DIFF=$(printf '%s\n' "${FILE_DIFF}" | head -n "${MAX_LINES}")
 fi
 
-# Render each line
+# Render each line using .diff-prefix + .diff-line-code inner structure
+# (matches the DS CSS which applies colors via .diff-prefix and .diff-line-code selectors)
 while IFS= read -r line; do
-  ESCAPED=$(html_escape "${line}")
   first_char="${line:0:1}"
+  rest="${line:1}"
   case "${first_char}" in
-    "+") printf '<div class="diff-line added">%s</div>\n' "${ESCAPED}" ;;
-    "-") printf '<div class="diff-line removed">%s</div>\n' "${ESCAPED}" ;;
-    "@") printf '<div class="diff-hunk-header">%s</div>\n' "${ESCAPED}" ;;
-    *)   printf '<div class="diff-line context">%s</div>\n' "${ESCAPED}" ;;
+    "+")
+      PREFIX=$(html_escape "+")
+      CODE=$(html_escape "${rest}")
+      printf '<div class="diff-line added"><span class="diff-prefix">%s</span><span class="diff-line-code">%s</span></div>\n' "${PREFIX}" "${CODE}"
+      ;;
+    "-")
+      PREFIX=$(html_escape "-")
+      CODE=$(html_escape "${rest}")
+      printf '<div class="diff-line removed"><span class="diff-prefix">%s</span><span class="diff-line-code">%s</span></div>\n' "${PREFIX}" "${CODE}"
+      ;;
+    "@")
+      ESCAPED=$(html_escape "${line}")
+      printf '<div class="diff-hunk-header"><span class="diff-line-code">%s</span></div>\n' "${ESCAPED}"
+      ;;
+    *)
+      CODE=$(html_escape "${rest}")
+      printf '<div class="diff-line context"><span class="diff-prefix"> </span><span class="diff-line-code">%s</span></div>\n' "${CODE}"
+      ;;
   esac
 done <<< "${FILE_DIFF}"
 
 if [ "${TRUNCATED}" = true ]; then
   REMAINING=$(( TOTAL_LINES - MAX_LINES ))
-  printf '<div class="diff-line context" style="color:var(--mate-frame-muted);font-style:italic;">[… %d more lines not shown]</div>\n' \
+  printf '<div class="diff-line context"><span class="diff-prefix"> </span><span class="diff-line-code" style="color:var(--mate-frame-muted);font-style:italic;">[&#x2026; %d more lines not shown]</span></div>\n' \
     "${REMAINING}"
 fi

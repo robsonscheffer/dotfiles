@@ -21,62 +21,27 @@ Optional: `qmd` for semantic brain search (falls back to grep).
 
 ## Step 0 — Preflight
 
-### 1. gh CLI
+Run the preflight script. It handles all checks and qmd setup in one call:
 
 ```bash
-gh auth status 2>/dev/null && echo "OK" || echo "FAIL"
+SKILL_BIN=~/.claude/skills/rs-walk/bin
+CONTEXT_MODE=$(bash "${SKILL_BIN}/preflight.sh") || exit 1
+# CONTEXT_MODE is now "CONTEXT_MODE=qmd" or "CONTEXT_MODE=grep" — extract the value:
+CONTEXT_MODE="${CONTEXT_MODE#CONTEXT_MODE=}"
 ```
 
-If FAIL — stop: "`gh` CLI required. Run `gh auth login`."
+If the script exits non-zero, surface the error message and stop.
 
-### 2. html-artifact DS
+Set constants used throughout:
 
 ```bash
 REPORT_TEMPLATE=~/.claude/skills/html-artifact/dist/templates/report.html
 LINT_BIN=~/.claude/skills/html-artifact/bin/lint-artifact.mjs
-[ -f "${REPORT_TEMPLATE}" ] && echo "TEMPLATE_OK" || echo "TEMPLATE_MISSING"
-[ -f "${LINT_BIN}" ] && echo "LINT_OK" || echo "LINT_MISSING"
-```
-
-If either missing — stop: "html-artifact plugin required. Check `~/.claude/skills/html-artifact/`."
-
-### 3. wiki/walks/ — first-run setup
-
-```bash
 WALKS_DIR=~/brain/wiki/walks
-WALKS_INDEX=${WALKS_DIR}/index.html
-
-if [ ! -d "${WALKS_DIR}" ]; then
-  mkdir -p "${WALKS_DIR}"
-  # Seed index.html — see Index Seeding section below
-fi
+WALKS_INDEX="${WALKS_DIR}/index.html"
 ```
 
-If `${WALKS_INDEX}` does not exist, create it using the **Index Seeding** procedure at the end of this skill.
-
-### 4. qmd — optional, self-healing
-
-```bash
-if command -v qmd &>/dev/null; then
-  # Brain collection
-  if ! qmd collection list --json 2>/dev/null | jq -e '.[] | select(.name=="brain")' >/dev/null 2>&1; then
-    echo "Adding brain collection..."
-    qmd collection add ~/brain/wiki brain
-    qmd update brain
-  fi
-  # Walks collection
-  if ! qmd collection list --json 2>/dev/null | jq -e '.[] | select(.name=="walks")' >/dev/null 2>&1; then
-    echo "Adding walks collection..."
-    qmd collection add ~/brain/wiki/walks walks
-    qmd update walks 2>/dev/null || true  # empty on first run, ok
-  fi
-  CONTEXT_MODE=qmd
-else
-  CONTEXT_MODE=grep
-fi
-```
-
-Store `CONTEXT_MODE`. Never block on qmd absence.
+If `${WALKS_INDEX}` does not exist after preflight, seed it using the **Index Seeding** procedure at the end of this skill.
 
 ---
 
@@ -259,30 +224,20 @@ If `${WALK_DIR}` already exists, ask: "Overwrite existing walk at `${WALK_DIR}`?
 
 ### Parse diff per group
 
-For each group from Agent 1, extract the diff for its files from `/tmp/walk-${PR_NUMBER}.diff`.
-
-Use `awk` to extract per-file diff sections:
+For each file in each group returned by Agent 1, render the diff using the script:
 
 ```bash
-# Extract diff for one file (e.g. "src/embeds/embeddedPaths.ts")
-FILE="src/embeds/embeddedPaths.ts"
-awk "/^diff --git.*${FILE//\//\\/}/,/^diff --git [^$]/" /tmp/walk-${PR_NUMBER}.diff | \
-  grep -v "^diff --git" | head -80
+bash "${SKILL_BIN}/render-diff.sh" "/tmp/walk-${PR_NUMBER}.diff" "{filepath}"
+# Returns inner HTML for a .diff-block — wrap it:
+# <div class="diff-block">
+#   <div class="diff-file-header">{filepath}</div>
+#   {script output}
+# </div>
 ```
 
-Render each diff section as `.diff-block` HTML. For each line of the extracted diff:
+The script handles: awk extraction, HTML escaping, line classification, 80-line cap, truncation notice.
 
-- Lines starting with `+` (not `+++`): `<div class="diff-line added">{html-escaped line}</div>`
-- Lines starting with `-` (not `---`): `<div class="diff-line removed">{html-escaped line}</div>`
-- Lines starting with `@@`: `<div class="diff-hunk-header">{html-escaped line}</div>`
-- Lines starting with `diff --git`, `index`, `---`, `+++`: skip
-- All other lines: `<div class="diff-line context">{html-escaped line}</div>`
-
-HTML-escape all line content: `<` → `&lt;`, `>` → `&gt;`, `&` → `&amp;`.
-
-If a group has a risk flag from Agent 3 matching one of its files, render the risk callout immediately before the diff block.
-
-**Cap per group: 80 diff lines.** If a file has more, show the first 60 + a note: `<div class="diff-line context" style="color:var(--mate-frame-muted);">[… {N} more lines — open file in GitHub]</div>`
+If a group has a risk flag from Agent 3 whose `file` matches one of the group's files, render the risk callout **before** the diff block for that file.
 
 ### Build the HTML document
 
@@ -319,41 +274,14 @@ Walk: #{number} · {title}
 
 ### Walkthrough content structure
 
+**IMPORTANT — grid column order:**
+`.spec-layout` CSS is `grid-template-columns: 1fr 180px`.
+First child → wide content column. Second child → narrow rail.
+The `<div>` (main content) MUST come first; `<aside class="spec-rail">` MUST come second.
+Swapping them crushes the content into 180px.
+
 ```html
 <div class="spec-layout">
-  <aside class="spec-rail">
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">AUTHOR</span>
-      <span class="spec-rail-value">{author.login}</span>
-    </div>
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">PR</span>
-      <span class="spec-rail-value">
-        <a href="{url}" style="color:var(--mate-primary);">#{number}</a>
-      </span>
-    </div>
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">REPO</span>
-      <span class="spec-rail-value" style="font-family:var(--mate-font-mono);font-size:12px;">{REPO}</span>
-    </div>
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">CHANGES</span>
-      <span class="spec-rail-value" style="font-family:var(--mate-font-mono);">
-        <span style="color:var(--mate-success);">+{additions}</span>
-        <span style="color:var(--mate-error);">−{deletions}</span>
-        · {changedFiles} files
-      </span>
-    </div>
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">BRANCH</span>
-      <span class="spec-rail-value" style="font-family:var(--mate-font-mono);font-size:11px;">{headRefName}</span>
-    </div>
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">CONTEXT</span>
-      <span class="spec-rail-value">{CONTEXT_MODE}</span>
-    </div>
-  </aside>
-
   <div>
 
     <!-- CONTEXT SECTION -->
@@ -374,7 +302,7 @@ Walk: #{number} · {title}
     {for each group:}
     <section style="margin-bottom:2.5rem;">
       <h2 style="font-family:var(--mate-font-display);font-size:1.25rem;margin-bottom:0.25rem;">{group.title}</h2>
-      <p style="font-size:13px;color:var(--mate-frame-muted);margin-bottom:1rem;">{group.framing}</p>
+      <p style="font-size:14px;color:var(--mate-frame-muted);margin-bottom:1rem;">{group.framing}</p>
 
       {if group.note:}
       <div class="spec-decision" style="margin-bottom:1rem;">
@@ -384,8 +312,8 @@ Walk: #{number} · {title}
       {if risk flag matches this group's file:}
       <div class="alert" style="background:rgba(232,184,74,0.08);border-left:3px solid var(--mate-warning);padding:0.75rem 1rem;margin-bottom:1rem;border-radius:4px;">
         <strong style="color:var(--mate-warning);">⚠ {risk.title}</strong>
-        <p style="margin:0.25rem 0 0;font-size:13px;">{risk.description}</p>
-        <p style="margin:0.25rem 0 0;font-size:12px;color:var(--mate-frame-muted);">Blast radius: {risk.blast_radius}</p>
+        <p style="margin:0.25rem 0 0;font-size:14px;">{risk.description}</p>
+        <p style="margin:0.25rem 0 0;font-size:14px;color:var(--mate-frame-muted);">Blast radius: {risk.blast_radius}</p>
       </div>
 
       <!-- Diff block for each file in this group -->
@@ -403,20 +331,20 @@ Walk: #{number} · {title}
       <div class="spec-decision" style="margin-bottom:1rem;">
         <strong style="font-size:14px;">{question.title}</strong>
         <p style="margin:0.5rem 0;font-size:14px;">{question.question}</p>
-        <code style="font-family:var(--mate-font-mono);font-size:12px;color:var(--mate-frame-muted);">{question.pointer}</code>
+        <code style="font-family:var(--mate-font-mono);font-size:14px;color:var(--mate-frame-muted);">{question.pointer}</code>
       </div>
     </section>
 
     <!-- YOUR NOTES -->
     <section style="margin-bottom:2.5rem;border-top:1px solid rgba(255,255,255,0.06);padding-top:2rem;">
       <h2 style="font-family:var(--mate-font-display);font-size:1.1rem;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem;">Your notes</h2>
-      <p style="color:var(--mate-frame-dim);font-size:13px;font-style:italic;">Fill in as you read. What you caught, what you approved, what surprised you.</p>
+      <p style="color:var(--mate-frame-dim);font-size:14px;font-style:italic;">Fill in as you read. What you caught, what you approved, what surprised you.</p>
       <div style="margin-top:0.75rem;min-height:4rem;border-bottom:1px solid rgba(255,255,255,0.08);"></div>
     </section>
 
     <!-- JUDGMENT — hidden until revealed -->
     <details style="margin-bottom:2rem;">
-      <summary style="cursor:pointer;font-family:var(--mate-font-body);font-size:13px;color:var(--mate-frame-dim);padding:0.5rem 0;user-select:none;">
+      <summary style="cursor:pointer;font-family:var(--mate-font-body);font-size:14px;color:var(--mate-frame-dim);padding:0.5rem 0;user-select:none;">
         ▸ Reveal judgment — read your notes first
       </summary>
       <div style="margin-top:1.5rem;padding:1.5rem;background:rgba(255,255,255,0.02);border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
@@ -427,8 +355,8 @@ Walk: #{number} · {title}
         <p style="font-size:14px;margin-bottom:1rem;"><strong>Fit:</strong> {fit}</p>
         {if gaps non-empty:}
         <div style="margin-bottom:1rem;">
-          <strong style="font-size:13px;color:var(--mate-frame-muted);">Gaps</strong>
-          <ul style="margin-top:0.5rem;font-size:13px;">
+          <strong style="font-size:14px;color:var(--mate-frame-muted);">Gaps</strong>
+          <ul style="margin-top:0.5rem;font-size:14px;">
             {for each gap: <li>{gap}</li>}
           </ul>
         </div>
@@ -436,6 +364,41 @@ Walk: #{number} · {title}
     </details>
 
   </div>
+
+  <!-- RAIL — second child gets the 180px column -->
+  <aside class="spec-rail">
+    <div class="spec-rail-row">
+      <span class="spec-rail-label">AUTHOR</span>
+      <span class="spec-rail-value">{author.login}</span>
+    </div>
+    <div class="spec-rail-row">
+      <span class="spec-rail-label">PR</span>
+      <span class="spec-rail-value">
+        <a href="{url}" style="color:var(--mate-primary);">#{number}</a>
+      </span>
+    </div>
+    <div class="spec-rail-row">
+      <span class="spec-rail-label">REPO</span>
+      <span class="spec-rail-value" style="font-size:14px;word-break:break-all;">{REPO}</span>
+    </div>
+    <div class="spec-rail-row">
+      <span class="spec-rail-label">CHANGES</span>
+      <span class="spec-rail-value">
+        <span style="color:var(--mate-success);">+{additions}</span>
+        <span style="color:var(--mate-error);">−{deletions}</span>
+        <br><span style="color:var(--mate-frame-muted);font-size:14px;">{changedFiles} files</span>
+      </span>
+    </div>
+    <div class="spec-rail-row">
+      <span class="spec-rail-label">BRANCH</span>
+      <span class="spec-rail-value" style="font-size:14px;word-break:break-all;">{headRefName}</span>
+    </div>
+    <div class="spec-rail-row">
+      <span class="spec-rail-label">CONTEXT</span>
+      <span class="spec-rail-value">{CONTEXT_MODE}</span>
+    </div>
+  </aside>
+
 </div>
 ```
 
@@ -468,13 +431,33 @@ Badge class by overall:
 
 Tags: extract from PR title — any ticket IDs (RETIRE-XXXX), repo slug, and 2–3 topic words.
 
+### Strip template boilerplate
+
+The report template has a hardcoded stats block and example issue table that appear after
+`<!-- CONTENT -->` in the DOM. Remove them before linting:
+
+```python
+import re
+with open(WALK_HTML) as f: html = f.read()
+# Remove everything from the stats block to just before <footer
+html = re.sub(
+    r'\n\s*<div\s+class="stats shadow[^"]*".*?</div>\s*\n\s*(?=<footer)',
+    '\n      ', html, flags=re.DOTALL
+)
+with open(WALK_HTML, 'w') as f: f.write(html)
+```
+
 ### Lint
 
 ```bash
 node "${LINT_BIN}" "${WALK_HTML}"
 ```
 
-Fix every violation before continuing. If lint passes, open:
+The template itself has 2 pre-existing violations (`inlined-css`, `no-stylesheet`) — these
+are expected for a self-contained file. Fix any violations in your added content; skip
+template-origin violations at lines before the `<!-- CONTENT -->` insertion point.
+
+If lint passes (or only pre-existing template violations remain), open:
 
 ```bash
 open "${WALK_HTML}"
@@ -488,15 +471,15 @@ Read `~/brain/wiki/walks/index.html`. Find `<!-- walks: one <tr> per review -->`
 
 ```html
 <tr>
-  <td style="font-family:var(--mate-font-mono);font-size:13px;">
+  <td style="font-family:var(--mate-font-mono);font-size:14px;">
     <a href="pr-{number}-{slug}/walk.html" style="color:var(--mate-primary);"
       >#{number}</a
     >
   </td>
   <td style="color:var(--mate-frame-text);font-size:14px;">{title}</td>
-  <td style="color:var(--mate-frame-muted);font-size:13px;">{author.login}</td>
+  <td style="color:var(--mate-frame-muted);font-size:14px;">{author.login}</td>
   <td
-    style="font-family:var(--mate-font-mono);font-size:12px;color:var(--mate-frame-muted);"
+    style="font-family:var(--mate-font-mono);font-size:14px;color:var(--mate-frame-muted);"
   >
     {today}
   </td>
@@ -550,9 +533,7 @@ gh pr review ${PR_NUMBER} --repo "${REPO}" \
 
 ### After submitting — close the loop
 
-1. Update `meta.json`: set `verdict` to `approved` / `changes-requested` / `commented`.
-
-2. Write learning entry `~/brain/wiki/learning/walk-pr-{number}-{slug}.md`:
+1. Write learning entry `~/brain/wiki/learning/walk-pr-{number}-{slug}.md`:
 
 ```markdown
 ---
@@ -571,7 +552,7 @@ updated: { today }
 
 ## Key decision
 
-{group[0].note or framing — the most important thing}
+{group[0].note or first group framing — the most important thing}
 
 ## Risks going in
 
@@ -582,25 +563,17 @@ updated: { today }
 {verdict} — {your_notes if non-empty, else "no notes recorded"}
 ```
 
-3. Append to `~/brain/wiki/log.md`:
-
-```
-## [{today}] walk | {PR_URL} | {verdict}
-```
-
-4. Update the verdict badge in `walks/index.html` — find the row for this PR and replace `badge-open">pending` with the appropriate badge.
-
-5. Re-index walks:
+2. Run close-walk script — handles meta.json, index badge, log.md, qmd re-index, commit:
 
 ```bash
-[ "${CONTEXT_MODE}" = "qmd" ] && qmd update walks 2>/dev/null || true
+bash "${SKILL_BIN}/close-walk.sh" "${WALK_DIR}" "${PR_NUMBER}" "{verdict}" "{notes}"
 ```
 
-6. Commit:
+3. Stage and commit the learning entry:
 
 ```bash
-git -C ~/brain add wiki/walks/ wiki/learning/ wiki/log.md
-git -C ~/brain commit -m "chore: close walk pr-{number} [{verdict}]"
+git -C ~/brain add wiki/learning/walk-pr-${PR_NUMBER}-${SLUG}.md
+git -C ~/brain commit -m "chore: walk pr-${PR_NUMBER} learning entry"
 ```
 
 ---
