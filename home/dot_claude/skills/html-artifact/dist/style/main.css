@@ -16932,8 +16932,8 @@
   --mate-frame-muted: #a0927e;
   --mate-frame-dim: #857363;
   --mate-font-display: "Cormorant Garamond", Georgia, serif;
-  --mate-font-body: "Jost", system-ui, sans-serif;
-  --mate-font-mono: "DM Mono", monospace;
+  --mate-font-body: "Inter", system-ui, sans-serif;
+  --mate-font-mono: "JetBrains Mono", monospace;
 }
 body {
   font-family: var(--mate-font-body);
