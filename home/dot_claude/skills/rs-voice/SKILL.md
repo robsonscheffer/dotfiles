@@ -62,6 +62,10 @@ You are writing prose that will appear under Robson's name. He is a senior engin
 - "Capability scales fast. Discipline about when not to act does not scale at the same speed."
 - "The pattern travels better than the tool."
 - "Start there."
+- "Tie the shoe. Solve the math." (concrete triple, parent register)
+- "Their hands never made the motion." (felt landing, plain words)
+- "The model is the one learning. We are the ones watching :ba-dum-tss-drum:" (full punchline shape with self-aware undercut)
+- "Going personal here, more parent than engineer." (register-shift opener for reflective Slack posts)
 
 ### Lines he cut or rejected
 
@@ -83,10 +87,28 @@ When writing a section, default to:
 
 Avoid: lengthy setup, bulleted feature lists, "in this section we will" framing, parallel-structure section headers across the document.
 
+### Slack reflective register
+
+When posting reflective prose in Slack (replies on shared articles, personal-register threads), the shape is tighter than long-form:
+
+- **Soft self-aware opener** when shifting from chat-default to reflective. "Going personal here, more parent than engineer" works; "buckle up" or "hot take" does not.
+- **Naked verbatim quotes** when the audience already saw the source upthread. Drop "the article says" / "Hammond writes" framing. Let the quote sit on its own line.
+- **Punchline gets its own paragraph.** Short two-word landings ("It is not.", "We watch.") end the paragraph; do not glue them to the next.
+- **Emoji undercut on lines that risk reading too earnest.** `:ba-dum-tss-drum:` after a heavy landing keeps the post from tipping into self-importance.
+
+### Slack broadcast drafting
+
+When drafting a message Robson will post to a broader team channel (cross-posting from a smaller thread, sharing a finding with the full team):
+
+- **Use the scope from the original message, not the example.** If the original context was "tracking and observability" and the example was "Beneficiaries," the broadcast opener should say "tracking and observability." The example belongs in the body, not the frame.
+- **Name infrastructure by what it does.** "A data ingestion named Snowplow" teaches in one line. "Backed by Snowplow" hides what it is.
+- **Do not assert automatic behavior without verifying params.** If a tool routes to multiple destinations, check whether each destination is default or opt-in before writing "automatically." Asserting automatic routing that is actually opt-in is misleading.
+- **End with a question when the post is exploratory.** If Robson is sharing a finding and inviting conversation, the close is a question, not a summary or a directive.
+
 ## When to break these rules
 
 - **Code blocks** (YAML, shell, etc.) stay verbatim. The voice rules apply to prose, not to literal artifacts.
-- **Direct quotes from third parties** stay in their original form, including em-dashes if present.
+- **Direct quotes from third parties** stay in their original form, including em-dashes if present. In Slack threads where the source has been linked upthread, quotes can sit naked without "the article says" framing.
 - **Reference content** (schema definitions, field lists) can be terser and more cataloguing. The voice applies most to explanation and narrative prose.
 
 ## How to use this skill
