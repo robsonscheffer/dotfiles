@@ -33,3 +33,13 @@ If you have not seen a pipeline before, read these in order:
 ## Background
 
 The shape is older than AI tooling. Ansible playbooks, Kubernetes manifests, CI configs, Makefiles, Just files all share it. [Kestra](https://kestra.io/) sits closest to this folder: its workflow blueprints already include agent stages, and the shape of a Kestra flow looks much like one of these recipes. This folder is what the pattern looks like when applied to one person's day instead of a company's infrastructure.
+
+## The shape on a different runner
+
+These files use mate's YAML dialect, but the pattern isn't tied to mate. The same four-stage `poke` recipe rebuilt on [go-task](https://taskfile.dev) lives at `taskfile-claude/tasks/pipelines/poke.yml` — different YAML dialect, same topology, no framework, ~150 lines. Read both side-by-side and the shape becomes obvious independent of the runner.
+
+| stage kind | mate dialect | Taskfile dialect |
+|---|---|---|
+| deterministic shell | `command: \|...` | `cmds: [- ...]` |
+| model judgment | `agent: <name>` + prompt | `cmds: [- claude -p ...]` |
+| composition | `pipeline: op-foo` | `task: foo` or `includes:` |

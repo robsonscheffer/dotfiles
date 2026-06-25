@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# chezmoi run_always — symlink dotfile-tracked skills into ~/.codex/skills/
+set -euo pipefail
+
+CODEX_SKILLS="$HOME/.codex/skills"
+CLAUDE_SKILLS="$HOME/.claude/skills"
+
+if [[ ! -d "$CODEX_SKILLS" ]]; then
+  echo "sync-skills-to-codex: skipping — $CODEX_SKILLS not found"
+  exit 0
+fi
+
+SOURCE_DIR="$(readlink -f "{{ .chezmoi.sourceDir }}" 2>/dev/null || echo "{{ .chezmoi.sourceDir }}")"
+TRACKED_SKILLS="$SOURCE_DIR/dot_claude/skills"
+
+if [[ ! -d "$TRACKED_SKILLS" ]]; then
+  echo "sync-skills-to-codex: skipping — $TRACKED_SKILLS not found"
+  exit 0
+fi
+
+for skill_src in "$TRACKED_SKILLS"/*/; do
+  skill_name=$(basename "$skill_src")
+  dst="$CODEX_SKILLS/$skill_name"
+  src="$CLAUDE_SKILLS/$skill_name"
+
+  [[ -d "$src" ]] || continue
+
+  if [[ -L "$dst" ]]; then
+    # Already a symlink — leave it alone
+    :
+  elif [[ -e "$dst" ]]; then
+    echo "sync-skills-to-codex: skipping $skill_name — exists as non-symlink in codex"
+  else
+    ln -s "$src" "$dst"
+    echo "sync-skills-to-codex: linked $skill_name"
+  fi
+done

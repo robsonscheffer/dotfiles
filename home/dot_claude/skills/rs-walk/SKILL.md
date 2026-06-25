@@ -33,7 +33,6 @@ CONTEXT_MODE="${CONTEXT_MODE#CONTEXT_MODE=}"
 If the script exits non-zero, surface the error message and stop.
 
 Set constants used throughout:
-
 ```bash
 REPORT_TEMPLATE=~/.claude/skills/html-artifact/dist/templates/report.html
 LINT_BIN=~/.claude/skills/html-artifact/bin/lint-artifact.mjs
@@ -48,7 +47,6 @@ If `${WALKS_INDEX}` does not exist after preflight, seed it using the **Index Se
 ## Step 1 — Resolve PR URL
 
 Accept:
-
 - Full URL: `https://github.com/org/repo/pull/123`
 - Short form: `org/repo#123`
 
@@ -82,19 +80,16 @@ Store: `PR_META` (JSON), diff at `/tmp/walk-${PR_NUMBER}.diff`, files at `/tmp/w
 Extract key terms: PR title words + top 5 changed file basenames (without extension).
 
 **qmd mode** (`CONTEXT_MODE=qmd`):
-
 ```bash
 qmd query "{key terms}" --json -c brain -c walks -n 8 2>/dev/null
 ```
 
 Parse results: for each hit, extract `path`, `score`, `snippet`. Format as:
-
 ```
 - [{score}%] {path}: {snippet}
 ```
 
 **grep mode** (`CONTEXT_MODE=grep`):
-
 ```bash
 grep -rl "{term1}\|{term2}\|{term3}" ~/brain/wiki/ 2>/dev/null | \
   grep -v "walks/index" | head -8
@@ -109,7 +104,6 @@ If nothing found in either mode: `CONTEXT_RESULTS="Nothing found in brain for th
 ## Step 4 — Parallel agents
 
 Dispatch all four simultaneously. Pass to every agent:
-
 - `PR_META` (full JSON)
 - `FILE_LIST` (contents of `/tmp/walk-${PR_NUMBER}-files.txt`)
 - First 400 lines of `/tmp/walk-${PR_NUMBER}.diff`
@@ -137,7 +131,6 @@ Return a **JSON object** with this schema:
 ```
 
 Rules:
-
 - 2–5 groups. Group by decision, not by directory.
 - Sequence by logical dependency: the group you need to understand before the next makes sense goes first.
 - `framing` is WHY, not WHAT. "This is the decision everything else follows from" not "These are the path constants."
@@ -160,7 +153,6 @@ Return a **JSON array**:
 ```
 
 Rules:
-
 - Questions only the reviewer can answer by reading the actual code. No "why did they do X" — the story covers that.
 - Each pointer must be a real file from the file list.
 - If the PR description mentions something pending QA or unconfirmed, that is always a question.
@@ -183,7 +175,6 @@ Return a **JSON array**:
 ```
 
 Rules:
-
 - Unverified assumptions are always risks. Hardcoded strings that must match external systems. Missing tests for edge cases.
 - "None identified" only if genuinely true — return `[]`.
 - Max 4 flags. Triage ruthlessly.
@@ -235,26 +226,11 @@ summary; show the directory path muted on the right. Chevron rotates on toggle v
 
 ```html
 <details open class="diff-block" style="margin-bottom:1.25rem;">
-  <summary
-    style="list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;"
-    title="{filepath}"
-  >
-    <div
-      class="diff-file-header"
-      style="flex:1;margin:0;border-radius:0;border-bottom:none;display:flex;align-items:center;gap:0.5rem;"
-    >
-      <span
-        class="diff-toggle-icon"
-        style="font-size:11px;color:var(--mate-frame-dim);display:inline-block;"
-        >&#x25BC;</span
-      >
-      <span style="font-family:var(--mate-font-mono);font-size:14px;"
-        >{basename}</span
-      >
-      <span
-        style="font-size:14px;color:var(--mate-frame-dim);font-family:var(--mate-font-mono);margin-left:auto;opacity:0.5;"
-        >{dirname}/</span
-      >
+  <summary style="list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;" title="{filepath}">
+    <div class="diff-file-header" style="flex:1;margin:0;border-radius:0;border-bottom:none;display:flex;align-items:center;gap:0.5rem;">
+      <span class="diff-toggle-icon" style="font-size:11px;color:var(--mate-frame-dim);display:inline-block;">&#x25BC;</span>
+      <span style="font-family:var(--mate-font-mono);font-size:14px;">{basename}</span>
+      <span style="font-size:14px;color:var(--mate-frame-dim);font-family:var(--mate-font-mono);margin-left:auto;opacity:0.5;">{dirname}/</span>
     </div>
   </summary>
   {script output}
@@ -265,24 +241,19 @@ Add this JS once before the first group (via a `<script>` block injected into th
 
 ```html
 <script>
-  (function () {
-    document.addEventListener("DOMContentLoaded", function () {
-      document.querySelectorAll("details.diff-block").forEach((d) => {
-        d.addEventListener("toggle", function () {
-          const icon = this.querySelector(".diff-toggle-icon");
-          if (icon)
-            icon.style.transform = this.open
-              ? "rotate(0deg)"
-              : "rotate(-90deg)";
-        });
+(function() {
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('details.diff-block').forEach(d => {
+      d.addEventListener('toggle', function() {
+        const icon = this.querySelector('.diff-toggle-icon');
+        if (icon) icon.style.transform = this.open ? 'rotate(0deg)' : 'rotate(-90deg)';
       });
     });
-    window.__walkToggleAll = function (open) {
-      document.querySelectorAll("details.diff-block").forEach((d) => {
-        d.open = open;
-      });
-    };
-  })();
+  });
+  window.__walkToggleAll = function(open) {
+    document.querySelectorAll('details.diff-block').forEach(d => { d.open = open; });
+  };
+})();
 </script>
 ```
 
@@ -290,18 +261,8 @@ Add expand/collapse controls above each group's diff blocks:
 
 ```html
 <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
-  <button
-    onclick="__walkToggleAll(true)"
-    style="font-size:14px;font-family:var(--mate-font-body);color:var(--mate-frame-muted);background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;"
-  >
-    expand all
-  </button>
-  <button
-    onclick="__walkToggleAll(false)"
-    style="font-size:14px;font-family:var(--mate-font-body);color:var(--mate-frame-muted);background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;"
-  >
-    collapse all
-  </button>
+  <button onclick="__walkToggleAll(true)" style="font-size:14px;font-family:var(--mate-font-body);color:var(--mate-frame-muted);background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;">expand all</button>
+  <button onclick="__walkToggleAll(false)" style="font-size:14px;font-family:var(--mate-font-body);color:var(--mate-frame-muted);background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;">collapse all</button>
 </div>
 ```
 
@@ -312,7 +273,6 @@ Risks from Agent 3 are collected and rendered in the sticky right rail (not inli
 Read `${REPORT_TEMPLATE}`. Fill the slots:
 
 **`<!-- TITLE -->`** (all 3 occurrences):
-
 ```
 Walk: #{number} · {title}
 ```
@@ -320,22 +280,14 @@ Walk: #{number} · {title}
 **`<!-- DATE -->`** (both occurrences): today's date `YYYY-MM-DD`
 
 **`<!-- ADDITIONAL META BADGES -->`**:
-
 ```html
 <span class="badge badge-building">{headRefName}</span>
-<span
-  class="badge"
-  style="background:var(--mate-frame-sidebar);color:var(--mate-frame-muted);"
-  >{CONTEXT_MODE}</span
->
+<span class="badge" style="background:var(--mate-frame-sidebar);color:var(--mate-frame-muted);">{CONTEXT_MODE}</span>
 ```
 
 **`<!-- FOOTER LINK -->`**:
-
 ```html
-<a href="{PR_URL}" style="color:var(--mate-primary);"
-  >Open PR #{number} on GitHub ↗</a
->
+<a href="{PR_URL}" style="color:var(--mate-primary);">Open PR #{number} on GitHub ↗</a>
 ```
 
 **`<!-- CONTENT -->`**: replace with the full walkthrough body below.
@@ -349,18 +301,10 @@ The `<div>` (main content) MUST come first; `<aside class="spec-rail">` MUST com
 Swapping them crushes the content into 220px.
 
 The rail is sticky — it follows the user as they scroll. Apply this CSS override after injecting content:
-
 ```html
 <style>
-  .spec-layout {
-    grid-template-columns: 1fr 220px;
-  }
-  .spec-rail {
-    position: sticky;
-    top: 3.5rem;
-    max-height: calc(100vh - 4rem);
-    overflow-y: auto;
-  }
+.spec-layout { grid-template-columns: 1fr 220px; }
+.spec-rail { position: sticky; top: 3.5rem; max-height: calc(100vh - 4rem); overflow-y: auto; }
 </style>
 ```
 
@@ -501,7 +445,6 @@ The rail is sticky — it follows the user as they scroll. Apply this CSS overri
 ```
 
 Badge class by overall:
-
 - `strong` → `badge-done`
 - `solid` → `badge-building`
 - `cautious` → `badge-open` with warning color
@@ -581,27 +524,19 @@ Read `~/brain/wiki/walks/index.html`. Find `<!-- walks: one <tr> per review -->`
 ```html
 <tr>
   <td style="font-family:var(--mate-font-mono);font-size:14px;">
-    <a href="pr-{number}-{slug}/walk.html" style="color:var(--mate-primary);"
-      >#{number}</a
-    >
+    <a href="pr-{number}-{slug}/walk.html" style="color:var(--mate-primary);">#{number}</a>
   </td>
   <td style="color:var(--mate-frame-text);font-size:14px;">{title}</td>
   <td style="color:var(--mate-frame-muted);font-size:14px;">{author.login}</td>
-  <td
-    style="font-family:var(--mate-font-mono);font-size:14px;color:var(--mate-frame-muted);"
-  >
-    {today}
-  </td>
+  <td style="font-family:var(--mate-font-mono);font-size:14px;color:var(--mate-frame-muted);">{today}</td>
   <td>
-    {for each tag:
-    <span class="badge" style="margin-right:4px;font-size:11px;">{tag}</span>}
+    {for each tag: <span class="badge" style="margin-right:4px;font-size:11px;">{tag}</span>}
   </td>
   <td><span class="badge badge-open">pending</span></td>
 </tr>
 ```
 
 Commit:
-
 ```bash
 git -C ~/brain add wiki/walks/
 git -C ~/brain commit -m "chore: walk pr-{number} {title truncated to 60 chars}"
@@ -622,19 +557,15 @@ AskUserQuestion:
 If **Skip for now**: stop here. Remind: "`gh pr review {number} --repo {REPO} --approve` when ready."
 
 If **Approve**:
-
 ```bash
 gh pr review ${PR_NUMBER} --repo "${REPO}" --approve
 ```
 
 If **Request changes** or **Comment only**:
-
 ```
 AskUserQuestion: "Your review comment?" (free text)
 ```
-
 Then:
-
 ```bash
 gh pr review ${PR_NUMBER} --repo "${REPO}" \
   --request-changes --body "{comment}"   # or --comment
@@ -649,10 +580,10 @@ gh pr review ${PR_NUMBER} --repo "${REPO}" \
 title: "Walk: {title}"
 type: learning
 summary: "{1-sentence: what this PR was and what the key decision was}"
-tags: { tags from meta.json }
+tags: {tags from meta.json}
 sources: ["{PR_URL}"]
-created: { today }
-updated: { today }
+created: {today}
+updated: {today}
 ---
 
 ## What
@@ -679,7 +610,6 @@ bash "${SKILL_BIN}/close-walk.sh" "${WALK_DIR}" "${PR_NUMBER}" "{verdict}" "{not
 ```
 
 3. Stage and commit the learning entry:
-
 ```bash
 git -C ~/brain add wiki/learning/walk-pr-${PR_NUMBER}-${SLUG}.md
 git -C ~/brain commit -m "chore: walk pr-${PR_NUMBER} learning entry"
@@ -689,16 +619,16 @@ git -C ~/brain commit -m "chore: walk pr-${PR_NUMBER} learning entry"
 
 ## Edge cases
 
-| Situation                    | Behavior                                                                                  |
-| ---------------------------- | ----------------------------------------------------------------------------------------- |
-| PR body empty                | Infer story from diff; note "No description — inferred from diff" in story section        |
-| Diff > 2000 lines            | Cap per-group at 80 lines; add "[diff large — showing key hunks only]" note in each group |
-| > 20 changed files           | Agent 1 caps at 5 groups, merges minor files into nearest logical group                   |
-| Walk already exists          | Ask: "Overwrite existing walk at `{WALK_DIR}`? [y/N]"                                     |
-| Lint fails                   | Surface each violation with file:line. Fix before opening.                                |
-| qmd update slow on first run | Print: "Indexing brain — first run, may take ~60s"                                        |
-| gh review fails              | Surface error verbatim. meta.json stays with `verdict: null`.                             |
-| User skips submission        | meta.json stays with `verdict: null`. Walk stays in index as "pending".                   |
+| Situation | Behavior |
+|-----------|----------|
+| PR body empty | Infer story from diff; note "No description — inferred from diff" in story section |
+| Diff > 2000 lines | Cap per-group at 80 lines; add "[diff large — showing key hunks only]" note in each group |
+| > 20 changed files | Agent 1 caps at 5 groups, merges minor files into nearest logical group |
+| Walk already exists | Ask: "Overwrite existing walk at `{WALK_DIR}`? [y/N]" |
+| Lint fails | Surface each violation with file:line. Fix before opening. |
+| qmd update slow on first run | Print: "Indexing brain — first run, may take ~60s" |
+| gh review fails | Surface error verbatim. meta.json stays with `verdict: null`. |
+| User skips submission | meta.json stays with `verdict: null`. Walk stays in index as "pending". |
 
 ---
 
@@ -713,46 +643,19 @@ When `~/brain/wiki/walks/index.html` does not exist:
 
 ```html
 <div style="margin-bottom:2rem;">
-  <p
-    style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);font-size:14px;"
-  >
-    Every PR walk you run appears here. Open a walk to review inline — GitHub
-    only for submitting.
+  <p style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);font-size:14px;">
+    Every PR walk you run appears here. Open a walk to review inline — GitHub only for submitting.
   </p>
 </div>
 <table class="table w-full" id="walks-table">
   <thead>
     <tr>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        PR
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Title
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Author
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Date
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Tags
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Verdict
-      </th>
+      <th style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);">PR</th>
+      <th style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);">Title</th>
+      <th style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);">Author</th>
+      <th style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);">Date</th>
+      <th style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);">Tags</th>
+      <th style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);">Verdict</th>
     </tr>
   </thead>
   <tbody id="walks-tbody">

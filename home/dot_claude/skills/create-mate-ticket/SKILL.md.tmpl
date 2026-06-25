@@ -1,0 +1,75 @@
+---
+name: create-mate-ticket
+description: Use when the user wants to create a new MATE ticket. Creates the ticket file in the usemate repo's docs/plans/active/ following the ticket contract schema, then commits it.
+argument-hint: [brief description of the ticket]
+allowed-tools: Bash(ls:*), Bash(git:*), Read, Write, Bash(grep:*)
+---
+
+# Create MATE Ticket
+
+## Arguments
+
+```
+[brief description of the ticket idea]
+```
+
+## Instructions
+
+1. **Find next ID**
+
+```sh
+ls ~/apps/robsonscheffer/usemate/docs/plans/active/ ~/apps/robsonscheffer/usemate/docs/plans/done/ \
+  | grep -oE 'MATE-[0-9]+' | sort -t- -k2 -n | tail -1
+```
+
+Increment by 1 → `MATE-NNN`.
+
+2. **Derive slug** from the description: lowercase, hyphens, ≤5 words. e.g. `add-stdio-mcp-support`.
+
+3. **Write the ticket** to `~/apps/robsonscheffer/usemate/docs/plans/active/MATE-NNN-<slug>/README.md`:
+
+```markdown
+---
+id: MATE-NNN
+status: open
+needs: spec
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+tags: []
+epic: ad-hoc
+---
+
+# MATE-NNN — <Title>
+
+## What
+
+<1–3 sentences: what the ticket delivers>
+
+## Why
+
+<1–2 sentences: why it matters>
+
+## Log
+
+- YYYY-MM-DD HH:MM | CREATED | ticket seeded
+```
+
+Set `needs: spec` when the description is thin. Set `needs: plan` when What/Why are already clear from the arguments.
+
+4. **Commit immediately** — a ticket left uncommitted blocks the next craft workflow (dirty tree):
+
+```sh
+cd ~/apps/robsonscheffer/usemate
+git add docs/plans/active/MATE-NNN-<slug>/README.md
+git commit -m "chore: add MATE-NNN ticket — <slug>"
+```
+
+Run from the bare repo — git operates on the working tree correctly from there.
+
+5. **Report** the ticket ID, path, and status/needs pair chosen.
+
+## Notes
+
+- Legal `(status, needs)` pairs for new tickets: `(open, spec)`, `(open, plan)`, `(open, research)`.
+- `topic:` field is optional — only needed when the pipeline resolver needs an alias.
+- Full contract: `~/apps/robsonscheffer/usemate/docs/plans/.ticket-contract.yaml`.

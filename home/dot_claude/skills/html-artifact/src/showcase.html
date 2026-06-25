@@ -93,6 +93,9 @@
         <a class="sidebar-link" href="#palette"
           ><span class="num">08</span> Palette</a
         >
+        <a class="sidebar-link" href="#typography"
+          ><span class="num">09</span> Typography</a
+        >
 
         <div
           class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-dim)]"
@@ -100,13 +103,13 @@
           Document layout
         </div>
         <a class="sidebar-link" href="#diff"
-          ><span class="num">09</span> Code Diff</a
+          ><span class="num">10</span> Code Diff</a
         >
         <a class="sidebar-link" href="#spec"
-          ><span class="num">10</span> Spec / Right Rail</a
+          ><span class="num">11</span> Spec / Right Rail</a
         >
         <a class="sidebar-link" href="#tooltips"
-          ><span class="num">11</span> Tooltips</a
+          ><span class="num">12</span> Tooltips</a
         >
 
         <div
@@ -114,7 +117,10 @@
         >
           Resources
         </div>
-        <a class="sidebar-link" href="#" target="_blank"
+        <a
+          class="sidebar-link"
+          href="file:///Users/robson.scheffer/brain/wiki/artifact/index.html"
+          target="_blank"
           ><span class="num">↗</span> Artifact Index</a
         >
       </aside>
@@ -539,9 +545,333 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </div>
           </section>
 
+          <section class="ds-section" id="typography">
+            <div class="section-header">
+              <h2>09 — Typography</h2>
+              <span class="section-tag">--mate-font-*</span>
+            </div>
+            <p class="section-desc">
+              Three-font system. Display for hero headings — the weight
+              justifies the extravagance. Body for everything readable. Mono for
+              code, paths, and numbers that must align.
+            </p>
+
+            <!-- Font stacks -->
+            <div
+              class="preview-card"
+              style="display: flex; flex-direction: column; gap: 2rem"
+            >
+              <!-- Display -->
+              <div>
+                <div
+                  class="text-xs uppercase tracking-wider mb-3"
+                  style="color: var(--mate-frame-muted); font-weight: 600"
+                >
+                  Display —
+                  <code
+                    style="font-family: var(--mate-font-mono); font-size: 11px"
+                    >--mate-font-display</code
+                  >
+                </div>
+                <div
+                  style="
+                    font-family: var(--mate-font-display);
+                    font-size: 2.25rem;
+                    font-weight: 400;
+                    line-height: 1.15;
+                    color: var(--mate-frame-text);
+                    margin-bottom: 0.25rem;
+                  "
+                >
+                  Cormorant Garamond
+                </div>
+                <div
+                  style="
+                    font-family: var(--mate-font-display);
+                    font-size: 2.25rem;
+                    font-weight: 600;
+                    line-height: 1.15;
+                    color: var(--mate-frame-text);
+                    font-style: italic;
+                    margin-bottom: 0.75rem;
+                  "
+                >
+                  Bold &amp; Italic
+                </div>
+                <div
+                  style="
+                    font-family: var(--mate-font-display);
+                    font-size: 1rem;
+                    line-height: 1.6;
+                    color: var(--mate-frame-muted);
+                  "
+                >
+                  ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
+                  abcdefghijklmnopqrstuvwxyz 0123456789
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid var(--mate-frame-border)"></div>
+
+              <!-- Body -->
+              <div>
+                <div
+                  class="text-xs uppercase tracking-wider mb-3"
+                  style="color: var(--mate-frame-muted); font-weight: 600"
+                >
+                  Body —
+                  <code
+                    style="font-family: var(--mate-font-mono); font-size: 11px"
+                    >--mate-font-body</code
+                  >
+                </div>
+                <div
+                  style="
+                    font-family: var(--mate-font-body);
+                    font-size: 1.5rem;
+                    font-weight: 400;
+                    line-height: 1.4;
+                    color: var(--mate-frame-text);
+                    margin-bottom: 0.25rem;
+                  "
+                >
+                  Inter — the workhorse
+                </div>
+                <div
+                  style="
+                    font-family: var(--mate-font-body);
+                    font-size: 15px;
+                    line-height: 1.7;
+                    color: var(--mate-frame-text);
+                    max-width: 56ch;
+                    margin-bottom: 0.75rem;
+                  "
+                >
+                  Body copy should breathe. Inter at 15px/1.7 gives the eye
+                  enough room to scan without losing density. Tighten to 14px
+                  for secondary text — never below that.
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    gap: 1.5rem;
+                    font-family: var(--mate-font-body);
+                    font-size: 14px;
+                    color: var(--mate-frame-muted);
+                  "
+                >
+                  <span style="font-weight: 300">Light 300</span>
+                  <span style="font-weight: 400">Regular 400</span>
+                  <span style="font-weight: 500">Medium 500</span>
+                  <span style="font-weight: 600">SemiBold 600</span>
+                </div>
+              </div>
+
+              <div style="border-top: 1px solid var(--mate-frame-border)"></div>
+
+              <!-- Mono -->
+              <div>
+                <div
+                  class="text-xs uppercase tracking-wider mb-3"
+                  style="color: var(--mate-frame-muted); font-weight: 600"
+                >
+                  Mono —
+                  <code
+                    style="font-family: var(--mate-font-mono); font-size: 11px"
+                    >--mate-font-mono</code
+                  >
+                </div>
+                <div
+                  style="
+                    font-family: var(--mate-font-mono);
+                    font-size: 1.1rem;
+                    font-weight: 400;
+                    line-height: 1.4;
+                    color: var(--mate-frame-text);
+                    margin-bottom: 0.5rem;
+                  "
+                >
+                  JetBrains Mono
+                </div>
+                <div
+                  style="
+                    font-family: var(--mate-font-mono);
+                    font-size: 13px;
+                    line-height: 1.6;
+                    color: var(--mate-frame-text);
+                    margin-bottom: 0.75rem;
+                  "
+                >
+                  const embed = (path: string) =&gt; &lt;iframe src={path} /&gt;
+                </div>
+                <div
+                  style="
+                    display: flex;
+                    gap: 1.5rem;
+                    font-family: var(--mate-font-mono);
+                    font-size: 13px;
+                    color: var(--mate-frame-muted);
+                  "
+                >
+                  <span style="font-weight: 400">Regular 400</span>
+                  <span style="font-weight: 500">Medium 500</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Type scale -->
+            <div class="preview-card" style="margin-top: 1.5rem">
+              <div
+                class="text-xs uppercase tracking-wider mb-4"
+                style="color: var(--mate-frame-muted); font-weight: 600"
+              >
+                Heading scale — walk document
+              </div>
+
+              <!-- Page title -->
+              <div
+                style="
+                  margin-bottom: 1.5rem;
+                  padding-bottom: 1.5rem;
+                  border-bottom: 1px solid var(--mate-frame-border);
+                "
+              >
+                <div
+                  style="
+                    font-family: var(--mate-font-mono);
+                    font-size: 10px;
+                    color: var(--mate-frame-dim);
+                    margin-bottom: 0.4rem;
+                    letter-spacing: 0.05em;
+                  "
+                >
+                  PAGE TITLE · Cormorant 400 · ~2.5rem
+                </div>
+                <div
+                  style="
+                    font-family: var(--mate-font-display);
+                    font-size: 2.5rem;
+                    font-weight: 400;
+                    line-height: 1.1;
+                    color: var(--mate-frame-text);
+                  "
+                >
+                  Walk: #23542 · Embed the loan dashboard
+                </div>
+              </div>
+
+              <!-- Group heading -->
+              <div
+                style="
+                  margin-bottom: 1.5rem;
+                  padding-bottom: 1.5rem;
+                  border-bottom: 1px solid var(--mate-frame-border);
+                "
+              >
+                <div
+                  style="
+                    font-family: var(--mate-font-mono);
+                    font-size: 10px;
+                    color: var(--mate-frame-dim);
+                    margin-bottom: 0.4rem;
+                    letter-spacing: 0.05em;
+                  "
+                >
+                  GROUP TITLE · Cormorant 600 · 1.4rem
+                </div>
+                <h2
+                  style="
+                    font-family: var(--mate-font-display);
+                    font-size: 1.4rem;
+                    font-weight: 600;
+                    margin: 0;
+                    line-height: 1.2;
+                  "
+                >
+                  <span
+                    style="
+                      font-size: 0.7rem;
+                      font-family: var(--mate-font-body);
+                      font-weight: 700;
+                      color: var(--mate-frame-muted);
+                      letter-spacing: 0.1em;
+                      vertical-align: middle;
+                      margin-right: 0.5em;
+                    "
+                    >01</span
+                  >
+                  Shared embed shell
+                </h2>
+              </div>
+
+              <!-- Section label -->
+              <div
+                style="
+                  margin-bottom: 1.5rem;
+                  padding-bottom: 1.5rem;
+                  border-bottom: 1px solid var(--mate-frame-border);
+                "
+              >
+                <div
+                  style="
+                    font-family: var(--mate-font-mono);
+                    font-size: 10px;
+                    color: var(--mate-frame-dim);
+                    margin-bottom: 0.4rem;
+                    letter-spacing: 0.05em;
+                  "
+                >
+                  SECTION LABEL · Inter 700 · 0.7rem uppercase
+                </div>
+                <h3
+                  style="
+                    font-family: var(--mate-font-body);
+                    font-size: 0.7rem;
+                    font-weight: 700;
+                    color: var(--mate-frame-muted);
+                    text-transform: uppercase;
+                    letter-spacing: 0.12em;
+                    margin: 0;
+                  "
+                >
+                  The story
+                </h3>
+              </div>
+
+              <!-- Body -->
+              <div>
+                <div
+                  style="
+                    font-family: var(--mate-font-mono);
+                    font-size: 10px;
+                    color: var(--mate-frame-dim);
+                    margin-bottom: 0.4rem;
+                    letter-spacing: 0.05em;
+                  "
+                >
+                  BODY · Inter 400 · 15px / 1.7
+                </div>
+                <p
+                  style="
+                    font-family: var(--mate-font-body);
+                    font-size: 15px;
+                    line-height: 1.7;
+                    color: var(--mate-frame-text);
+                    margin: 0;
+                  "
+                >
+                  The authentication service had session state locked inside the
+                  legacy monolith; to surface it in the new platform the author
+                  extracted a shared session container and rebuilt both surfaces
+                  as thin adapters on top of it.
+                </p>
+              </div>
+            </div>
+          </section>
+
           <section class="ds-section" id="diff">
             <div class="section-header">
-              <h2>09 — Code Diff</h2>
+              <h2>10 — Code Diff</h2>
               <span class="section-tag">.diff-block</span>
             </div>
             <p class="section-desc">
@@ -605,7 +935,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
 
           <section class="ds-section" id="spec">
             <div class="section-header">
-              <h2>10 — Spec / Right Rail</h2>
+              <h2>11 — Spec / Right Rail</h2>
               <span class="section-tag">.spec-rail</span>
             </div>
             <p class="section-desc">
@@ -752,7 +1082,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
 
           <section class="ds-section" id="tooltips">
             <div class="section-header">
-              <h2>11 — Tooltips</h2>
+              <h2>12 — Tooltips</h2>
               <span class="section-tag">.tooltip</span>
             </div>
             <p class="section-desc">

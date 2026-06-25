@@ -1,0 +1,130 @@
+---
+name: rs-session-audit
+description: Use when you want to scan recent Claude Code sessions to find skill gaps, friction patterns, and write/update opportunities. Trigger on "skill audit", "scan sessions", "what skills should I write", "look back at sessions".
+argument-hint: "[N weeks] [light|heavy]"
+model: sonnet
+allowed-tools:
+  - Bash(find:*)
+  - Bash(jq:*)
+  - Bash(awk:*)
+  - Bash(ls:*)
+  - Bash(head:*)
+  - Bash(tail:*)
+  - Bash(grep:*)
+  - Bash(sed:*)
+  - Bash(date:*)
+  - Bash(sort:*)
+  - Bash(xargs ls:*)
+  - Bash(wc:*)
+---
+
+# rs-session-audit — Skill Gap Audit from Session History
+
+Scans recent Claude Code JSONL session files to surface skill gaps, friction patterns, and opportunities to write or update skills.
+
+## Arguments
+
+```
+$ARGUMENTS
+```
+
+Parse from arguments:
+- **N**: weeks to look back, integer 1–4, default `1`
+- **Mode**: `light` (inline, fast) or `heavy` (parallel agents, thorough), default `light`
+
+Examples: `1`, `2 heavy`, `light`, `4 heavy`
+
+---
+
+## Step 1 — Find Sessions
+
+```bash
+find ~/.claude/projects -name "*.jsonl" -not -path "*/subagents/*" -mtime -$((N*7)) \
+  | xargs ls -lt 2>/dev/null \
+  | awk '$5 > 50000 {print $NF}' \
+  | head -25
+```
+
+Skips single-turn/ephemeral sessions. Cap at 25.
+
+---
+
+## Step 2 — Read Existing Skills
+
+```bash
+ls ~/.claude/skills/ | sort
+```
+
+Keep this list — deduplicate against it in the output.
+
+---
+
+## Step 3 — Extract User Messages
+
+```bash
+jq -r 'select(.type=="user") | select(.isMeta != true) | select(.message.content | type == "string") | .message.content' FILE \
+  | grep -v "^<local-command\|^<system-reminder" \
+  | sed 's/<[^>]*>//g' \
+  | awk 'length > 5 && length < 400' \
+  | head -25
+```
+
+Run in a Bash loop across all files. Long strings (>400 chars) are system-loaded skill/context content injected at session start — not user turns.
+
+---
+
+## Step 4 — Analyze
+
+### Light mode
+
+Analyze all extracted messages inline. For each session identify:
+
+1. **What** the user was doing (one sentence)
+2. **Skills invoked** (`/skill-name` patterns in messages)
+3. **Friction signals** — flag these patterns:
+   - Same instruction repeated 2+ times (or in ALL CAPS like "ALWAYS USE LINKS")
+   - Manual fallback: "go lets do it manually", "I'll just do it"
+   - Confusion about skill: "POKE is a workflow from mate, what are u doing?"
+   - Agent wandered before correct path: long back-and-forth before task started
+
+### Heavy mode
+
+Batch sessions into groups of 3–4. For each batch, dispatch one Agent with:
+
+> "Analyze these JSONL session files. Per session: (1) what the user was doing, (2) skills invoked, (3) friction points — repeated instructions, fallbacks to manual, confusion signals. Return structured markdown. Do not suggest skills that already exist: [paste existing skills list]."
+
+Pass the session file paths and existing skills list.
+
+**If agents fail (API 529 overloaded):** Fall back to light-mode inline analysis immediately. Do not retry.
+
+---
+
+## Step 5 — Output Report
+
+```markdown
+## Skill Audit — [N]-week lookback · [MODE] mode
+
+### New skills to write
+| # | Name | What it does | Evidence | Priority |
+|---|------|-------------|----------|----------|
+
+### Existing skills to update
+| # | Skill | Change needed | Evidence | Priority |
+|---|-------|--------------|----------|----------|
+
+### Friction without a skill fix
+(Agent behavior or user habit patterns — not addressable by writing a skill)
+```
+
+**Priority rubric:** `high` = user was blocked or fell back to manual; `medium` = repeated corrections to agent; `low` = single occurrence or cosmetic.
+
+After the report, offer: _"Want me to `/write-skill` any of these now?"_
+
+---
+
+## Notes
+
+- `isMeta: true` entries are local command echoes — skip them.
+- `content` may be a string or an array; this skill's extraction handles the string case (most user turns). Array-form content (tool results) is not needed.
+- Sessions live under `~/.claude/projects/<project-slug>/`. Each `*.jsonl` at the top level is a main session; `subagents/` holds agent sub-sessions.
+- This skill is read-only. It writes nothing. Offer `/write-skill` for any action items.
