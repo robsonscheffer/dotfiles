@@ -27,6 +27,56 @@ one command.
 
 ---
 
+## Session start — always read these files first
+
+Before any operation, read these three files. Never rely on values remembered
+from a previous session or stated in this skill — the user may have changed
+their config or the design system may have been updated.
+
+**1. User config** — `~/.config/html-artifact.json`
+
+Provides `base_dir`, `port` (default: `52010`), `md_roots`. If the file does
+not exist, run the **First-Run Wizard** before proceeding.
+
+**2. Design tokens** — `~/.claude/skills/html-artifact/assets/css/tokens.yaml`
+
+Provides current token values (hex, rgba) and their intended usage. Use these
+values in inline styles. Do not guess or recall hex values from memory.
+Token names follow the pattern `--mate-<key>` (e.g. `palette.primary.value`
+maps to `var(--mate-primary)`).
+
+**3. Component registry** — `~/.claude/skills/html-artifact/assets/registry.yaml`
+
+Lists all custom components by id, with their class name conventions and
+descriptions. Read per-component `example.html` under
+`~/.claude/skills/html-artifact/assets/components/<id>/` when you need the
+exact markup pattern for a component.
+
+---
+
+## Storage layout and URL routing
+
+The server maps filesystem paths to URL prefixes. **Always derive paths and
+URLs from `base_dir` and `port` read from config — never hard-code them.**
+
+| Tier    | Filesystem path                                   | Server URL                                             |
+| ------- | ------------------------------------------------- | ------------------------------------------------------ |
+| scratch | `<base_dir>/.scratch/artifact/<type>/<slug>.html` | `http://localhost:<port>/scratch/<type>/<slug>.html`   |
+| wiki    | `<base_dir>/wiki/artifact/<type>/<slug>.html`     | `http://localhost:<port>/artifacts/<type>/<slug>.html` |
+| index   | `<base_dir>/wiki/artifact/index.html`             | `http://localhost:<port>/artifacts/index.html`         |
+| style   | (served from skill dist/)                         | `http://localhost:<port>/style/main.css`               |
+| md view | (any file under md_roots)                         | `http://localhost:<port>/md?path=<encoded-path>`       |
+
+`<type>` is one of: `spec`, `report`, `prototype`, `dashboard`.
+
+The route prefixes (`/scratch/`, `/artifacts/`) are fixed conventions — they
+do not change with config. Only `base_dir` and `port` vary per user.
+
+**Never pass the filesystem path to `open` or construct a URL from `<base_dir>`**
+— the server won't find it. The route prefix is the only valid entry point.
+
+---
+
 ## Generating an artifact
 
 1. Choose the template type for the content:
@@ -35,27 +85,38 @@ one command.
    - **prototype** — interactive UI demo
    - **dashboard** — metrics and data tables
 
-2. Read the pre-built template:
-   - `~/.claude/skills/html-artifact/dist/templates/spec.html`
-   - `~/.claude/skills/html-artifact/dist/templates/report.html`
-   - `~/.claude/skills/html-artifact/dist/templates/prototype.html`
-   - `~/.claude/skills/html-artifact/dist/templates/dashboard.html`
+2. Read the pre-built template for the chosen type:
 
-3. Link the stylesheet. Every generated artifact must have this in `<head>`:
-
-   ```html
-   <link rel="stylesheet" href="http://localhost:52010/style/main.css" />
+   ```
+   ~/.claude/skills/html-artifact/dist/templates/<type>.html
    ```
 
-   The persistent server (started via LaunchAgent) serves the compiled CSS at this URL.
-   **Never use a `file://` path and never inline the CSS as a `<style>` block.**
+   **If the template is too large to read in full:** read only the first 80
+   lines (the `<head>` and nav structure), then build the `<body>` from scratch
+   following the design system rules below. Never skip the linter step.
+
+3. Every artifact `<head>` must contain exactly these two link tags and nothing
+   else for styles:
+
+   ```html
+   <link
+     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+     rel="stylesheet"
+   />
+   <link rel="stylesheet" href="http://localhost:<port>/style/main.css" />
+   ```
+
+   Replace `<port>` with the value from config. **Never add a `<style>` block.
+   Never use a `file://` path.** The external stylesheet already defines all
+   mate tokens and compiled Tailwind/DaisyUI utilities. Reference tokens via
+   `var(--mate-*)` in `style=""` inline attrs.
 
 4. Fill the content slots:
    - `<!-- TITLE -->` — artifact title (appears in `<title>`, breadcrumb, and h1)
    - `<!-- DATE -->` — date in `YYYY-MM-DD` format
-   - `<!-- CONTENT -->` comment — replace with your HTML content
-   - `<!-- ADDITIONAL META BADGES -->` — optional: add `<span class="badge ...">` for status chips
-   - `<!-- FOOTER LINK -->` — optional: add a link to the live URL if published
+   - `<!-- CONTENT -->` — replace with your HTML content
+   - `<!-- ADDITIONAL META BADGES -->` — optional status chips
+   - `<!-- FOOTER LINK -->` — optional link to the live URL if published
 
 5. Write the filled template to the output path.
 
@@ -63,96 +124,79 @@ one command.
    ```bash
    node ~/.claude/skills/html-artifact/bin/lint-artifact.mjs <output-path>
    ```
-   Exit 0 = clean. Exit 1 = violations printed with file:line context — fix each one.
+   Exit 0 = clean. Exit 1 = violations with file:line context — fix each one.
 
 ---
 
 ## Design System
 
-Artifacts use DaisyUI v5 + Tailwind v4 as the base layer, with the mate theme applied via
-`data-theme="mate"` on `<html>`. Use DaisyUI class names directly — no custom utilities
-needed for base components. The mate theme overrides DaisyUI's default palette via CSS custom
-properties and oklch color definitions declared in the `<style>` block.
+Artifacts use DaisyUI v5 + Tailwind v4 as the base layer, with the mate theme
+applied via `data-theme="mate"` on `<html>`. Use DaisyUI class names directly
+— no custom utilities needed for base components. All mate tokens are defined
+in the external stylesheet via CSS custom properties.
 
 ### Token vocabulary
 
-These CSS custom properties are defined in every artifact's `<style>` block. Use them — never
-invent raw hex values.
+**Read `~/.claude/skills/html-artifact/assets/css/tokens.yaml` for current
+values.** Never recall hex values from memory — they may change when the
+palette evolves. The YAML structure is:
 
-| Token                  | Value              | Usage                                                                   |
-| ---------------------- | ------------------ | ----------------------------------------------------------------------- |
-| `--mate-primary`       | `#d4764e`          | Brand, CTAs, active states                                              |
-| `--mate-secondary`     | `#c4956a`          | Secondary accents                                                       |
-| `--mate-success`       | `#7db46e`          | Success, done states                                                    |
-| `--mate-warning`       | `#e8b84a`          | Warning, in-progress                                                    |
-| `--mate-error`         | `#e05252`          | Error, destructive                                                      |
-| `--mate-info`          | `#6b9fb4`          | Info, minor severity                                                    |
-| `--mate-frame-bg`      | `#18150f`          | Page background                                                         |
-| `--mate-frame-sidebar` | `#201c15`          | Sidebar background                                                      |
-| `--mate-frame-nav`     | `#1c1810`          | Top nav background                                                      |
-| `--mate-frame-text`    | `#e8e0d4`          | All body copy and descriptive text                                      |
-| `--mate-frame-muted`   | `#a0927e`          | **Labels, captions, rail labels, table headers only** — never body copy |
-| `--mate-frame-dim`     | `#857363`          | Tertiary: timestamps, footer, placeholder text                          |
-| `--mate-font-display`  | Cormorant Garamond | Headings, stat values                                                   |
-| `--mate-font-body`     | Jost               | UI text, labels                                                         |
-| `--mate-font-mono`     | DM Mono            | Code, hex values, numbers                                               |
+```
+palette.<name>.value  → CSS custom property value  (e.g. --mate-primary)
+palette.<name>.usage  → when to apply it
+frame.<name>.value    → frame/surface color value   (e.g. --mate-frame-bg)
+typography.<name>     → font family and weights     (e.g. --mate-font-display)
+```
+
+Use token names in inline styles as `var(--mate-<key>)`. Do not invent raw
+hex or rgba values — compose from token values only.
 
 ### Token usage rules (hard constraints)
 
-These are the most common mistakes. Treat them as invariants, not guidelines.
+These are semantic rules — they hold regardless of what the palette contains.
 
-| Rule                                 | Wrong                           | Right                             |
-| ------------------------------------ | ------------------------------- | --------------------------------- |
-| Body/paragraph text                  | `color:var(--mate-frame-muted)` | `color:var(--mate-frame-text)`    |
-| Rollout step descriptions            | `color:var(--mate-frame-muted)` | `color:var(--mate-frame-text)`    |
-| Table cell content                   | `color:var(--mate-frame-muted)` | `color:var(--mate-frame-text)`    |
-| Table column headers                 | `color:var(--mate-frame-text)`  | `color:var(--mate-frame-muted)`   |
-| Rail label (the small uppercase key) | `color:var(--mate-frame-text)`  | `color:var(--mate-frame-muted)`   |
-| Rail value (the actual value)        | `color:var(--mate-frame-muted)` | `color:var(--mate-frame-text)`    |
-| Body font size                       | `font-size:12px` or `13px`      | `font-size:14px` or `15px`        |
-| Light-mode hex in dark theme         | `background:#fef2f2`            | `background:rgba(212,36,21,0.07)` |
+| Rule                             | Wrong                           | Right                           |
+| -------------------------------- | ------------------------------- | ------------------------------- |
+| Body / paragraph text            | `color:var(--mate-frame-muted)` | `color:var(--mate-frame-text)`  |
+| Table cell content               | `color:var(--mate-frame-muted)` | `color:var(--mate-frame-text)`  |
+| Table column headers             | `color:var(--mate-frame-text)`  | `color:var(--mate-frame-muted)` |
+| Rail label (small uppercase key) | `color:var(--mate-frame-text)`  | `color:var(--mate-frame-muted)` |
+| Rail value (the actual value)    | `color:var(--mate-frame-muted)` | `color:var(--mate-frame-text)`  |
+| Body font size                   | `font-size:12px` or `13px`      | `font-size:14px` or `15px`      |
+| Light-mode hex in dark theme     | `background:#fef2f2`            | use `rgba()` with token value   |
 
-**The rule of thumb:** if a human would read it as content, it gets `--mate-frame-text`. If it is a label _above_ or _beside_ content (never the content itself), it may use `--mate-frame-muted`.
+**The rule of thumb:** if a human reads it as content, use `--mate-frame-text`.
+If it labels content above or beside it, use `--mate-frame-muted`.
 
 ### DaisyUI components (use directly — no special setup)
 
-navbar, breadcrumbs, btn (all variants), input, select, textarea, label, form-control,
-alert (all variants), progress, stats/stat, badge, tooltip, card, table, footer
+navbar, breadcrumbs, btn (all variants), input, select, textarea, label,
+form-control, alert (all variants), progress, stats/stat, badge, tooltip,
+card, table, footer
 
 ### Custom registry components
 
-These are not in DaisyUI. Use the class names exactly as listed — they are compiled into
-`dist/style/main.css` and available in every artifact via the external stylesheet link.
-
-| Component       | Classes                                                                                                                         | When to use                              |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| Severity chip   | `.sev .sev-critical` `.sev-major` `.sev-minor` `.sev-nit`                                                                       | Code review finding severity             |
-| Lifecycle badge | `.badge .badge-open` `.badge-ready` `.badge-building` `.badge-done` `.badge-dropped`                                            | Ticket/artifact lifecycle state          |
-| Stat delta      | `.stat-delta .delta-up` / `.delta-down`                                                                                         | Trend indicator below a stat value       |
-| Code diff       | `.diff-block` `.diff-file-header` `.diff-hunk-header` `.diff-line` `.diff-line.added` `.diff-line.removed` `.diff-line.context` | Unified diff viewer                      |
-| Spec rail       | `.spec-layout` `.spec-rail` `.spec-rail-row` `.spec-rail-label` `.spec-rail-value`                                              | Right metadata panel in spec docs        |
-| Spec decision   | `.spec-decision`                                                                                                                | Left-border callout for design decisions |
-| Palette swatch  | `.swatch-grid` `.swatch-card` `.swatch-color` `.swatch-meta` `.swatch-name` `.swatch-hex`                                       | Color documentation                      |
+**Read `~/.claude/skills/html-artifact/assets/registry.yaml` for the current
+list.** For exact markup patterns, read the component's
+`assets/components/<id>/example.html`. The registry lists component ids,
+class names, and when to use each.
 
 See `~/.claude/skills/html-artifact/dist/showcase.html` for the full live reference.
 
 ### Agent extension rule
 
-When a new component is needed that isn't in DaisyUI or the registry, compose it from
-`var(--mate-*)` tokens. Name classes with the `.mate-` prefix. Do not invent new colors —
-use tokens only.
+When a new component is needed that isn't in DaisyUI or the registry, compose
+it from `var(--mate-*)` tokens using inline styles. Name classes with the
+`.mate-` prefix. Do not invent new colors.
 
 ---
 
 ## Operations
 
-Read `~/.config/html-artifact.json` at the start of every operation.
-If the file does not exist, run the **First-Run Wizard** before proceeding.
-
-> **Before converting external content to HTML:** check whether the server already
-> has a route for it. Markdown files in `md_roots` → use **link-md** below.
-> Only generate an HTML artifact when the content genuinely needs the mate design
-> system rendered as a standalone page.
+> **Before converting external content to HTML:** check whether the server
+> already has a route for it. Markdown files in `md_roots` → use **link-md**
+> below. Only generate an HTML artifact when the content genuinely needs the
+> mate design system rendered as a standalone page.
 
 ### link-md
 
@@ -173,14 +217,27 @@ If the path isn't covered, add it to `md_roots` before continuing.
 
 ```bash
 mdview --url <absolute-path-to-file>
-# → http://localhost:52010/md?path=%2FUsers%2F...%2Ffile.md
+# → http://localhost:<port>/md?path=%2FUsers%2F...%2Ffile.md
 ```
 
-**Add to the index ARTIFACTS array** — use the `/md?path=` URL as the `file` value:
+**Add a row to `wiki/artifact/index.html`** — use the `/md?path=` URL as the
+title link `href`:
 
-```js
-{ title: 'My Plan', type: 'spec', tier: 'wiki', created: '2026-06-15',
-  url: null, file: '/md?path=/Users/robson.scheffer/.../file.md' },
+```html
+<tr>
+  <td>
+    <a href="/md?path=/Users/.../file.md" style="color:var(--mate-primary);"
+      >My Plan</a
+    >
+  </td>
+  <td><span class="badge badge-open">spec</span></td>
+  <td
+    style="font-family:var(--mate-font-mono);font-size:14px;color:var(--mate-frame-muted);"
+  >
+    2026-06-15
+  </td>
+  <td>—</td>
+</tr>
 ```
 
 Commit only the updated `index.html`. No HTML file is created or committed.
@@ -189,19 +246,25 @@ Commit only the updated `index.html`. No HTML file is created or committed.
 
 1. `AskUserQuestion`: "Scratch (ephemeral) or wiki (committed)?" → `scratch` / `wiki`
 2. `AskUserQuestion`: "Type?" → `spec` / `report` / `prototype` / `dashboard`
-3. Derive a slug from the user's topic (kebab-case, max 40 chars, date-prefixed: `2026-06-09-<slug>`).
-4. Generate the HTML file using a pre-built template from `~/.claude/skills/html-artifact/dist/templates/<type>.html`. Follow the **Generating an artifact** section above.
-5. Write to `<base_dir>/wiki/artifact/<type>/<slug>.html` (wiki) or `<base_dir>/.scratch/artifact/<type>/<slug>.html` (scratch).
-6. If tier is `wiki`: update `wiki/artifact/index.html` (see **index.html** below). Commit: `git -C <base_dir> add wiki/artifact/ && git -C <base_dir> commit -m "chore: add artifact <slug>"`. Open at `http://localhost:52010/artifacts/<type>/<slug>.html`.
-7. If tier is `scratch`: write file only. No index update, no commit. Open at `http://localhost:52010/scratch/<type>/<slug>.html`.
+3. Derive a slug from the user's topic (kebab-case, max 40 chars, date-prefixed: `YYYY-MM-DD-<slug>`).
+4. Generate the HTML file following **Generating an artifact** above.
+5. Write to:
+   - scratch → `<base_dir>/.scratch/artifact/<type>/<slug>.html`
+   - wiki → `<base_dir>/wiki/artifact/<type>/<slug>.html`
+6. If tier is `wiki`: add row to `wiki/artifact/index.html`, commit:
+   `git -C <base_dir> add wiki/artifact/ && git -C <base_dir> commit -m "chore: add artifact <slug>"`.
+   Open at `http://localhost:<port>/artifacts/<type>/<slug>.html`.
+7. If tier is `scratch`: write file only. No index update, no commit.
+   Open at `http://localhost:<port>/scratch/<type>/<slug>.html`.
 
 ### promote
 
-1. Ask user which scratch artifact to promote (show list from `.scratch/artifact/`).
-2. `mv <base_dir>/.scratch/artifact/<type>/<file>.html <base_dir>/wiki/artifact/<type>/`
-3. If `<file>.html.pub.json` exists alongside it (e.g. `2026-06-09-my-report.html.pub.json`), move the sidecar too.
-4. Update `wiki/artifact/index.html` to add the promoted artifact.
+1. List `.scratch/artifact/` to show user the available scratch artifacts.
+2. `mv <base_dir>/.scratch/artifact/<type>/<slug>.html <base_dir>/wiki/artifact/<type>/`
+3. If a `<slug>.html.pub.json` sidecar exists alongside it, move that too.
+4. Add row to `wiki/artifact/index.html`.
 5. Commit: `git -C <base_dir> add wiki/artifact/ && git -C <base_dir> commit -m "chore: promote artifact <slug>"`.
+6. Open at `http://localhost:<port>/artifacts/<type>/<slug>.html`.
 
 ### publish
 
@@ -216,7 +279,7 @@ Commit only the updated `index.html`. No HTML file is created or committed.
      [--slug <slug> --owner-key <key>])
    ```
 4. Parse JSON result. Check `ok`. If false, surface `error` to user and stop.
-5. Write/update sidecar `<source>.html.pub.json` (e.g. `2026-06-09-my-report.html.pub.json`):
+5. Write/update sidecar `<source>.html.pub.json`:
    ```json
    {
      "slug": "...",
@@ -226,7 +289,9 @@ Commit only the updated `index.html`. No HTML file is created or committed.
      "published_at": "..."
    }
    ```
-6. Update `index.html`: if no `<tr>` exists for this artifact yet (e.g. publishing from scratch before promoting), add a new row. Otherwise find the `<tr>` whose `<a href>` matches the artifact's relative path (e.g. `report/2026-06-09-my-report.html`) and update its Published `<td>` with `<a href="[url]">share ↗</a>`.
+6. Update `index.html`: find the `<tr>` whose `<a href>` matches the artifact's
+   relative path (e.g. `report/2026-06-09-my-report.html`) and update its
+   Published `<td>` with `<a href="[url]">share ↗</a>`. Add a row if none exists.
 7. Surface both `url` (share) and `manage_url` (author) to the user.
 
 ### serve
@@ -235,29 +300,10 @@ Commit only the updated `index.html`. No HTML file is created or committed.
 node ~/.claude/skills/html-artifact/bin/artifact-serve.mjs
 ```
 
-Opens `wiki/artifact/index.html` in the browser via a local static server.
+If port `<port>` is already in use, the LaunchAgent is running — skip the
+launch and open the URL directly.
 
-**URL routing — use these routes, never filesystem paths:**
-
-| Tier    | Filesystem path                                   | Server URL                                            |
-| ------- | ------------------------------------------------- | ----------------------------------------------------- |
-| scratch | `<base_dir>/.scratch/artifact/<type>/<slug>.html` | `http://localhost:52010/scratch/<type>/<slug>.html`   |
-| wiki    | `<base_dir>/wiki/artifact/<type>/<slug>.html`     | `http://localhost:52010/artifacts/<type>/<slug>.html` |
-| index   | `<base_dir>/wiki/artifact/index.html`             | `http://localhost:52010/artifacts/index.html`         |
-
-After writing a scratch artifact, open it with:
-
-```bash
-open "http://localhost:52010/scratch/<type>/<slug>.html"
-```
-
-After writing a wiki artifact, open it with:
-
-```bash
-open "http://localhost:52010/artifacts/<type>/<slug>.html"
-```
-
-**Never pass the filesystem path to `open` or construct a URL from `<base_dir>`** — the server won't find it. The route prefix (`/scratch/` or `/artifacts/`) is the only valid entry point.
+Opens `http://localhost:<port>/artifacts/index.html`.
 
 ---
 
@@ -278,19 +324,18 @@ Triggers when `~/.config/html-artifact.json` is missing.
    **Optional config keys:**
    - `port` — default `52010`
    - `md_roots` — array of absolute paths the `/md` route is allowed to serve from.
-     Add any repo's `docs/` directory here to enable `link-md` for its markdown files.
      Example: `"md_roots": ["/Users/me/brain", "/Users/me/apps/myrepo/docs"]`
 
-4. Create directories:
+4. Create directories (route convention shown alongside):
    ```
-   <base_dir>/wiki/artifact/spec/
-   <base_dir>/wiki/artifact/report/
-   <base_dir>/wiki/artifact/prototype/
-   <base_dir>/wiki/artifact/dashboard/
-   <base_dir>/.scratch/artifact/spec/
-   <base_dir>/.scratch/artifact/report/
-   <base_dir>/.scratch/artifact/prototype/
-   <base_dir>/.scratch/artifact/dashboard/
+   <base_dir>/wiki/artifact/spec/          → /artifacts/spec/
+   <base_dir>/wiki/artifact/report/        → /artifacts/report/
+   <base_dir>/wiki/artifact/prototype/     → /artifacts/prototype/
+   <base_dir>/wiki/artifact/dashboard/     → /artifacts/dashboard/
+   <base_dir>/.scratch/artifact/spec/      → /scratch/spec/
+   <base_dir>/.scratch/artifact/report/    → /scratch/report/
+   <base_dir>/.scratch/artifact/prototype/ → /scratch/prototype/
+   <base_dir>/.scratch/artifact/dashboard/ → /scratch/dashboard/
    <assets_dir>/
    ```
 5. Write empty `wiki/artifact/index.html` (see **index.html** below, with empty tbody).
@@ -300,10 +345,11 @@ Triggers when `~/.config/html-artifact.json` is missing.
 
 ## index.html
 
-The manifest file at `wiki/artifact/index.html`. Claude maintains this — update on every `new` (wiki), `promote`, and `publish` operation.
+The manifest file at `<base_dir>/wiki/artifact/index.html`. Update on every
+`new` (wiki), `promote`, `link-md`, and `publish` operation.
 
-Use the `dashboard` pre-built template from `dist/templates/dashboard.html` as the base. Fill
-`<!-- TITLE -->` with `Artifact Index`, then replace `<!-- CONTENT -->` with:
+Use the `dashboard` pre-built template as the base. Fill `<!-- TITLE -->` with
+`Artifact Index`, then replace `<!-- CONTENT -->` with:
 
 ```html
 <table class="table w-full">
@@ -332,14 +378,25 @@ Use the `dashboard` pre-built template from `dist/templates/dashboard.html` as t
     </tr>
   </thead>
   <tbody>
-    <!-- one <tr> per artifact — added by Claude on new/promote/publish -->
-    <!-- example row:
+    <!-- one <tr> per artifact — added by Claude on new/promote/publish/link-md -->
+    <!-- HTML artifact row (href is relative to /artifacts/):
     <tr>
       <td><a href="report/2026-06-09-my-report.html" style="color:var(--mate-primary);">My Report</a></td>
       <td><span class="badge badge-done">report</span></td>
-      <td style="font-family:var(--mate-font-mono);font-size:13px;color:var(--mate-frame-muted);">2026-06-09</td>
-      <td><a href="https://share.html.com/abc123" style="color:var(--mate-primary);">share ↗</a></td>
+      <td style="font-family:var(--mate-font-mono);font-size:14px;color:var(--mate-frame-muted);">2026-06-09</td>
+      <td>—</td>
     </tr>
+    -->
+    <!-- Markdown row (href is the full /md?path= server URL):
+    <tr>
+      <td><a href="/md?path=/Users/.../file.md" style="color:var(--mate-primary);">My Plan</a></td>
+      <td><span class="badge badge-open">spec</span></td>
+      <td style="font-family:var(--mate-font-mono);font-size:14px;color:var(--mate-frame-muted);">2026-06-15</td>
+      <td>—</td>
+    </tr>
+    -->
+    <!-- Published — fill the Published td with the share URL:
+    <td><a href="https://..." style="color:var(--mate-primary);">share ↗</a></td>
     -->
   </tbody>
 </table>
