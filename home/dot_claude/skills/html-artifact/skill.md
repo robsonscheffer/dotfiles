@@ -192,8 +192,8 @@ Commit only the updated `index.html`. No HTML file is created or committed.
 3. Derive a slug from the user's topic (kebab-case, max 40 chars, date-prefixed: `2026-06-09-<slug>`).
 4. Generate the HTML file using a pre-built template from `~/.claude/skills/html-artifact/dist/templates/<type>.html`. Follow the **Generating an artifact** section above.
 5. Write to `<base_dir>/wiki/artifact/<type>/<slug>.html` (wiki) or `<base_dir>/.scratch/artifact/<type>/<slug>.html` (scratch).
-6. If tier is `wiki`: update `wiki/artifact/index.html` (see **index.html** below). Commit: `git -C <base_dir> add wiki/artifact/ && git -C <base_dir> commit -m "chore: add artifact <slug>"`.
-7. If tier is `scratch`: write file only. No index update, no commit.
+6. If tier is `wiki`: update `wiki/artifact/index.html` (see **index.html** below). Commit: `git -C <base_dir> add wiki/artifact/ && git -C <base_dir> commit -m "chore: add artifact <slug>"`. Open at `http://localhost:52010/artifacts/<type>/<slug>.html`.
+7. If tier is `scratch`: write file only. No index update, no commit. Open at `http://localhost:52010/scratch/<type>/<slug>.html`.
 
 ### promote
 
@@ -236,6 +236,28 @@ node ~/.claude/skills/html-artifact/bin/artifact-serve.mjs
 ```
 
 Opens `wiki/artifact/index.html` in the browser via a local static server.
+
+**URL routing — use these routes, never filesystem paths:**
+
+| Tier    | Filesystem path                                   | Server URL                                            |
+| ------- | ------------------------------------------------- | ----------------------------------------------------- |
+| scratch | `<base_dir>/.scratch/artifact/<type>/<slug>.html` | `http://localhost:52010/scratch/<type>/<slug>.html`   |
+| wiki    | `<base_dir>/wiki/artifact/<type>/<slug>.html`     | `http://localhost:52010/artifacts/<type>/<slug>.html` |
+| index   | `<base_dir>/wiki/artifact/index.html`             | `http://localhost:52010/artifacts/index.html`         |
+
+After writing a scratch artifact, open it with:
+
+```bash
+open "http://localhost:52010/scratch/<type>/<slug>.html"
+```
+
+After writing a wiki artifact, open it with:
+
+```bash
+open "http://localhost:52010/artifacts/<type>/<slug>.html"
+```
+
+**Never pass the filesystem path to `open` or construct a URL from `<base_dir>`** — the server won't find it. The route prefix (`/scratch/` or `/artifacts/`) is the only valid entry point.
 
 ---
 
