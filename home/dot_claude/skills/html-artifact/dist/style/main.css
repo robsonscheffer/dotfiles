@@ -16932,8 +16932,8 @@
   --mate-frame-muted: #a0927e;
   --mate-frame-dim: #857363;
   --mate-font-display: "Cormorant Garamond", Georgia, serif;
-  --mate-font-body: "Inter", system-ui, sans-serif;
-  --mate-font-mono: "JetBrains Mono", monospace;
+  --mate-font-body: "Jost", system-ui, sans-serif;
+  --mate-font-mono: "DM Mono", monospace;
 }
 body {
   font-family: var(--mate-font-body);
@@ -17086,7 +17086,7 @@ body:after {
 }
 .section-tag {
   font-family: var(--mate-font-mono);
-  color: var(--mate-frame-dim);
+  color: var(--mate-frame-muted);
   background: var(--mate-frame-text);
   font-size: 12px;
 }
@@ -17476,4 +17476,27 @@ body:after {
 /* frame-text on terracotta is 2.46:1; frame-bg gives ~5:1 */
 .btn-primary {
   color: var(--mate-frame-bg);
+}
+
+/* DaisyUI error button is too saturated for mate dark theme — use a soft destructive style */
+.btn-error {
+  --btn-color: color-mix(
+    in oklab,
+    var(--mate-error) 18%,
+    var(--mate-frame-sidebar)
+  );
+  --btn-fg: #ec6b6b;
+  --btn-border: color-mix(in oklab, var(--mate-error) 45%, transparent);
+}
+
+/* btn default has no --size set; pin to md (2.5rem) so size variants are comparable */
+.btn:not(.btn-xs):not(.btn-sm):not(.btn-md):not(.btn-lg):not(.btn-xl) {
+  --size: calc(var(--size-field, 0.25rem) * 10);
+}
+
+/* DaisyUI alert-error full fill is too saturated for mate dark theme */
+.alert-error {
+  background: rgba(224, 82, 82, 0.1);
+  border-color: rgba(224, 82, 82, 0.28);
+  color: var(--mate-frame-text);
 }

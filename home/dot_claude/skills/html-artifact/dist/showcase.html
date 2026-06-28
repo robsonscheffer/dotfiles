@@ -18290,7 +18290,7 @@
         class="w-56 shrink-0 sticky top-12 h-[calc(100vh-3rem)] overflow-y-auto bg-[var(--mate-frame-sidebar)] border-r border-[var(--mate-frame-border)] py-5"
       >
         <div
-          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-dim)]"
+          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-muted)]"
         >
           Components
         </div>
@@ -18320,7 +18320,7 @@
         >
 
         <div
-          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-dim)]"
+          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-muted)]"
         >
           Document layout
         </div>
@@ -18335,7 +18335,7 @@
         >
 
         <div
-          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-dim)]"
+          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-muted)]"
         >
           Resources
         </div>
@@ -18436,18 +18436,18 @@
               when the action destroys.
             </p>
             <div class="preview-card">
-              <div class="preview-row">
+              <div class="preview-row items-center">
                 <button class="btn btn-primary">Save changes</button>
-                <button class="btn btn-outline btn-secondary">Cancel</button>
+                <button class="btn btn-outline">Cancel</button>
                 <button class="btn btn-ghost">Dismiss</button>
                 <button class="btn btn-error">Delete report</button>
               </div>
               <div class="preview-divider"></div>
-              <div class="preview-row">
-                <button class="btn">Default</button>
-                <button class="btn btn-sm">Small</button>
-                <button class="btn btn-outline btn-sm">Outline small</button>
-                <button class="btn btn-ghost btn-sm">Ghost small</button>
+              <div class="preview-row items-end">
+                <button class="btn btn-lg btn-primary">Large</button>
+                <button class="btn btn-primary">Default</button>
+                <button class="btn btn-sm btn-primary">Small</button>
+                <button class="btn btn-xs btn-primary">X-small</button>
               </div>
             </div>
           </section>
@@ -18728,49 +18728,84 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             <div class="preview-card">
               <div class="swatch-group-label">Brand</div>
               <div class="swatch-grid">
-                <div class="swatch">
-                  <div class="swatch-chip" style="background: #d4764e"></div>
-                  <div class="swatch-name">Primary</div>
-                  <div class="swatch-hex">#d4764e</div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #d4764e"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Primary</div>
+                    <div class="swatch-token">--mate-primary</div>
+                    <div class="swatch-hex">#d4764e</div>
+                  </div>
                 </div>
-                <div class="swatch">
-                  <div class="swatch-chip" style="background: #c4956a"></div>
-                  <div class="swatch-name">Secondary</div>
-                  <div class="swatch-hex">#c4956a</div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #c4956a"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Secondary</div>
+                    <div class="swatch-token">--mate-secondary</div>
+                    <div class="swatch-hex">#c4956a</div>
+                  </div>
                 </div>
-                <div class="swatch">
-                  <div class="swatch-chip" style="background: #5a9a4e"></div>
-                  <div class="swatch-name">Erva</div>
-                  <div class="swatch-hex">#5a9a4e</div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #5a9a4e"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Erva</div>
+                    <div class="swatch-token">--mate-erva</div>
+                    <div class="swatch-hex">#5a9a4e</div>
+                  </div>
                 </div>
-                <div class="swatch">
-                  <div class="swatch-chip" style="background: #18150f"></div>
-                  <div class="swatch-name">Frame</div>
-                  <div class="swatch-hex">#18150f</div>
+                <div
+                  class="swatch-card"
+                  style="border-color: var(--mate-frame-border)"
+                >
+                  <div
+                    class="swatch-color"
+                    style="
+                      background: #18150f;
+                      border-bottom: 1px solid var(--mate-frame-border);
+                    "
+                  ></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Frame</div>
+                    <div class="swatch-token">--mate-frame-bg</div>
+                    <div class="swatch-hex">#18150f</div>
+                  </div>
                 </div>
               </div>
 
-              <div class="swatch-group-label">Semantic</div>
+              <div class="swatch-group-label" style="margin-top: 20px">
+                Semantic
+              </div>
               <div class="swatch-grid">
-                <div class="swatch">
-                  <div class="swatch-chip" style="background: #7db46e"></div>
-                  <div class="swatch-name">Success</div>
-                  <div class="swatch-hex">#7db46e</div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #7db46e"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Success</div>
+                    <div class="swatch-token">--mate-success</div>
+                    <div class="swatch-hex">#7db46e</div>
+                  </div>
                 </div>
-                <div class="swatch">
-                  <div class="swatch-chip" style="background: #e8b84a"></div>
-                  <div class="swatch-name">Warning</div>
-                  <div class="swatch-hex">#e8b84a</div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #e8b84a"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Warning</div>
+                    <div class="swatch-token">--mate-warning</div>
+                    <div class="swatch-hex">#e8b84a</div>
+                  </div>
                 </div>
-                <div class="swatch">
-                  <div class="swatch-chip" style="background: #e05252"></div>
-                  <div class="swatch-name">Error</div>
-                  <div class="swatch-hex">#e05252</div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #e05252"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Error</div>
+                    <div class="swatch-token">--mate-error</div>
+                    <div class="swatch-hex">#e05252</div>
+                  </div>
                 </div>
-                <div class="swatch">
-                  <div class="swatch-chip" style="background: #6b9fb4"></div>
-                  <div class="swatch-name">Info</div>
-                  <div class="swatch-hex">#6b9fb4</div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #6b9fb4"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Info</div>
+                    <div class="swatch-token">--mate-info</div>
+                    <div class="swatch-hex">#6b9fb4</div>
+                  </div>
                 </div>
               </div>
             </div>
