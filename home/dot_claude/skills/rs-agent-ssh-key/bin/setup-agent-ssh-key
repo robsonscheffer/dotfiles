@@ -28,6 +28,7 @@ if [[ -z "$AGENT_EMAIL" ]]; then
 fi
 
 [[ -z "$KEY_PATH" ]] && KEY_PATH="$HOME/.ssh/agents/work/id_ed25519"
+KEY_PATH="${KEY_PATH/#\~/$HOME}"
 
 GITCONFIG_D="$HOME/.gitconfig.d"
 GITCONFIG_AGENT="$GITCONFIG_D/claude-agent-work"
