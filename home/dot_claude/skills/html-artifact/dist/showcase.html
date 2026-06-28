@@ -444,6 +444,9 @@
         .fixed {
           position: fixed;
         }
+        .static {
+          position: static;
+        }
         .sticky {
           position: sticky;
         }
@@ -533,6 +536,9 @@
         }
         .shrink-0 {
           flex-shrink: 0;
+        }
+        .border-collapse {
+          border-collapse: collapse;
         }
         .grid-cols-1 {
           grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -19308,6 +19314,16 @@
           class="px-5 pb-1.5 mt-5 text-[11px] font-semibold uppercase tracking-widest"
           style="color: var(--mate-frame-dim)"
         >
+          Dashboards
+        </div>
+        <a class="sidebar-link" href="#burndown"
+          ><span class="num">17</span> Burndown</a
+        >
+
+        <div
+          class="px-5 pb-1.5 mt-5 text-[11px] font-semibold uppercase tracking-widest"
+          style="color: var(--mate-frame-dim)"
+        >
           Resources
         </div>
         <a
@@ -20487,6 +20503,341 @@ const LEGACY_FLAG = process.env.USE_OLD_PIPELINE === 'true';</code></pre>
                   </div>
                 </div>
               </div>
+            </div>
+          </section>
+
+          <!-- 17 Burndown Dashboard -->
+          <section class="ds-section" id="burndown">
+            <div class="section-header">
+              <h2>17 — Burndown Dashboard</h2>
+              <span class="section-tag"
+                >burndown-sync · .progress · .badge</span
+              >
+            </div>
+            <p class="section-desc">
+              Generated from <code>docs/plans/</code> ticket structure via
+              <code>burndown-sync</code>. Shows per-phase progress, stat tiles,
+              and a ticket-level table. Use <code>--epic</code> +
+              <code>--prefix</code> flags to target an epic.
+            </p>
+            <div class="preview-card">
+              <!-- A. Stat grid -->
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: repeat(4, 1fr);
+                  gap: 12px;
+                  margin-bottom: 24px;
+                "
+              >
+                <div
+                  style="
+                    background: var(--mate-frame-sidebar);
+                    border: 1px solid var(--mate-frame-border);
+                    border-radius: 8px;
+                    padding: 20px;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 10px;
+                      text-transform: uppercase;
+                      letter-spacing: 0.08em;
+                      color: var(--mate-frame-muted);
+                      margin-bottom: 8px;
+                    "
+                  >
+                    Total
+                  </div>
+                  <div
+                    style="
+                      font-size: 36px;
+                      font-family: var(--mate-font-display);
+                      color: var(--mate-frame-text);
+                      line-height: 1;
+                    "
+                  >
+                    12
+                  </div>
+                </div>
+                <div
+                  style="
+                    background: var(--mate-frame-sidebar);
+                    border: 1px solid var(--mate-frame-border);
+                    border-radius: 8px;
+                    padding: 20px;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 10px;
+                      text-transform: uppercase;
+                      letter-spacing: 0.08em;
+                      color: var(--mate-frame-muted);
+                      margin-bottom: 8px;
+                    "
+                  >
+                    Done
+                  </div>
+                  <div
+                    style="
+                      font-size: 36px;
+                      font-family: var(--mate-font-display);
+                      color: var(--color-success);
+                      line-height: 1;
+                    "
+                  >
+                    9
+                  </div>
+                </div>
+                <div
+                  style="
+                    background: var(--mate-frame-sidebar);
+                    border: 1px solid var(--mate-frame-border);
+                    border-radius: 8px;
+                    padding: 20px;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 10px;
+                      text-transform: uppercase;
+                      letter-spacing: 0.08em;
+                      color: var(--mate-frame-muted);
+                      margin-bottom: 8px;
+                    "
+                  >
+                    Building
+                  </div>
+                  <div
+                    style="
+                      font-size: 36px;
+                      font-family: var(--mate-font-display);
+                      color: var(--color-warning);
+                      line-height: 1;
+                    "
+                  >
+                    2
+                  </div>
+                </div>
+                <div
+                  style="
+                    background: var(--mate-frame-sidebar);
+                    border: 1px solid var(--mate-frame-border);
+                    border-radius: 8px;
+                    padding: 20px;
+                  "
+                >
+                  <div
+                    style="
+                      font-size: 10px;
+                      text-transform: uppercase;
+                      letter-spacing: 0.08em;
+                      color: var(--mate-frame-muted);
+                      margin-bottom: 8px;
+                    "
+                  >
+                    Open
+                  </div>
+                  <div
+                    style="
+                      font-size: 36px;
+                      font-family: var(--mate-font-display);
+                      color: var(--mate-frame-text);
+                      line-height: 1;
+                    "
+                  >
+                    1
+                  </div>
+                </div>
+              </div>
+
+              <!-- B. Overall progress bar -->
+              <div style="margin-bottom: 24px">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: baseline;
+                    margin-bottom: 6px;
+                  "
+                >
+                  <span
+                    style="
+                      font-size: 12px;
+                      font-weight: 600;
+                      color: var(--mate-frame-text);
+                      text-transform: uppercase;
+                      letter-spacing: 0.06em;
+                    "
+                    >Overall progress</span
+                  >
+                  <span
+                    style="
+                      font-size: 13px;
+                      font-family: var(--mate-font-mono);
+                      color: var(--mate-frame-muted);
+                    "
+                    >75%</span
+                  >
+                </div>
+                <progress
+                  class="progress progress-success"
+                  value="9"
+                  max="12"
+                ></progress>
+              </div>
+
+              <!-- C. Phase card -->
+              <div
+                style="
+                  background: var(--mate-frame-sidebar);
+                  border: 1px solid var(--mate-frame-border);
+                  border-radius: 8px;
+                  padding: 20px;
+                  margin-bottom: 24px;
+                "
+              >
+                <div
+                  style="
+                    font-size: 10px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.08em;
+                    color: var(--mate-frame-muted);
+                    margin-bottom: 6px;
+                  "
+                >
+                  Phase 1 · Foundation
+                </div>
+                <div
+                  style="
+                    font-size: 28px;
+                    font-family: var(--mate-font-display);
+                    color: var(--mate-frame-text);
+                    line-height: 1;
+                    margin-bottom: 10px;
+                  "
+                >
+                  6 / 8
+                </div>
+                <progress
+                  class="progress progress-success"
+                  value="6"
+                  max="8"
+                  style="margin-bottom: 8px"
+                ></progress>
+                <div
+                  style="
+                    font-size: 12px;
+                    color: var(--mate-frame-muted);
+                    font-family: var(--mate-font-mono);
+                  "
+                >
+                  2 building · 1 open
+                </div>
+              </div>
+
+              <!-- D. Phase table row sample -->
+              <table
+                style="
+                  width: 100%;
+                  border-collapse: collapse;
+                  font-size: 13px;
+                  color: var(--mate-frame-text);
+                "
+              >
+                <thead>
+                  <tr
+                    style="
+                      border-bottom: 1px solid var(--mate-frame-border);
+                      text-align: left;
+                    "
+                  >
+                    <th
+                      style="
+                        padding: 8px 12px;
+                        font-size: 10px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.08em;
+                        color: var(--mate-frame-muted);
+                        font-weight: 600;
+                      "
+                    >
+                      ID
+                    </th>
+                    <th
+                      style="
+                        padding: 8px 12px;
+                        font-size: 10px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.08em;
+                        color: var(--mate-frame-muted);
+                        font-weight: 600;
+                      "
+                    >
+                      Title
+                    </th>
+                    <th
+                      style="
+                        padding: 8px 12px;
+                        font-size: 10px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.08em;
+                        color: var(--mate-frame-muted);
+                        font-weight: 600;
+                      "
+                    >
+                      Status
+                    </th>
+                    <th
+                      style="
+                        padding: 8px 12px;
+                        font-size: 10px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.08em;
+                        color: var(--mate-frame-muted);
+                        font-weight: 600;
+                      "
+                    >
+                      Needs
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom: 1px solid var(--mate-frame-border)">
+                    <td
+                      style="
+                        padding: 10px 12px;
+                        font-family: var(--mate-font-mono);
+                        font-size: 12px;
+                        white-space: nowrap;
+                      "
+                    >
+                      <a href="#" style="color: var(--mate-primary)"
+                        >MATE-042</a
+                      >
+                    </td>
+                    <td style="padding: 10px 12px">
+                      Worker connection consolidation
+                    </td>
+                    <td style="padding: 10px 12px">
+                      <span class="badge badge-soft badge-building"
+                        >building</span
+                      >
+                    </td>
+                    <td
+                      style="
+                        padding: 10px 12px;
+                        font-family: var(--mate-font-mono);
+                        font-size: 12px;
+                        color: var(--mate-frame-muted);
+                      "
+                    >
+                      verify
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </section>
         </div>

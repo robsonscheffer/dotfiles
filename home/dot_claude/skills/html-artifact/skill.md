@@ -340,6 +340,29 @@ The source file on disk is never modified.
 
 9. Surface both `url` (share) and `manage_url` (author) to the user.
 
+### burndown-sync
+
+Generate an epic progress dashboard from a repo's `docs/plans/` ticket structure.
+
+```bash
+burndown-sync \
+  --repo <repo-root> \
+  --prefix <PREFIX> \
+  --epic <path-to-epic.md> \
+  --out <base_dir>/wiki/artifact/dashboard/<slug>.html
+```
+
+| Flag       | Required | Description                                            |
+| ---------- | -------- | ------------------------------------------------------ |
+| `--repo`   | yes      | Repo root containing `docs/plans/{active,done}/`       |
+| `--prefix` | yes      | Ticket prefix (e.g. `CANVAS`, `MATE`)                  |
+| `--epic`   | yes      | Path to `docs/epics/<slug>.md`                         |
+| `--out`    | yes      | Output HTML path (write to `wiki/artifact/dashboard/`) |
+| `--title`  | no       | Epic title (default: first `#` heading in epic md)     |
+| `--date`   | no       | Generation date `YYYY-MM-DD` (default: today)          |
+
+After writing, add a row to `wiki/artifact/index.html` and commit.
+
 ### serve
 
 ```bash
