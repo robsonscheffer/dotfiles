@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en" data-theme="mate">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><!-- EPIC_TITLE --> · burndown</title>
+    <script>
+      (function () {
+        var t = localStorage.getItem("mate-theme");
+        if (!t)
+          t = matchMedia("(prefers-color-scheme: dark)").matches
+            ? "mate"
+            : "mate-light";
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../style/main.css" />
+  </head>
+  <body>
+    <div class="grain"></div>
+    <header
+      class="sticky top-0 z-20 h-12 flex items-center px-4 md:px-6 gap-4"
+      style="
+        background: var(--mate-frame-nav);
+        border-bottom: 1px solid var(--mate-frame-border);
+      "
+    >
+      <div class="flex-1 flex items-center gap-6 min-w-0">
+        <span
+          style="
+            font-family: var(--mate-font-display);
+            font-size: 18px;
+            color: var(--mate-frame-text);
+            white-space: nowrap;
+          "
+          >mate-<em style="color: var(--mate-primary); font-weight: 400"
+            >ds</em
+          ></span
+        >
+        <nav class="hidden md:flex items-center gap-4">
+          <a
+            class="text-sm"
+            style="color: var(--mate-frame-muted)"
+            href="../showcase.html"
+            >Components</a
+          >
+          <a
+            class="text-sm"
+            style="color: var(--mate-frame-muted)"
+            href="report.html"
+            >Reports</a
+          >
+          <a
+            class="text-sm"
+            style="color: var(--mate-frame-muted)"
+            href="spec.html"
+            >Specs</a
+          >
+          <a
+            class="text-sm"
+            style="color: var(--mate-frame-muted)"
+            href="prototype.html"
+            >Prototypes</a
+          >
+          <a
+            class="text-sm"
+            style="color: var(--mate-frame-muted)"
+            href="blog.html"
+            >Blog</a
+          >
+        </nav>
+      </div>
+      <select
+        id="theme-switcher"
+        onchange="setTheme(this.value)"
+        style="
+          font-family: var(--mate-font-body);
+          font-size: 12px;
+          color: var(--mate-frame-muted);
+          background: var(--mate-frame-sidebar);
+          border: 1px solid var(--mate-frame-border);
+          border-radius: 6px;
+          padding: 3px 8px;
+          cursor: pointer;
+          outline: none;
+        "
+      >
+        <option value="mate">mate</option>
+        <option value="mate-light">mate-light</option>
+        <option value="gruvbox">gruvbox</option>
+        <option value="gruvbox-light">gruvbox-light</option>
+      </select>
+    </header>
+
+    <main style="max-width: 960px; margin: 0 auto; padding: 40px 40px 80px">
+      <!-- Artifact header -->
+      <div
+        style="
+          border-bottom: 1px solid var(--mate-frame-border);
+          padding-bottom: 24px;
+          margin-bottom: 32px;
+        "
+      >
+        <h1
+          style="
+            font-family: var(--mate-font-display);
+            font-size: 44px;
+            font-weight: 600;
+            color: var(--mate-frame-text);
+            letter-spacing: -0.015em;
+            margin: 0 0 12px;
+            line-height: 1.1;
+          "
+        >
+          <!-- EPIC_TITLE -->
+        </h1>
+        <div
+          class="meta"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            font-family: var(--mate-font-body);
+            font-size: 13px;
+            color: var(--mate-frame-muted);
+          "
+        >
+          <!-- META -->
+        </div>
+      </div>
+
+      <!-- Overall progress -->
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 12px;
+          margin-bottom: 32px;
+        "
+      >
+        <div
+          style="
+            background: var(--mate-frame-sidebar);
+            border: 1px solid var(--mate-frame-border);
+            border-radius: 8px;
+            padding: 20px;
+          "
+        >
+          <div
+            style="
+              font-size: 10px;
+              letter-spacing: 0.14em;
+              text-transform: uppercase;
+              color: var(--mate-frame-muted);
+              font-family: var(--mate-font-body);
+              margin-bottom: 6px;
+            "
+          >
+            Total
+          </div>
+          <div
+            style="
+              font-family: var(--mate-font-display);
+              font-size: 36px;
+              font-weight: 600;
+              color: var(--mate-frame-text);
+              line-height: 1;
+            "
+          >
+            <!-- STAT_TOTAL -->
+          </div>
+        </div>
+        <div
+          style="
+            background: var(--mate-frame-sidebar);
+            border: 1px solid var(--mate-frame-border);
+            border-radius: 8px;
+            padding: 20px;
+          "
+        >
+          <div
+            style="
+              font-size: 10px;
+              letter-spacing: 0.14em;
+              text-transform: uppercase;
+              color: var(--mate-frame-muted);
+              font-family: var(--mate-font-body);
+              margin-bottom: 6px;
+            "
+          >
+            Done
+          </div>
+          <div
+            style="
+              font-family: var(--mate-font-display);
+              font-size: 36px;
+              font-weight: 600;
+              color: var(--color-success, #22c55e);
+              line-height: 1;
+            "
+          >
+            <!-- STAT_DONE -->
+          </div>
+        </div>
+        <div
+          style="
+            background: var(--mate-frame-sidebar);
+            border: 1px solid var(--mate-frame-border);
+            border-radius: 8px;
+            padding: 20px;
+          "
+        >
+          <div
+            style="
+              font-size: 10px;
+              letter-spacing: 0.14em;
+              text-transform: uppercase;
+              color: var(--mate-frame-muted);
+              font-family: var(--mate-font-body);
+              margin-bottom: 6px;
+            "
+          >
+            Building
+          </div>
+          <div
+            style="
+              font-family: var(--mate-font-display);
+              font-size: 36px;
+              font-weight: 600;
+              color: var(--color-warning, #f59e0b);
+              line-height: 1;
+            "
+          >
+            <!-- STAT_BUILDING -->
+          </div>
+        </div>
+        <div
+          style="
+            background: var(--mate-frame-sidebar);
+            border: 1px solid var(--mate-frame-border);
+            border-radius: 8px;
+            padding: 20px;
+          "
+        >
+          <div
+            style="
+              font-size: 10px;
+              letter-spacing: 0.14em;
+              text-transform: uppercase;
+              color: var(--mate-frame-muted);
+              font-family: var(--mate-font-body);
+              margin-bottom: 6px;
+            "
+          >
+            Open
+          </div>
+          <div
+            style="
+              font-family: var(--mate-font-display);
+              font-size: 36px;
+              font-weight: 600;
+              color: var(--mate-frame-text);
+              line-height: 1;
+            "
+          >
+            <!-- STAT_OPEN -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Overall progress bar -->
+      <div style="margin-bottom: 40px">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+          "
+        >
+          <span
+            style="
+              font-family: var(--mate-font-body);
+              font-size: 12px;
+              color: var(--mate-frame-muted);
+              text-transform: uppercase;
+              letter-spacing: 0.1em;
+            "
+            >Overall progress</span
+          >
+          <span
+            style="
+              font-family: var(--mate-font-mono);
+              font-size: 14px;
+              color: var(--mate-frame-text);
+            "
+            ><!-- STAT_PROGRESS --></span
+          >
+        </div>
+        <progress
+          class="progress progress-success"
+          value="<!-- PROGRESS_VALUE -->"
+          max="<!-- PROGRESS_MAX -->"
+          style="width: 100%; height: 8px"
+        ></progress>
+      </div>
+
+      <!-- Phase summary cards -->
+      <div
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 12px;
+          margin-bottom: 48px;
+        "
+      >
+        <!-- PHASE_CARDS -->
+      </div>
+
+      <!-- Phase detail tables -->
+      <!-- PHASE_TABLES -->
+
+      <footer
+        style="
+          margin-top: 80px;
+          border-top: 1px solid var(--mate-frame-border);
+          padding-top: 16px;
+          display: flex;
+          justify-content: space-between;
+          font-size: 12px;
+          color: var(--mate-frame-dim);
+          font-family: var(--mate-font-body);
+        "
+      >
+        <span>Generated by html-artifact skill</span>
+        <span><!-- EPIC_TITLE --></span>
+      </footer>
+    </main>
+    <script>
+      function setTheme(v) {
+        document.documentElement.setAttribute("data-theme", v);
+        localStorage.setItem("mate-theme", v);
+        var s = document.getElementById("theme-switcher");
+        if (s) s.value = v;
+      }
+      var sel = document.getElementById("theme-switcher");
+      if (sel)
+        sel.value =
+          document.documentElement.getAttribute("data-theme") || "mate";
+    </script>
+  </body>
+</html>

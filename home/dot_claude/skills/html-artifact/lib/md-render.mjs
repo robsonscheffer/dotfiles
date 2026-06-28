@@ -96,16 +96,20 @@ function renderRail(data) {
     ([, v]) => v !== null && v !== undefined && v !== "",
   );
   if (entries.length === 0) return "";
-  return entries
+  const rows = entries
     .map(([key, value]) => {
-      const display = Array.isArray(value) ? value.join(", ") : String(value);
-      return `
-  <div class="spec-rail-row">
+      const display = Array.isArray(value)
+        ? value.join(", ")
+        : value instanceof Date
+          ? value.toISOString().slice(0, 10)
+          : String(value);
+      return `  <div class="spec-rail-row">
     <div class="spec-rail-label">${escapeHtml(key)}</div>
     <div class="spec-rail-value">${escapeHtml(display)}</div>
   </div>`;
     })
-    .join("");
+    .join("\n");
+  return `<nav class="spec-rail">\n${rows}\n</nav>`;
 }
 
 function deriveTitle(data, content, fallback) {
@@ -184,9 +188,20 @@ function resolveEpicPath(epicRef, sourceFile, repoRoot) {
   return null;
 }
 
+function readBaseDir() {
+  try {
+    const cfg = JSON.parse(
+      readFileSync(join(homedir(), ".config", "html-artifact.json"), "utf8"),
+    );
+    return cfg.base_dir ? expandPath(cfg.base_dir) : join(homedir(), "brain");
+  } catch {
+    return join(homedir(), "brain");
+  }
+}
+
 function findDashboardForEpic(epicSlug) {
   if (!epicSlug) return null;
-  const dir = join(homedir(), "brain", "wiki", "artifact", "dashboard");
+  const dir = join(readBaseDir(), "wiki", "artifact", "dashboard");
   if (!existsSync(dir)) return null;
   const matches = readdirSync(dir)
     .filter((f) => f.endsWith(".html") && f.includes(epicSlug))

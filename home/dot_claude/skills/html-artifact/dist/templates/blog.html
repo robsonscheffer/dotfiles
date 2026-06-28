@@ -19147,6 +19147,8 @@
   </head>
   <body>
     <div class="grain"></div>
+    <div class="reading-progress" id="reading-progress"></div>
+
     <header
       class="sticky top-0 z-20 h-12 flex items-center px-4 md:px-6 gap-4"
       style="
@@ -19193,7 +19195,7 @@
           >
           <a
             class="text-sm"
-            style="color: var(--mate-frame-muted)"
+            style="color: var(--mate-frame-text)"
             href="blog.html"
             >Blog</a
           >
@@ -19221,77 +19223,123 @@
       </select>
     </header>
 
-    <div
-      class="spec-layout"
-      style="max-width: 960px; margin: 0 auto; padding: 40px 40px 80px"
-    >
+    <div class="blog-layout with-toc">
       <article>
-        <nav
-          aria-label="Breadcrumb"
-          style="
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            font-family: var(--mate-font-body);
-            color: var(--mate-frame-muted);
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-          "
-        >
-          <!-- BREADCRUMB -->
+        <nav aria-label="Breadcrumb" style="margin-bottom: 28px">
+          <ol class="breadcrumb">
+            <li><a href="#">Artifacts</a></li>
+            <li><a href="#">Blog</a></li>
+            <li aria-current="page"><!-- TITLE --></li>
+          </ol>
         </nav>
 
-        <!-- CONTEXT_NAV -->
-
-        <h1
-          style="
-            font-family: var(--mate-font-display);
-            font-size: 44px;
-            font-weight: 600;
-            color: var(--mate-frame-text);
-            letter-spacing: -0.02em;
-            margin: 16px 0 8px;
-            line-height: 1.1;
-          "
-        >
-          <!-- TITLE -->
-        </h1>
-
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: var(--mate-font-body);
-            font-size: 12px;
-            color: var(--mate-frame-muted);
-            margin-bottom: 32px;
-            min-height: 20px;
-          "
-        >
-          <!-- NAV_META -->
+        <div class="blog-header">
+          <h1><!-- TITLE --></h1>
+          <div class="blog-meta">
+            <span><!-- CATEGORY --></span>
+            <span class="sep">·</span>
+            <span><!-- DATE --></span>
+            <span class="sep">·</span>
+            <span
+              ><!-- READ TIME -->
+              min read</span
+            >
+          </div>
         </div>
 
-        <div class="blog-prose" id="md-content">
+        <div class="author-card">
+          <div class="author-avatar"><!-- AUTHOR INITIAL --></div>
+          <div>
+            <div class="author-name"><!-- AUTHOR NAME --></div>
+            <div class="author-bio"><!-- AUTHOR ROLE --></div>
+          </div>
+        </div>
+
+        <!-- HERO IMAGE (optional): uncomment and fill src/alt/caption
+        <figure class="blog-hero">
+          <img src="IMAGE_URL" alt="IMAGE_ALT" />
+          <figcaption>CAPTION</figcaption>
+        </figure>
+        -->
+
+        <div class="blog-prose" id="post-content">
           <!-- CONTENT -->
+        </div>
+
+        <div class="blog-pullquote">
+          <!-- PULL QUOTE -->
+          <cite><!-- ATTRIBUTION --></cite>
+        </div>
+
+        <div class="tag-list">
+          <!-- TAGS: add/remove tag-pill elements as needed -->
+          <a href="#" class="tag-pill"><!-- TAG --></a>
+        </div>
+
+        <div class="related-section">
+          <div class="related-section-title">Related</div>
+          <div class="related-grid">
+            <!-- RELATED CARDS: copy this pattern for each related post -->
+            <a href="#" class="related-card">
+              <div class="rc-tag"><!-- CATEGORY --></div>
+              <div class="rc-title"><!-- POST TITLE --></div>
+              <div class="rc-meta">
+                <!-- DATE -->
+                ·
+                <!-- READ TIME -->
+                min
+              </div>
+            </a>
+            <a href="#" class="related-card">
+              <div class="rc-tag"><!-- CATEGORY --></div>
+              <div class="rc-title"><!-- POST TITLE --></div>
+              <div class="rc-meta">
+                <!-- DATE -->
+                ·
+                <!-- READ TIME -->
+                min
+              </div>
+            </a>
+            <a href="#" class="related-card">
+              <div class="rc-tag"><!-- CATEGORY --></div>
+              <div class="rc-title"><!-- POST TITLE --></div>
+              <div class="rc-meta">
+                <!-- DATE -->
+                ·
+                <!-- READ TIME -->
+                min
+              </div>
+            </a>
+          </div>
         </div>
 
         <footer
           style="
-            margin-top: 48px;
+            margin-top: 56px;
             border-top: 1px solid var(--mate-frame-border);
-            padding-top: 12px;
-            font-family: var(--mate-font-mono);
-            font-size: 11px;
+            padding-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
             color: var(--mate-frame-dim);
+            font-family: var(--mate-font-body);
           "
         >
-          <!-- SOURCE_PATH -->
+          <span
+            >Published
+            <!-- DATE -->
+            · html-artifact skill</span
+          >
+          <span><!-- FOOTER LINK --></span>
         </footer>
       </article>
 
-      <aside><!-- RAIL --></aside>
+      <aside>
+        <nav class="blog-toc" id="toc" aria-label="Table of contents">
+          <div class="blog-toc-title">On this page</div>
+          <!-- TOC LINKS: one <a href="#section-id"> per h2, add class="h3" for h3 -->
+        </nav>
+      </aside>
     </div>
 
     <script>
@@ -19305,6 +19353,47 @@
       if (sel)
         sel.value =
           document.documentElement.getAttribute("data-theme") || "mate";
+
+      (function () {
+        var bar = document.getElementById("reading-progress");
+        if (!bar) return;
+        function update() {
+          var el = document.documentElement;
+          var scrolled = el.scrollTop || document.body.scrollTop;
+          var total = el.scrollHeight - el.clientHeight;
+          bar.style.width = total > 0 ? (scrolled / total) * 100 + "%" : "0%";
+        }
+        window.addEventListener("scroll", update, { passive: true });
+        update();
+      })();
+
+      (function () {
+        var toc = document.getElementById("toc");
+        if (!toc) return;
+        var links = toc.querySelectorAll("a[href^='#']");
+        if (!links.length) return;
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                links.forEach(function (l) {
+                  l.classList.remove("active");
+                });
+                var match = toc.querySelector(
+                  "a[href='#" + entry.target.id + "']",
+                );
+                if (match) match.classList.add("active");
+              }
+            });
+          },
+          { rootMargin: "-20% 0px -70% 0px" },
+        );
+        links.forEach(function (l) {
+          var id = l.getAttribute("href").slice(1);
+          var el = document.getElementById(id);
+          if (el) observer.observe(el);
+        });
+      })();
     </script>
   </body>
 </html>

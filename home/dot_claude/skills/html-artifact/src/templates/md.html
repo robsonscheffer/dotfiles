@@ -96,74 +96,79 @@
       </select>
     </header>
 
-    <main style="max-width: 900px; margin: 0 auto; padding: 40px 40px 80px">
-      <div
-        class="artifact-header"
-        style="
-          border-bottom: 1px solid var(--mate-frame-border);
-          padding-bottom: 24px;
-          margin-bottom: 32px;
-          background: transparent;
-        "
-      >
-        <nav aria-label="Breadcrumb">
-          <ol class="breadcrumb">
-            <li><a href="#">Artifacts</a></li>
-            <li><a href="#">Dashboards</a></li>
-            <li aria-current="page"><!-- TITLE --></li>
-          </ol>
+    <div
+      class="spec-layout"
+      style="max-width: 960px; margin: 0 auto; padding: 40px 40px 80px"
+    >
+      <article>
+        <nav
+          aria-label="Breadcrumb"
+          style="
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-family: var(--mate-font-body);
+            color: var(--mate-frame-muted);
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+          "
+        >
+          <!-- BREADCRUMB -->
         </nav>
+
+        <!-- CONTEXT_NAV -->
+
         <h1
           style="
             font-family: var(--mate-font-display);
             font-size: 44px;
             font-weight: 600;
             color: var(--mate-frame-text);
-            letter-spacing: -0.015em;
-            margin: 14px 0 10px;
+            letter-spacing: -0.02em;
+            margin: 16px 0 8px;
             line-height: 1.1;
           "
         >
           <!-- TITLE -->
         </h1>
-        <div class="meta">
-          <span class="badge badge-ghost">dashboard</span>
-          <span
-            style="
-              color: var(--mate-frame-muted);
-              font-size: 13px;
-              font-family: var(--mate-font-body);
-            "
-            ><!-- DATE --></span
-          >
-          <!-- ADDITIONAL META BADGES -->
-        </div>
-      </div>
 
-      <!-- CONTENT: use .stats + .stat for metric tiles, table.artifact-table for data tables -->
-      <!-- DaisyUI .stats grid: <div class="stats shadow"> <div class="stat"> ... </div> </div> -->
-
-      <footer
-        style="
-          margin-top: 80px;
-          border-top: 1px solid var(--mate-frame-border);
-          padding-top: 16px;
-          display: flex;
-          justify-content: space-between;
-          font-size: 12px;
-          color: var(--mate-frame-dim);
-          font-family: var(--mate-font-body);
-          background: transparent;
-        "
-      >
-        <span
-          >Generated
-          <!-- DATE -->
-          · html-artifact skill</span
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--mate-font-body);
+            font-size: 12px;
+            color: var(--mate-frame-muted);
+            margin-bottom: 32px;
+            min-height: 20px;
+          "
         >
-        <span><!-- FOOTER LINK --></span>
-      </footer>
-    </main>
+          <!-- NAV_META -->
+        </div>
+
+        <div class="blog-prose" id="md-content">
+          <!-- CONTENT -->
+        </div>
+
+        <footer
+          style="
+            margin-top: 48px;
+            border-top: 1px solid var(--mate-frame-border);
+            padding-top: 12px;
+            font-family: var(--mate-font-mono);
+            font-size: 11px;
+            color: var(--mate-frame-dim);
+          "
+        >
+          <!-- SOURCE_PATH -->
+        </footer>
+      </article>
+
+      <aside><!-- RAIL --></aside>
+    </div>
+
     <script>
       function setTheme(v) {
         document.documentElement.setAttribute("data-theme", v);

@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@source "../templates";
+@source "../showcase.html";
 @import "daisyui/base/properties.css";
 @import "daisyui/base/reset.css";
 @import "daisyui/base/rootcolor.css";
@@ -12,3 +14,4 @@
 @import "./components/spec-rail.css";
 @import "./components/spec-decision.css";
 @import "./components/palette-swatch.css";
+@import "./components/blog.css";

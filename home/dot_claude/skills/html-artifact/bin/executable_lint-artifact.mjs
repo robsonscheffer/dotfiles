@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync, existsSync } from "fs";
+import { join } from "path";
+import { homedir } from "os";
 
 const filePath = process.argv[2];
 if (!filePath) {
@@ -10,6 +12,19 @@ if (!existsSync(filePath)) {
   console.error(`Not found: ${filePath}`);
   process.exit(2);
 }
+
+function readPort() {
+  try {
+    const cfg = JSON.parse(
+      readFileSync(join(homedir(), ".config", "html-artifact.json"), "utf8"),
+    );
+    return cfg.port || 52010;
+  } catch {
+    return 52010;
+  }
+}
+const PORT = readPort();
+const STYLE_URL = `http://localhost:${PORT}/style/main.css`;
 
 const raw = readFileSync(filePath, "utf8");
 
@@ -23,25 +38,29 @@ const violations = [];
 
 const hit = (lineNum, check, msg) => violations.push({ lineNum, check, msg });
 
-// 1. Inlined CSS
 const styleBlock = sanitized.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-if (styleBlock && styleBlock[1].includes("--mate-primary:")) {
+if (
+  styleBlock &&
+  (styleBlock[1].includes("--mate-primary:") || styleBlock[1].length > 1024)
+) {
   const lineNum = raw.slice(0, raw.indexOf(styleBlock[0])).split("\n").length;
-  hit(
-    lineNum,
-    "inlined-css",
-    "CSS is inlined — link to http://localhost:52010/style/main.css instead",
-  );
+  hit(lineNum, "inlined-css", `CSS is inlined — link to ${STYLE_URL} instead`);
 }
 
-// 2. file:// CSS link
 lines.forEach((line, i) => {
-  if (line.includes('rel="stylesheet"') && line.includes('href="file://')) {
-    hit(
-      i + 1,
-      "bad-css-link",
-      "CSS link uses file:// — use http://localhost:52010/style/main.css",
-    );
+  if (line.includes('rel="stylesheet"')) {
+    if (line.includes('href="file://')) {
+      hit(i + 1, "bad-css-link", `CSS link uses file:// — use ${STYLE_URL}`);
+    } else if (
+      line.includes('href="../style/') ||
+      line.includes('href="./style/')
+    ) {
+      hit(
+        i + 1,
+        "bad-css-link",
+        `CSS link uses relative path — use ${STYLE_URL}`,
+      );
+    }
   }
 });
 
@@ -50,7 +69,7 @@ if (!sanitized.includes('<link rel="stylesheet"')) {
   hit(
     1,
     "no-stylesheet",
-    'No stylesheet — add <link rel="stylesheet" href="http://localhost:52010/style/main.css">',
+    `No stylesheet — add <link rel="stylesheet" href="${STYLE_URL}">`,
   );
 }
 

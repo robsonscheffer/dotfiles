@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en" data-theme="mate">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The Cost of Invisible Decisions</title>
+    <script>
+      (function () {
+        var t = localStorage.getItem("mate-theme");
+        if (!t)
+          t = matchMedia("(prefers-color-scheme: dark)").matches
+            ? "mate"
+            : "mate-light";
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../style/main.css" />
+  </head>
+  <body>
+    <div class="grain"></div>
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <header
+      class="sticky top-0 z-20 h-12 flex items-center px-4 md:px-6 gap-4"
+      style="
+        background: var(--mate-frame-nav);
+        border-bottom: 1px solid var(--mate-frame-border);
+      "
+    >
+      <div class="flex-1 flex items-center gap-6 min-w-0">
+        <span
+          style="
+            font-family: var(--mate-font-display);
+            font-size: 18px;
+            color: var(--mate-frame-text);
+            white-space: nowrap;
+          "
+          >mate-<em style="color: var(--mate-primary); font-weight: 400"
+            >ds</em
+          ></span
+        >
+        <nav class="hidden md:flex items-center gap-4">
+          <a
+            class="text-sm"
+            style="color: var(--mate-frame-muted)"
+            href="../showcase.html"
+            >Components</a
+          >
+          <a
+            class="text-sm"
+            style="color: var(--mate-frame-muted)"
+            href="report.html"
+            >Reports</a
+          >
+          <a
+            class="text-sm"
+            style="color: var(--mate-frame-muted)"
+            href="spec.html"
+            >Specs</a
+          >
+          <a
+            class="text-sm"
+            style="color: var(--mate-frame-muted)"
+            href="prototype.html"
+            >Prototypes</a
+          >
+          <a
+            class="text-sm"
+            style="color: var(--mate-frame-text)"
+            href="blog.html"
+            >Blog</a
+          >
+        </nav>
+      </div>
+      <select
+        id="theme-switcher"
+        onchange="setTheme(this.value)"
+        style="
+          font-family: var(--mate-font-body);
+          font-size: 12px;
+          color: var(--mate-frame-muted);
+          background: var(--mate-frame-sidebar);
+          border: 1px solid var(--mate-frame-border);
+          border-radius: 6px;
+          padding: 3px 8px;
+          cursor: pointer;
+          outline: none;
+        "
+      >
+        <option value="mate">mate</option>
+        <option value="mate-light">mate-light</option>
+        <option value="gruvbox">gruvbox</option>
+        <option value="gruvbox-light">gruvbox-light</option>
+      </select>
+    </header>
+
+    <div class="blog-layout with-toc">
+      <article>
+        <nav aria-label="Breadcrumb" style="margin-bottom: 28px">
+          <ol class="breadcrumb">
+            <li><a href="#">Artifacts</a></li>
+            <li><a href="#">Blog</a></li>
+            <li aria-current="page">The Cost of Invisible Decisions</li>
+          </ol>
+        </nav>
+
+        <div class="blog-header">
+          <h1>The Cost of Invisible Decisions</h1>
+          <div class="blog-meta">
+            <span>Engineering</span>
+            <span class="sep">·</span>
+            <span>Jun 28, 2026</span>
+            <span class="sep">·</span>
+            <span>7 min read</span>
+          </div>
+        </div>
+
+        <div class="author-card">
+          <div class="author-avatar">R</div>
+          <div>
+            <div class="author-name">Robson Scheffer</div>
+            <div class="author-bio">Head of Engineering · Retirement Team</div>
+          </div>
+        </div>
+
+        <div class="blog-prose" id="post-content">
+          <p>
+            Every system carries the weight of decisions nobody remembers
+            making. A timeout set to 30 seconds because someone guessed. A
+            column named
+            <code>type2</code> because someone didn't want to migrate the
+            original. A cache TTL of zero because a bug was urgent and the fix
+            never came. These aren't bugs. They're invisible architecture.
+          </p>
+
+          <h2 id="how-they-form">How invisible decisions form</h2>
+          <p>
+            Invisible decisions don't arrive announced. They come in through the
+            side door: a hotfix at 11pm, a deadline that moved, a PR reviewer
+            who didn't ask why. The code ships. The context evaporates. Six
+            months later, someone is reading a number with no unit and no
+            comment and making their best guess about what it means.
+          </p>
+          <p>
+            The damage compounds. One invisible decision creates the conditions
+            for the next. The timeout gets cargo-culted into every new service.
+            The column name gets referenced in fifteen places before anyone
+            notices. The cache TTL spawns a whole class of silent failures that
+            look like network problems.
+          </p>
+
+          <div class="blog-callout tip">
+            <span class="callout-icon">◆</span>
+            <div>
+              <strong>Before every hotfix:</strong> write one sentence in the
+              commit message explaining why the number you picked is the right
+              number. Future you will read it at 2am and be grateful.
+            </div>
+          </div>
+
+          <h2 id="the-audit">The audit nobody wants to run</h2>
+          <p>
+            There's a simple test for invisible decisions: ask "why is this the
+            value?" about every magic constant in a file. If the answer is "I
+            don't know" or "it's always been that way," you've found one. The
+            goal isn't to change every value — most of them are probably fine.
+            The goal is to surface which ones you're trusting blindly.
+          </p>
+          <p>
+            A useful format:
+            <code>timeout_ms = 30_000 # upstream p99 is 22s per INC-4812</code>.
+            Eleven extra characters. The constant is now load-bearing in a way
+            you can reason about. The incident ticket is the diff you can't read
+            in the code — link it.
+          </p>
+
+          <div class="blog-callout warning">
+            <span class="callout-icon">△</span>
+            <div>
+              <strong>Don't document everything.</strong> A comment on every
+              line is noise, not signal. Reserve them for the decisions that
+              would look wrong to a competent reader at first glance. That's the
+              bar.
+            </div>
+          </div>
+
+          <h2 id="when-it-matters">When it finally matters</h2>
+          <p>
+            Invisible decisions surface at the worst times: incidents,
+            migrations, onboarding. The on-call engineer at 2am doesn't need a
+            mystery — they need to know whether changing this value will fix the
+            problem or make it worse. The person writing the migration script
+            needs to know if
+            <code>type2</code> means anything or if it's safe to drop. The new
+            engineer needs to know which parts of the codebase are deliberate
+            and which are accidental.
+          </p>
+          <p>
+            The cost isn't the time to write the comment. The cost is the
+            accumulated uncertainty tax — every decision made under fog instead
+            of clarity, every incident that ran two hours longer than it needed
+            to.
+          </p>
+
+          <div class="blog-callout note">
+            <span class="callout-icon">i</span>
+            <div>
+              This is distinct from over-documentation. The goal is decisions
+              that are <em>traceable</em>, not decisions that are
+              <em>explained</em>. A ticket link beats three paragraphs of
+              rationale.
+            </div>
+          </div>
+
+          <h2 id="the-practice">A practice, not a rule</h2>
+          <p>
+            You won't fix invisible decisions with a style guide. You fix them
+            one PR at a time, when you happen to be reading the code anyway. The
+            habit is: when you stop to read a value and think "huh, why is this
+            here?" — write down the answer before you move on. Leave it better
+            than you found it. Not perfect. Just not invisible.
+          </p>
+          <blockquote>
+            Good code is code you can reason about. A decision you can trace is
+            a decision you can change safely.
+          </blockquote>
+        </div>
+
+        <div class="blog-pullquote">
+          The invisible decisions aren't the ones that were made carelessly.
+          They're the ones made carefully, under pressure, and never written
+          down.
+          <cite>— Field note, 2024 incident retrospective</cite>
+        </div>
+
+        <div class="tag-list">
+          <a href="#" class="tag-pill active">engineering</a>
+          <a href="#" class="tag-pill">architecture</a>
+          <a href="#" class="tag-pill">craft</a>
+          <a href="#" class="tag-pill">incidents</a>
+        </div>
+
+        <div class="related-section">
+          <div class="related-section-title">Related</div>
+          <div class="related-grid">
+            <a href="#" class="related-card">
+              <div class="rc-tag">Architecture</div>
+              <div class="rc-title">
+                Layering violations and how to spot them early
+              </div>
+              <div class="rc-meta">May 2026 · 8 min</div>
+            </a>
+            <a href="#" class="related-card">
+              <div class="rc-tag">Incidents</div>
+              <div class="rc-title">
+                What a 3-hour incident taught us about naming
+              </div>
+              <div class="rc-meta">Apr 2026 · 5 min</div>
+            </a>
+            <a href="#" class="related-card">
+              <div class="rc-tag">Craft</div>
+              <div class="rc-title">The comment that earns its place</div>
+              <div class="rc-meta">Mar 2026 · 4 min</div>
+            </a>
+          </div>
+        </div>
+
+        <footer
+          style="
+            margin-top: 56px;
+            border-top: 1px solid var(--mate-frame-border);
+            padding-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--mate-frame-dim);
+            font-family: var(--mate-font-body);
+          "
+        >
+          <span>Published Jun 28, 2026 · html-artifact skill</span>
+          <span></span>
+        </footer>
+      </article>
+
+      <aside>
+        <nav class="blog-toc" id="toc" aria-label="Table of contents">
+          <div class="blog-toc-title">On this page</div>
+          <a href="#how-they-form">How invisible decisions form</a>
+          <a href="#the-audit">The audit nobody wants to run</a>
+          <a href="#when-it-matters">When it finally matters</a>
+          <a href="#the-practice">A practice, not a rule</a>
+        </nav>
+      </aside>
+    </div>
+
+    <script>
+      function setTheme(v) {
+        document.documentElement.setAttribute("data-theme", v);
+        localStorage.setItem("mate-theme", v);
+        var s = document.getElementById("theme-switcher");
+        if (s) s.value = v;
+      }
+      var sel = document.getElementById("theme-switcher");
+      if (sel)
+        sel.value =
+          document.documentElement.getAttribute("data-theme") || "mate";
+
+      (function () {
+        var bar = document.getElementById("reading-progress");
+        if (!bar) return;
+        function update() {
+          var el = document.documentElement;
+          var scrolled = el.scrollTop || document.body.scrollTop;
+          var total = el.scrollHeight - el.clientHeight;
+          bar.style.width = total > 0 ? (scrolled / total) * 100 + "%" : "0%";
+        }
+        window.addEventListener("scroll", update, { passive: true });
+        update();
+      })();
+
+      (function () {
+        var toc = document.getElementById("toc");
+        if (!toc) return;
+        var links = toc.querySelectorAll("a[href^='#']");
+        if (!links.length) return;
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                links.forEach(function (l) {
+                  l.classList.remove("active");
+                });
+                var match = toc.querySelector(
+                  "a[href='#" + entry.target.id + "']",
+                );
+                if (match) match.classList.add("active");
+              }
+            });
+          },
+          { rootMargin: "-20% 0px -70% 0px" },
+        );
+        links.forEach(function (l) {
+          var id = l.getAttribute("href").slice(1);
+          var el = document.getElementById(id);
+          if (el) observer.observe(el);
+        });
+      })();
+    </script>
+  </body>
+</html>

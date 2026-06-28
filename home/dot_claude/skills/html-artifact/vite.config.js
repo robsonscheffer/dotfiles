@@ -34,6 +34,21 @@ const entries = {
     input: resolve(__dirname, "src/templates/dashboard.html"),
     outDir: resolve(__dirname, "dist/templates"),
   },
+  blog: {
+    root: resolve(__dirname, "src/templates"),
+    input: resolve(__dirname, "src/templates/blog.html"),
+    outDir: resolve(__dirname, "dist/templates"),
+  },
+  md: {
+    root: resolve(__dirname, "src/templates"),
+    input: resolve(__dirname, "src/templates/md.html"),
+    outDir: resolve(__dirname, "dist/templates"),
+  },
+  burndown: {
+    root: resolve(__dirname, "src/templates"),
+    input: resolve(__dirname, "src/templates/burndown.html"),
+    outDir: resolve(__dirname, "dist/templates"),
+  },
   css: {
     root: resolve(__dirname, "src/style"),
     input: resolve(__dirname, "src/style/index.js"),

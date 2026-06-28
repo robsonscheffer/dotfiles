@@ -35,6 +35,9 @@ const distFiles = {
   report: join(DIST, "templates", "report.html"),
   prototype: join(DIST, "templates", "prototype.html"),
   dashboard: join(DIST, "templates", "dashboard.html"),
+  blog: join(DIST, "templates", "blog.html"),
+  md: join(DIST, "templates", "md.html"),
+  burndown: join(DIST, "templates", "burndown.html"),
 };
 for (const [name, path] of Object.entries(distFiles)) {
   assert(`${name}.html exists`, existsSync(path));
@@ -46,7 +49,15 @@ assert(
   fileSize(distFiles.showcase) > 50_000,
   `got ${fileSize(distFiles.showcase)} bytes`,
 );
-for (const name of ["spec", "report", "prototype", "dashboard"]) {
+for (const name of [
+  "spec",
+  "report",
+  "prototype",
+  "dashboard",
+  "blog",
+  "md",
+  "burndown",
+]) {
   assert(
     `templates/${name}.html > 20 KB`,
     fileSize(distFiles[name]) > 20_000,
@@ -61,6 +72,10 @@ for (const [name, path] of Object.entries(distFiles)) {
     `${name}.html has no ../style/main.css ref`,
     !content.includes("../style/main.css") &&
       !content.includes("./style/main.css"),
+  );
+  assert(
+    `${name}.html has no relative style/ ref`,
+    !content.includes('href="../style/') && !content.includes('href="./style/'),
   );
 }
 
@@ -86,6 +101,22 @@ for (const name of ["spec", "report", "prototype", "dashboard"]) {
     assert(`templates/${name}.html has ${slot}`, content.includes(slot));
   }
 }
+assert(
+  "templates/md.html has <!-- CONTENT -->",
+  fileContent(distFiles.md).includes("<!-- CONTENT -->"),
+);
+assert(
+  "templates/md.html has <!-- RAIL -->",
+  fileContent(distFiles.md).includes("<!-- RAIL -->"),
+);
+assert(
+  "templates/burndown.html has <!-- EPIC_TITLE -->",
+  fileContent(distFiles.burndown).includes("<!-- EPIC_TITLE -->"),
+);
+assert(
+  "templates/burndown.html has <!-- PHASE_TABLES -->",
+  fileContent(distFiles.burndown).includes("<!-- PHASE_TABLES -->"),
+);
 
 console.log("\nCSS source — main.css imports");
 const mainCss = fileContent(join(SRC, "style", "main.css"));

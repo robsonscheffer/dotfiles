@@ -64,6 +64,12 @@
             href="templates/prototype.html"
             >Prototypes</a
           >
+          <a
+            class="text-sm"
+            style="color: var(--mate-frame-muted)"
+            href="templates/blog.html"
+            >Blog</a
+          >
         </nav>
       </div>
       <div class="flex items-center gap-2">
@@ -152,6 +158,25 @@
         >
         <a class="sidebar-link" href="#tooltips"
           ><span class="num">12</span> Tooltips</a
+        >
+
+        <div
+          class="px-5 pb-1.5 mt-5 text-[11px] font-semibold uppercase tracking-widest"
+          style="color: var(--mate-frame-dim)"
+        >
+          Blog
+        </div>
+        <a class="sidebar-link" href="#blog-header"
+          ><span class="num">13</span> Post Header</a
+        >
+        <a class="sidebar-link" href="#blog-prose"
+          ><span class="num">14</span> Prose</a
+        >
+        <a class="sidebar-link" href="#blog-callouts"
+          ><span class="num">15</span> Callouts</a
+        >
+        <a class="sidebar-link" href="#blog-extras"
+          ><span class="num">16</span> Tags · TOC · Cards</a
         >
 
         <div
@@ -1135,6 +1160,208 @@ Captures decisions from the embedded-beneficiaries audit, plus open questions on
                 </span>
                 — hover the ID for the one-line summary.
               </p>
+            </div>
+          </section>
+
+          <!-- 13 Blog: Post Header + Author Card -->
+          <section class="ds-section" id="blog-header">
+            <div class="section-header">
+              <h2>13 — Post Header</h2>
+              <span class="section-tag">.blog-header / .author-card</span>
+            </div>
+            <p class="section-desc">
+              Title block, meta line, and the author byline card below it.
+            </p>
+            <div class="preview-card">
+              <div style="max-width: 640px">
+                <div
+                  style="
+                    height: 3px;
+                    width: 62%;
+                    background: var(--mate-primary);
+                    border-radius: 2px;
+                    margin-bottom: 24px;
+                  "
+                ></div>
+                <div class="blog-header">
+                  <h1>The Architecture of Stillness</h1>
+                  <div class="blog-meta">
+                    <span>Engineering</span>
+                    <span class="sep">·</span>
+                    <span>Jun 28, 2026</span>
+                    <span class="sep">·</span>
+                    <span>6 min read</span>
+                  </div>
+                </div>
+                <div class="author-card">
+                  <div class="author-avatar">R</div>
+                  <div>
+                    <div class="author-name">Robson Scheffer</div>
+                    <div class="author-bio">
+                      Head of Engineering · Retirement Team
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 14 Blog: Prose -->
+          <section class="ds-section" id="blog-prose">
+            <div class="section-header">
+              <h2>14 — Prose</h2>
+              <span class="section-tag">.blog-prose / .blog-pullquote</span>
+            </div>
+            <p class="section-desc">
+              Long-form body text: headings, paragraphs, code, blockquote, pull
+              quote.
+            </p>
+            <div class="preview-card">
+              <div style="max-width: 640px">
+                <div class="blog-prose">
+                  <h2>Why systems slow down</h2>
+                  <p>
+                    Every system accumulates
+                    <strong>accidental complexity</strong> — the kind that comes
+                    not from the problem itself, but from decisions made under
+                    time pressure. The fix is rarely a rewrite. It's usually a
+                    <a href="#">patient audit</a> of what's load-bearing and
+                    what isn't.
+                  </p>
+                  <blockquote>
+                    Complexity is never free. It's always borrowed from future
+                    maintainers.
+                  </blockquote>
+                  <h3>The two kinds of debt</h3>
+                  <p>
+                    Technical debt isn't monolithic. There's the kind you choose
+                    — <code>// TODO: revisit after launch</code> — and the kind
+                    that accretes without intention. Only the first kind is
+                    manageable.
+                  </p>
+                  <pre><code>// intentional shortcut — remove before Q3 release
+const LEGACY_FLAG = process.env.USE_OLD_PIPELINE === 'true';</code></pre>
+                </div>
+                <div class="blog-pullquote">
+                  The best engineers I know treat complexity like debt on a
+                  balance sheet — visible, tracked, and being paid down.
+                  <cite>— Robson Scheffer</cite>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 15 Blog: Callouts -->
+          <section class="ds-section" id="blog-callouts">
+            <div class="section-header">
+              <h2>15 — Callouts</h2>
+              <span class="section-tag"
+                >.blog-callout.tip / .warning / .note</span
+              >
+            </div>
+            <p class="section-desc">
+              Editorial aside boxes for tips, warnings, and informational notes.
+            </p>
+            <div class="preview-card">
+              <div style="max-width: 640px">
+                <div class="blog-callout tip">
+                  <span class="callout-icon">✦</span>
+                  <span
+                    ><strong>Tip —</strong> Run the audit on a branch first. The
+                    linter flags false positives on generated files — filter
+                    those before acting on results.</span
+                  >
+                </div>
+                <div class="blog-callout warning">
+                  <span class="callout-icon">⚠</span>
+                  <span
+                    ><strong>Warning —</strong> This migration is irreversible.
+                    Take a snapshot of the table before executing the backfill
+                    in production.</span
+                  >
+                </div>
+                <div class="blog-callout note">
+                  <span class="callout-icon">ℹ</span>
+                  <span
+                    ><strong>Note —</strong> The <code>--dry-run</code> flag was
+                    added in v2.4. If you're on an earlier version, simulate the
+                    run in staging first.</span
+                  >
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 16 Blog: Tags · TOC · Related Cards -->
+          <section class="ds-section" id="blog-extras">
+            <div class="section-header">
+              <h2>16 — Tags · TOC · Cards</h2>
+              <span class="section-tag"
+                >.tag-pill / .blog-toc / .related-card</span
+              >
+            </div>
+            <p class="section-desc">
+              Tag pills, sidebar table of contents, and related post cards.
+            </p>
+            <div class="preview-card">
+              <div
+                class="preview-row"
+                style="align-items: flex-start; gap: 40px; flex-wrap: wrap"
+              >
+                <div style="flex: 1; min-width: 200px">
+                  <p class="section-desc" style="margin-bottom: 10px">
+                    Tag pills
+                  </p>
+                  <div class="tag-list">
+                    <a href="#" class="tag-pill active">engineering</a>
+                    <a href="#" class="tag-pill">architecture</a>
+                    <a href="#" class="tag-pill">rails</a>
+                    <a href="#" class="tag-pill">performance</a>
+                    <a href="#" class="tag-pill">observability</a>
+                  </div>
+                  <div class="preview-divider"></div>
+                  <p class="section-desc" style="margin-bottom: 10px">
+                    Table of contents
+                  </p>
+                  <div class="blog-toc" style="position: static">
+                    <div class="blog-toc-title">On this page</div>
+                    <a href="#" class="active">Why systems slow down</a>
+                    <a href="#" class="h3">The two kinds of debt</a>
+                    <a href="#" class="h3">Measuring the ceiling</a>
+                    <a href="#">What to do about it</a>
+                    <a href="#" class="h3">The three levers</a>
+                    <a href="#">Closing thoughts</a>
+                  </div>
+                </div>
+                <div style="flex: 2; min-width: 280px">
+                  <p class="section-desc" style="margin-bottom: 10px">
+                    Related post cards
+                  </p>
+                  <div class="related-grid">
+                    <a href="#" class="related-card">
+                      <div class="rc-tag">Architecture</div>
+                      <div class="rc-title">
+                        Layering violations and how to spot them early
+                      </div>
+                      <div class="rc-meta">May 2026 · 8 min</div>
+                    </a>
+                    <a href="#" class="related-card">
+                      <div class="rc-tag">Performance</div>
+                      <div class="rc-title">
+                        N+1 queries in the wild: a field guide
+                      </div>
+                      <div class="rc-meta">Apr 2026 · 5 min</div>
+                    </a>
+                    <a href="#" class="related-card">
+                      <div class="rc-tag">Observability</div>
+                      <div class="rc-title">
+                        What your p99 latency is really telling you
+                      </div>
+                      <div class="rc-meta">Mar 2026 · 7 min</div>
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
         </div>

@@ -33,6 +33,11 @@ Before any operation, read these three files. Never rely on values remembered
 from a previous session or stated in this skill — the user may have changed
 their config or the design system may have been updated.
 
+> **Cold-start check:** if `dist/templates/` is missing or empty, run
+> `npm run build` in `~/.claude/skills/html-artifact/` before proceeding.
+> Templates are pre-built and committed — this should only be needed after
+> a fresh install or a skill update that added new templates.
+
 **1. User config** — `~/.config/html-artifact.json`
 
 Provides `base_dir`, `port` (default: `52010`), `md_roots`. If the file does
@@ -67,7 +72,7 @@ URLs from `base_dir` and `port` read from config — never hard-code them.**
 | style   | (served from skill dist/)                         | `http://localhost:<port>/style/main.css`               |
 | md view | (any file under md_roots)                         | `http://localhost:<port>/md?path=<encoded-path>`       |
 
-`<type>` is one of: `spec`, `report`, `prototype`, `dashboard`.
+`<type>` is one of: `spec`, `report`, `prototype`, `dashboard`, `blog`.
 
 The route prefixes (`/scratch/`, `/artifacts/`) are fixed conventions — they
 do not change with config. Only `base_dir` and `port` vary per user.
@@ -84,6 +89,7 @@ do not change with config. Only `base_dir` and `port` vary per user.
    - **report** — findings, audit results, data analysis
    - **prototype** — interactive UI demo
    - **dashboard** — metrics and data tables
+   - **blog** — long-form prose article with optional TOC
 
 2. Read the pre-built template for the chosen type:
 
@@ -100,7 +106,7 @@ do not change with config. Only `base_dir` and `port` vary per user.
 
    ```html
    <link
-     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
      rel="stylesheet"
    />
    <link rel="stylesheet" href="http://localhost:<port>/style/main.css" />
@@ -249,7 +255,7 @@ Commit only the updated `index.html`. No HTML file is created or committed.
 ### new
 
 1. `AskUserQuestion`: "Scratch (ephemeral) or wiki (committed)?" → `scratch` / `wiki`
-2. `AskUserQuestion`: "Type?" → `spec` / `report` / `prototype` / `dashboard`
+2. `AskUserQuestion`: "Type?" → `spec` / `report` / `prototype` / `dashboard` / `blog`
 3. Derive a slug from the user's topic (kebab-case, max 40 chars, date-prefixed: `YYYY-MM-DD-<slug>`).
 4. Generate the HTML file following **Generating an artifact** above.
 5. Write to:
@@ -307,7 +313,7 @@ The source file on disk is never modified.
 4. Call html-publisher using the **temp file** as `--source`:
 
    ```bash
-   RESULT=$(${PLUGIN_ROOT:html-publisher}/bin/publish share-html \
+   RESULT=$(${PLUGIN_ROOT:-html-publisher}/bin/publish share-html \
      --source /tmp/<slug>-publish.html \
      [--slug <slug> --owner-key <key>])
    ```
@@ -353,12 +359,10 @@ Triggers when `~/.config/html-artifact.json` is missing.
 
 1. `AskUserQuestion`: "Where should artifacts live? (default: ~/brain)"
    → store as `base_dir`
-2. `AskUserQuestion`: "Where should shared assets live? (default: <base_dir>/assets)"
-   → store as `assets_dir`
-3. Create `~/.config/` if needed, then write `~/.config/html-artifact.json`:
+2. Create `~/.config/` if needed, then write `~/.config/html-artifact.json`:
 
    ```json
-   { "base_dir": "<answer1>", "assets_dir": "<answer2>" }
+   { "base_dir": "<answer>" }
    ```
 
    **Optional config keys:**
@@ -366,20 +370,21 @@ Triggers when `~/.config/html-artifact.json` is missing.
    - `md_roots` — array of absolute paths the `/md` route is allowed to serve from.
      Example: `"md_roots": ["/Users/me/brain", "/Users/me/apps/myrepo/docs"]`
 
-4. Create directories (route convention shown alongside):
+3. Create directories (route convention shown alongside):
    ```
    <base_dir>/wiki/artifact/spec/          → /artifacts/spec/
    <base_dir>/wiki/artifact/report/        → /artifacts/report/
    <base_dir>/wiki/artifact/prototype/     → /artifacts/prototype/
    <base_dir>/wiki/artifact/dashboard/     → /artifacts/dashboard/
+   <base_dir>/wiki/artifact/blog/          → /artifacts/blog/
    <base_dir>/.scratch/artifact/spec/      → /scratch/spec/
    <base_dir>/.scratch/artifact/report/    → /scratch/report/
    <base_dir>/.scratch/artifact/prototype/ → /scratch/prototype/
    <base_dir>/.scratch/artifact/dashboard/ → /scratch/dashboard/
-   <assets_dir>/
+   <base_dir>/.scratch/artifact/blog/      → /scratch/blog/
    ```
-5. Write empty `wiki/artifact/index.html` (see **index.html** below, with empty tbody).
-6. Proceed with the original operation.
+4. Write empty `wiki/artifact/index.html` (see **index.html** below, with empty tbody).
+5. Proceed with the original operation.
 
 ---
 
