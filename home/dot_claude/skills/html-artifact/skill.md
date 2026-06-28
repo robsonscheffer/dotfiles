@@ -111,6 +111,10 @@ do not change with config. Only `base_dir` and `port` vary per user.
    mate tokens and compiled Tailwind/DaisyUI utilities. Reference tokens via
    `var(--mate-*)` in `style=""` inline attrs.
 
+   > **Font source of truth:** the Google Fonts URL above must match the
+   > `typography` entries in `tokens.yaml`. If tokens.yaml changes font families,
+   > update this URL to match — never keep them out of sync.
+
 4. Fill the content slots:
    - `<!-- TITLE -->` — artifact title (appears in `<title>`, breadcrumb, and h1)
    - `<!-- DATE -->` — date in `YYYY-MM-DD` format
@@ -268,18 +272,52 @@ Commit only the updated `index.html`. No HTML file is created or committed.
 
 ### publish
 
+Published files are served externally — `localhost` URLs won't resolve for
+readers. Before uploading, inline the stylesheet into a self-contained copy.
+The source file on disk is never modified.
+
 1. Determine source path.
-2. Check for `<source>.pub.json` sidecar.
+
+2. **Build a publish-ready copy (inline the stylesheet):**
+   a. Read the source HTML.
+   b. Fetch the CSS: `curl -s http://localhost:<port>/style/main.css`
+   If curl fails (server not running), abort and tell the user to start it first.
+   c. In the HTML string, replace the stylesheet link tag exactly:
+
+   ```
+   <link rel="stylesheet" href="http://localhost:<port>/style/main.css" />
+   ```
+
+   with an inline style block:
+
+   ```html
+   <style>
+     /* mate DS — inlined at publish time */
+     <css content>
+   </style>
+   ```
+
+   d. Write the result to a temp file: `/tmp/<slug>-publish.html`
+   e. The Google Fonts `<link>` is a public URL — leave it unchanged.
+
+3. Check for `<source>.pub.json` sidecar.
    - If sidecar exists: call html-publisher with `--slug <slug> --owner-key <key>` (update).
    - If not: call html-publisher for new page.
-3. Call html-publisher:
+
+4. Call html-publisher using the **temp file** as `--source`:
+
    ```bash
    RESULT=$(${PLUGIN_ROOT:html-publisher}/bin/publish share-html \
-     --source <path.html> \
+     --source /tmp/<slug>-publish.html \
      [--slug <slug> --owner-key <key>])
    ```
-4. Parse JSON result. Check `ok`. If false, surface `error` to user and stop.
-5. Write/update sidecar `<source>.html.pub.json`:
+
+5. Delete the temp file (success or failure): `rm /tmp/<slug>-publish.html`
+
+6. Parse JSON result. Check `ok`. If false, surface `error` to user and stop.
+
+7. Write/update sidecar `<source>.html.pub.json` (next to the **source** file, not the temp):
+
    ```json
    {
      "slug": "...",
@@ -289,10 +327,12 @@ Commit only the updated `index.html`. No HTML file is created or committed.
      "published_at": "..."
    }
    ```
-6. Update `index.html`: find the `<tr>` whose `<a href>` matches the artifact's
+
+8. Update `index.html`: find the `<tr>` whose `<a href>` matches the artifact's
    relative path (e.g. `report/2026-06-09-my-report.html`) and update its
    Published `<td>` with `<a href="[url]">share ↗</a>`. Add a row if none exists.
-7. Surface both `url` (share) and `manage_url` (author) to the user.
+
+9. Surface both `url` (share) and `manage_url` (author) to the user.
 
 ### serve
 
