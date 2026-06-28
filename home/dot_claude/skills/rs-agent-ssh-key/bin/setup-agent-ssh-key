@@ -131,10 +131,13 @@ fi
 
 if gh api user/emails --jq '.[].email' 2>/dev/null | grep -qF "$AGENT_EMAIL"; then
   ok "Email ${AGENT_EMAIL} already on GitHub account"
-else
-  gh api user/emails -f "email[]=${AGENT_EMAIL}" >/dev/null
+elif gh api user/emails -f "email[]=${AGENT_EMAIL}" >/dev/null 2>&1; then
   ok "Added ${AGENT_EMAIL} to GitHub account"
   warn "Check your inbox — GitHub sent a verification link to ${AGENT_EMAIL}"
+else
+  warn "Could not add email — gh token missing 'user' scope"
+  warn "Run: gh auth refresh -h github.com -s user"
+  warn "Then add ${AGENT_EMAIL} at https://github.com/settings/emails"
 fi
 warn "ACTION REQUIRED: Authorize SSO for your GitHub orgs on that signing key"
 
