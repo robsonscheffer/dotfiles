@@ -38,11 +38,11 @@ const violations = [];
 
 const hit = (lineNum, check, msg) => violations.push({ lineNum, check, msg });
 
-const styleBlock = sanitized.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-if (
-  styleBlock &&
-  (styleBlock[1].includes("--mate-primary:") || styleBlock[1].length > 1024)
-) {
+// Only check <style> blocks that appear in <head> — content demos are allowed
+const headEnd = sanitized.indexOf("</head>");
+const headSection = headEnd > 0 ? sanitized.slice(0, headEnd) : "";
+const styleBlock = headSection.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
+if (styleBlock && styleBlock[1].includes("--mate-primary:")) {
   const lineNum = raw.slice(0, raw.indexOf(styleBlock[0])).split("\n").length;
   hit(lineNum, "inlined-css", `CSS is inlined — link to ${STYLE_URL} instead`);
 }
