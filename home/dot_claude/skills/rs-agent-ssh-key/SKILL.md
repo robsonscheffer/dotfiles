@@ -12,7 +12,6 @@ allowed-tools:
   - Bash(jq:*)
   - Read(~/.claude/settings.json)
   - Read(~/.gitconfig.d/*)
-  - Read(~/.ssh/agents/*)
 ---
 
 # Agent SSH Key

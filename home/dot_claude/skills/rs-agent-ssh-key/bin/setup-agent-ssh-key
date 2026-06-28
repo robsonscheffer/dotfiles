@@ -128,8 +128,14 @@ else
   ok "Registered auth key on GitHub"
 fi
 
-warn "ACTION REQUIRED: Add ${AGENT_EMAIL} as a verified email on GitHub → https://github.com/settings/emails"
-warn "Then authorize SSO for your GitHub orgs on that signing key."
+if gh api user/emails --jq '.[].email' 2>/dev/null | grep -qF "$AGENT_EMAIL"; then
+  ok "Email ${AGENT_EMAIL} already on GitHub account"
+else
+  gh api user/emails -f "email[]=${AGENT_EMAIL}" >/dev/null
+  ok "Added ${AGENT_EMAIL} to GitHub account"
+  warn "Check your inbox — GitHub sent a verification link to ${AGENT_EMAIL}"
+fi
+warn "ACTION REQUIRED: Authorize SSO for your GitHub orgs on that signing key"
 
 step "7/7 — GIT_CONFIG_GLOBAL in ~/.claude/settings.json"
 if ! command -v jq >/dev/null 2>&1; then
