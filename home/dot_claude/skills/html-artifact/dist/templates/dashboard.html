@@ -7,7 +7,11 @@
     <script>
       (function () {
         var t = localStorage.getItem("mate-theme");
-        if (t) document.documentElement.setAttribute("data-theme", t);
+        if (!t)
+          t = matchMedia("(prefers-color-scheme: dark)").matches
+            ? "mate"
+            : "mate-light";
+        document.documentElement.setAttribute("data-theme", t);
       })();
     </script>
     <link
