@@ -18721,18 +18721,32 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
               <span class="section-tag">tokens.yaml</span>
             </div>
             <p class="section-desc">
-              Warm earth on dark frame. Brand colors carry the work; semantics
-              signal state. Hex values are the source of truth — DaisyUI tokens
-              derive from them.
+              Two themes — dark (fully designed) and light (plumbing stub). Hex
+              values are the source of truth; TUI terminal values and web CSS
+              tokens are calibrated separately for their rendering contexts.
             </p>
-            <div class="preview-card">
+
+            <div class="preview-card" style="margin-bottom: 16px">
+              <div
+                style="
+                  font-size: 11px;
+                  font-weight: 700;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: var(--mate-frame-muted);
+                  margin-bottom: 20px;
+                "
+              >
+                Dark — tui-design-system.yaml
+              </div>
+
               <div class="swatch-group-label">Brand</div>
-              <div class="swatch-grid">
+              <div class="swatch-grid" style="margin-bottom: 20px">
                 <div class="swatch-card">
                   <div class="swatch-color" style="background: #d4764e"></div>
                   <div class="swatch-meta">
                     <div class="swatch-name">Primary</div>
-                    <div class="swatch-token">--mate-primary</div>
+                    <div class="swatch-token">colors.primary</div>
                     <div class="swatch-hex">#d4764e</div>
                   </div>
                 </div>
@@ -18740,7 +18754,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                   <div class="swatch-color" style="background: #c4956a"></div>
                   <div class="swatch-meta">
                     <div class="swatch-name">Secondary</div>
-                    <div class="swatch-token">--mate-secondary</div>
+                    <div class="swatch-token">colors.secondary</div>
                     <div class="swatch-hex">#c4956a</div>
                   </div>
                 </div>
@@ -18748,38 +18762,27 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                   <div class="swatch-color" style="background: #5a9a4e"></div>
                   <div class="swatch-meta">
                     <div class="swatch-name">Erva</div>
-                    <div class="swatch-token">--mate-erva</div>
+                    <div class="swatch-token">chimarrao.erva</div>
                     <div class="swatch-hex">#5a9a4e</div>
                   </div>
                 </div>
-                <div
-                  class="swatch-card"
-                  style="border-color: var(--mate-frame-border)"
-                >
-                  <div
-                    class="swatch-color"
-                    style="
-                      background: #18150f;
-                      border-bottom: 1px solid var(--mate-frame-border);
-                    "
-                  ></div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #8b6942"></div>
                   <div class="swatch-meta">
-                    <div class="swatch-name">Frame</div>
-                    <div class="swatch-token">--mate-frame-bg</div>
-                    <div class="swatch-hex">#18150f</div>
+                    <div class="swatch-name">Bomba</div>
+                    <div class="swatch-token">chimarrao.bomba</div>
+                    <div class="swatch-hex">#8b6942</div>
                   </div>
                 </div>
               </div>
 
-              <div class="swatch-group-label" style="margin-top: 20px">
-                Semantic
-              </div>
-              <div class="swatch-grid">
+              <div class="swatch-group-label">Semantic</div>
+              <div class="swatch-grid" style="margin-bottom: 20px">
                 <div class="swatch-card">
                   <div class="swatch-color" style="background: #7db46e"></div>
                   <div class="swatch-meta">
                     <div class="swatch-name">Success</div>
-                    <div class="swatch-token">--mate-success</div>
+                    <div class="swatch-token">colors.success</div>
                     <div class="swatch-hex">#7db46e</div>
                   </div>
                 </div>
@@ -18787,7 +18790,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                   <div class="swatch-color" style="background: #e8b84a"></div>
                   <div class="swatch-meta">
                     <div class="swatch-name">Warning</div>
-                    <div class="swatch-token">--mate-warning</div>
+                    <div class="swatch-token">colors.warning</div>
                     <div class="swatch-hex">#e8b84a</div>
                   </div>
                 </div>
@@ -18795,7 +18798,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                   <div class="swatch-color" style="background: #e05252"></div>
                   <div class="swatch-meta">
                     <div class="swatch-name">Error</div>
-                    <div class="swatch-token">--mate-error</div>
+                    <div class="swatch-token">colors.error</div>
                     <div class="swatch-hex">#e05252</div>
                   </div>
                 </div>
@@ -18803,8 +18806,364 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                   <div class="swatch-color" style="background: #6b9fb4"></div>
                   <div class="swatch-meta">
                     <div class="swatch-name">Info</div>
-                    <div class="swatch-token">--mate-info</div>
+                    <div class="swatch-token">colors.info</div>
                     <div class="swatch-hex">#6b9fb4</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swatch-group-label">Text</div>
+              <div class="swatch-grid" style="margin-bottom: 20px">
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #d4cfc8"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Primary</div>
+                    <div class="swatch-token">text.primary</div>
+                    <div class="swatch-hex">#d4cfc8</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #b0a898"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Secondary</div>
+                    <div class="swatch-token">text.secondary</div>
+                    <div class="swatch-hex">#b0a898</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #7a7268"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Muted</div>
+                    <div class="swatch-token">text.muted</div>
+                    <div class="swatch-hex">#7a7268</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #5a5545"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Dim</div>
+                    <div class="swatch-token">text.dim</div>
+                    <div class="swatch-hex">#5a5545</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div
+                    class="swatch-color"
+                    style="
+                      background: #1a1816;
+                      border-bottom: 1px solid var(--mate-frame-border);
+                    "
+                  ></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Inverse</div>
+                    <div class="swatch-token">text.inverse</div>
+                    <div class="swatch-hex">#1a1816</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swatch-group-label">Surfaces</div>
+              <div class="swatch-grid" style="margin-bottom: 20px">
+                <div class="swatch-card">
+                  <div
+                    class="swatch-color"
+                    style="
+                      background: #131210;
+                      border-bottom: 1px solid var(--mate-frame-border);
+                    "
+                  ></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Deep</div>
+                    <div class="swatch-token">bg.deep</div>
+                    <div class="swatch-hex">#131210</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div
+                    class="swatch-color"
+                    style="
+                      background: #1a1816;
+                      border-bottom: 1px solid var(--mate-frame-border);
+                    "
+                  ></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Primary</div>
+                    <div class="swatch-token">bg.primary</div>
+                    <div class="swatch-hex">#1a1816</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div
+                    class="swatch-color"
+                    style="
+                      background: #252220;
+                      border-bottom: 1px solid var(--mate-frame-border);
+                    "
+                  ></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Secondary</div>
+                    <div class="swatch-token">bg.secondary</div>
+                    <div class="swatch-hex">#252220</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #302c28"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Elevated</div>
+                    <div class="swatch-token">bg.elevated</div>
+                    <div class="swatch-hex">#302c28</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #1e2a32"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Selected</div>
+                    <div class="swatch-token">bg.selected</div>
+                    <div class="swatch-hex">#1e2a32</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swatch-group-label">Severity</div>
+              <div class="swatch-grid" style="margin-bottom: 20px">
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #e05252"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Critical</div>
+                    <div class="swatch-token">severity.critical</div>
+                    <div class="swatch-hex">#e05252</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #e8b84a"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Major</div>
+                    <div class="swatch-token">severity.major</div>
+                    <div class="swatch-hex">#e8b84a</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #6b9fb4"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Minor</div>
+                    <div class="swatch-token">severity.minor</div>
+                    <div class="swatch-hex">#6b9fb4</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #5a5545"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Nit</div>
+                    <div class="swatch-token">severity.nit</div>
+                    <div class="swatch-hex">#5a5545</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swatch-group-label">Stage</div>
+              <div class="swatch-grid">
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #6b9fb4"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Open</div>
+                    <div class="swatch-token">stage.open</div>
+                    <div class="swatch-hex">#6b9fb4</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #e8b84a"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">In review</div>
+                    <div class="swatch-token">stage.inreview</div>
+                    <div class="swatch-hex">#e8b84a</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #c4956a"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Triaged</div>
+                    <div class="swatch-token">stage.triaged</div>
+                    <div class="swatch-hex">#c4956a</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #7db46e"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Posted</div>
+                    <div class="swatch-token">stage.posted</div>
+                    <div class="swatch-hex">#7db46e</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #5a5545"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Done</div>
+                    <div class="swatch-token">stage.done</div>
+                    <div class="swatch-hex">#5a5545</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="preview-card">
+              <div
+                style="
+                  font-size: 11px;
+                  font-weight: 700;
+                  letter-spacing: 0.08em;
+                  text-transform: uppercase;
+                  color: var(--mate-frame-muted);
+                  margin-bottom: 8px;
+                "
+              >
+                Light — tui-design-system-light.yaml
+              </div>
+              <p
+                style="
+                  font-size: 13px;
+                  color: var(--mate-frame-muted);
+                  margin-bottom: 20px;
+                  font-style: italic;
+                "
+              >
+                First-pass plumbing. Accents darkened for light surfaces; no
+                designed contrast curves yet. A follow-up ticket is open.
+              </p>
+
+              <div class="swatch-group-label">Brand</div>
+              <div class="swatch-grid" style="margin-bottom: 20px">
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #b85a32"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Primary</div>
+                    <div class="swatch-token">colors.primary</div>
+                    <div class="swatch-hex">#b85a32</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #8a6238"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Secondary</div>
+                    <div class="swatch-token">colors.secondary</div>
+                    <div class="swatch-hex">#8a6238</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #3d6b35"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Erva</div>
+                    <div class="swatch-token">chimarrao.erva</div>
+                    <div class="swatch-hex">#3d6b35</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swatch-group-label">Semantic</div>
+              <div class="swatch-grid" style="margin-bottom: 20px">
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #3f7a3a"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Success</div>
+                    <div class="swatch-token">colors.success</div>
+                    <div class="swatch-hex">#3f7a3a</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #a07c1a"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Warning</div>
+                    <div class="swatch-token">colors.warning</div>
+                    <div class="swatch-hex">#a07c1a</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #b03030"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Error</div>
+                    <div class="swatch-token">colors.error</div>
+                    <div class="swatch-hex">#b03030</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div class="swatch-color" style="background: #3a6f88"></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Info</div>
+                    <div class="swatch-token">colors.info</div>
+                    <div class="swatch-hex">#3a6f88</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="swatch-group-label">Surfaces</div>
+              <div class="swatch-grid">
+                <div class="swatch-card">
+                  <div
+                    class="swatch-color"
+                    style="
+                      background: #fbfaf7;
+                      border-bottom: 1px solid #cbc4b8;
+                    "
+                  ></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Primary</div>
+                    <div class="swatch-token">bg.primary</div>
+                    <div class="swatch-hex">#fbfaf7</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div
+                    class="swatch-color"
+                    style="
+                      background: #f1ece4;
+                      border-bottom: 1px solid #cbc4b8;
+                    "
+                  ></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Secondary</div>
+                    <div class="swatch-token">bg.secondary</div>
+                    <div class="swatch-hex">#f1ece4</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div
+                    class="swatch-color"
+                    style="
+                      background: #e6e0d4;
+                      border-bottom: 1px solid #cbc4b8;
+                    "
+                  ></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Elevated</div>
+                    <div class="swatch-token">bg.elevated</div>
+                    <div class="swatch-hex">#e6e0d4</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div
+                    class="swatch-color"
+                    style="
+                      background: #dfe6ee;
+                      border-bottom: 1px solid #cbc4b8;
+                    "
+                  ></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Selected</div>
+                    <div class="swatch-token">bg.selected</div>
+                    <div class="swatch-hex">#dfe6ee</div>
+                  </div>
+                </div>
+                <div class="swatch-card">
+                  <div
+                    class="swatch-color"
+                    style="
+                      background: #f7f4ee;
+                      border-bottom: 1px solid #cbc4b8;
+                    "
+                  ></div>
+                  <div class="swatch-meta">
+                    <div class="swatch-name">Deep</div>
+                    <div class="swatch-token">bg.deep</div>
+                    <div class="swatch-hex">#f7f4ee</div>
                   </div>
                 </div>
               </div>
