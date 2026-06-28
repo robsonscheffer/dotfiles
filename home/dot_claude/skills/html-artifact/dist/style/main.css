@@ -16968,7 +16968,7 @@ body:after {
 }
 .sidebar-link .num {
   font-family: var(--mate-font-mono);
-  color: var(--mate-frame-dim);
+  color: var(--mate-frame-muted);
   min-width: 16px;
   font-size: 10px;
 }
@@ -17118,7 +17118,7 @@ body:after {
   background: var(--mate-frame-nav);
   border-top: 1px solid var(--mate-frame-border);
   font-family: var(--mate-font-body);
-  color: var(--mate-frame-dim);
+  color: var(--mate-frame-muted);
   justify-content: space-between;
   align-items: center;
   padding: 16px 40px;
@@ -17433,4 +17433,52 @@ body:after {
   font-size: 11px;
   font-family: var(--mate-font-mono);
   margin-top: 2px;
+}
+
+/* ── mate a11y overrides — 2026-06-28 ─────────────────────────────────────
+   Contrast fixes for WCAG AA compliance on the mate dark theme.              */
+
+/* sev-nit: frame-dim (#857363) fails 4.5:1 → bump to muted                  */
+.sev-nit {
+  color: var(--mate-frame-muted);
+  border-color: color-mix(in oklab, var(--mate-frame-muted) 35%, transparent);
+  background: color-mix(in oklab, var(--mate-frame-muted) 12%, transparent);
+}
+
+/* delta-down: mate-error (#e05252) is 4.32:1 on sidebar — just below AA     */
+.delta-down {
+  color: #ec6b6b;
+}
+
+/* alert overrides — DaisyUI defaults too saturated for mate dark theme       */
+.alert-warning {
+  background: rgba(232, 184, 74, 0.1);
+  border-color: rgba(232, 184, 74, 0.28);
+  color: var(--mate-frame-text);
+}
+.alert-info {
+  background: rgba(107, 159, 180, 0.1);
+  border-color: rgba(107, 159, 180, 0.28);
+  color: var(--mate-frame-text);
+}
+.alert-success {
+  background: rgba(125, 180, 110, 0.1);
+  border-color: rgba(125, 180, 110, 0.28);
+  color: var(--mate-frame-text);
+}
+
+/* swatch-hex uses frame-dim — fix to muted */
+.swatch-hex {
+  color: var(--mate-frame-muted);
+}
+
+/* sev-critical: #e05252 is 3.9:1 on tinted bg at 11px bold — just below AA  */
+.sev-critical {
+  color: #ec6b6b;
+}
+
+/* btn-primary: frame-text (#e8e0d4) on terracotta (#d4764e) is only 2.46:1
+   dark frame-bg gives ~5:1 on terracotta */
+.btn-primary {
+  color: var(--mate-frame-bg);
 }
