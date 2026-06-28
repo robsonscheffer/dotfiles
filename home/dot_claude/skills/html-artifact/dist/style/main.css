@@ -17435,22 +17435,19 @@ body:after {
   margin-top: 2px;
 }
 
-/* ── mate a11y overrides — 2026-06-28 ─────────────────────────────────────
-   Contrast fixes for WCAG AA compliance on the mate dark theme.              */
-
-/* sev-nit: frame-dim (#857363) fails 4.5:1 → bump to muted                  */
+/* frame-dim (#857363) fails 4.5:1 AA at small sizes — override to muted */
 .sev-nit {
   color: var(--mate-frame-muted);
   border-color: color-mix(in oklab, var(--mate-frame-muted) 35%, transparent);
   background: color-mix(in oklab, var(--mate-frame-muted) 12%, transparent);
 }
 
-/* delta-down: mate-error (#e05252) is 4.32:1 on sidebar — just below AA     */
+/* mate-error (#e05252) is 4.32:1 on sidebar bg — just below 4.5:1 AA */
 .delta-down {
   color: #ec6b6b;
 }
 
-/* alert overrides — DaisyUI defaults too saturated for mate dark theme       */
+/* DaisyUI alert defaults are too saturated for mate dark theme */
 .alert-warning {
   background: rgba(232, 184, 74, 0.1);
   border-color: rgba(232, 184, 74, 0.28);
@@ -17467,18 +17464,16 @@ body:after {
   color: var(--mate-frame-text);
 }
 
-/* swatch-hex uses frame-dim — fix to muted */
 .swatch-hex {
   color: var(--mate-frame-muted);
 }
 
-/* sev-critical: #e05252 is 3.9:1 on tinted bg at 11px bold — just below AA  */
+/* #e05252 is 3.9:1 on tinted bg at 11px bold — just below 4.5:1 AA */
 .sev-critical {
   color: #ec6b6b;
 }
 
-/* btn-primary: frame-text (#e8e0d4) on terracotta (#d4764e) is only 2.46:1
-   dark frame-bg gives ~5:1 on terracotta */
+/* frame-text on terracotta is 2.46:1; frame-bg gives ~5:1 */
 .btn-primary {
   color: var(--mate-frame-bg);
 }
