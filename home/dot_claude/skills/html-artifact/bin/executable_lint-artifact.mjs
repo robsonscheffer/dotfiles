@@ -64,8 +64,14 @@ lines.forEach((line, i) => {
   }
 });
 
-// 3. No stylesheet
-if (!sanitized.includes('<link rel="stylesheet"')) {
+// 3. No stylesheet — normalize whitespace to catch multi-line <link> tags
+const flatHead = sanitized
+  .slice(0, sanitized.indexOf("</head>") + 7)
+  .replace(/\s+/g, " ");
+if (
+  !flatHead.includes('rel="stylesheet"') &&
+  !flatHead.includes("rel='stylesheet'")
+) {
   hit(
     1,
     "no-stylesheet",
@@ -85,15 +91,43 @@ lines.forEach((line, i) => {
 });
 
 // 5. Small font sizes outside exempt label contexts
+// Check 3-line window around each hit for element/class context
 const SMALL_FONT_EXEMPT =
-  /spec-rail-label|<th|badge|breadcrumb|footer|font-mono|stat-title|sev-/;
+  /spec-rail-label|<th|badge|breadcrumb|footer|font-mono|stat-title|sev-|nav-|meta-|label|caption|chip|tag|mono|<select|<option|<small|theme-switcher|setTheme|\.date|\.time|\.pill|\.crumb|\.nav/;
 lines.forEach((line, i) => {
-  if (/font-size:\s*1[23]px/.test(line) && !SMALL_FONT_EXEMPT.test(line)) {
-    hit(i + 1, "small-font", "font-size 12/13px on body element — use 14px+");
+  if (/font-size:\s*1[23]px/.test(line)) {
+    const window = lines.slice(Math.max(0, i - 3), i + 4).join(" ");
+    if (!SMALL_FONT_EXEMPT.test(window)) {
+      hit(i + 1, "small-font", "font-size 12/13px on body element — use 14px+");
+    }
   }
 });
 
-// 6. Light-mode hardcoded hex
+// 6. Missing theme switcher
+if (!sanitized.includes("setTheme")) {
+  hit(
+    1,
+    "no-theme-switcher",
+    'Missing theme switcher — add <select id="theme-switcher" onchange="setTheme(this.value)"> and setTheme() JS',
+  );
+}
+
+// 7. Wrong Google Fonts (Jost / DM Mono instead of Inter / JetBrains Mono)
+if (/fonts\.googleapis\.com\/css2\?[^"']+(?:Jost|DM\+Mono)/.test(sanitized)) {
+  const lineNum =
+    lines.findIndex(
+      (l) =>
+        l.includes("fonts.googleapis.com") &&
+        (l.includes("Jost") || l.includes("DM+Mono")),
+    ) + 1;
+  hit(
+    lineNum || 1,
+    "wrong-fonts",
+    "Google Fonts URL uses Jost/DM+Mono — use Inter:wght@300;400;500;600 and JetBrains+Mono:wght@400;500",
+  );
+}
+
+// 8. Light-mode hardcoded hex
 const LIGHT_HEX = [
   "#fef2f2",
   "#f0fdf4",
