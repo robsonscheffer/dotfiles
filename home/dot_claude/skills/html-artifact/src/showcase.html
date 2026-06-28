@@ -14,19 +14,25 @@
     <div class="grain"></div>
 
     <header
-      class="sticky top-0 z-20 h-12 flex items-center px-6 bg-[var(--mate-frame-nav)] border-b border-[var(--mate-frame-border)]"
+      class="sticky top-0 z-20 h-12 flex items-center px-4 md:px-6 gap-4"
+      style="
+        background: var(--mate-frame-nav);
+        border-bottom: 1px solid var(--mate-frame-border);
+      "
     >
-      <div class="flex-1 flex items-center gap-6">
-        <div
+      <div class="flex-1 flex items-center gap-6 min-w-0">
+        <span
           style="
             font-family: var(--mate-font-display);
             font-size: 18px;
             color: var(--mate-frame-text);
+            white-space: nowrap;
           "
+          >mate-<em style="color: var(--mate-primary); font-weight: 400"
+            >ds</em
+          ></span
         >
-          mate-<em style="color: var(--mate-primary); font-weight: 400">ds</em>
-        </div>
-        <div class="hidden md:flex items-center gap-4">
+        <nav class="hidden md:flex items-center gap-4">
           <a class="text-sm" style="color: var(--mate-frame-text)" href="#nav"
             >Components</a
           >
@@ -48,24 +54,51 @@
             href="templates/prototype.html"
             >Prototypes</a
           >
-        </div>
+        </nav>
       </div>
-      <div class="flex items-center gap-3">
-        <span
-          class="badge badge-outline"
-          style="color: var(--mate-primary); border-color: var(--mate-primary)"
-          >v1.0</span
+      <div class="flex items-center gap-2">
+        <select
+          id="theme-switcher"
+          onchange="
+            document.documentElement.setAttribute('data-theme', this.value)
+          "
+          style="
+            font-family: var(--mate-font-body);
+            font-size: 12px;
+            color: var(--mate-frame-muted);
+            background: var(--mate-frame-sidebar);
+            border: 1px solid var(--mate-frame-border);
+            border-radius: 6px;
+            padding: 3px 8px;
+            cursor: pointer;
+            outline: none;
+          "
         >
-        <button class="btn btn-primary btn-sm">Publish</button>
+          <option value="mate">mate</option>
+          <option value="mate-light">mate-light</option>
+          <option value="gruvbox">gruvbox</option>
+          <option value="gruvbox-light">gruvbox-light</option>
+        </select>
+        <span
+          class="badge badge-outline hidden md:inline-flex"
+          style="color: var(--mate-primary); border-color: var(--mate-primary)"
+          >v1.1</span
+        >
       </div>
     </header>
 
     <div class="flex min-h-[calc(100vh-3rem)]">
       <aside
-        class="w-56 shrink-0 sticky top-12 h-[calc(100vh-3rem)] overflow-y-auto bg-[var(--mate-frame-sidebar)] border-r border-[var(--mate-frame-border)] py-5"
+        id="sidebar"
+        class="w-52 shrink-0 sticky top-12 h-[calc(100vh-3rem)] overflow-y-auto py-5 hidden md:block"
+        style="
+          background: var(--mate-frame-sidebar);
+          border-right: 1px solid var(--mate-frame-border);
+        "
       >
         <div
-          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-dim)]"
+          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest"
+          style="color: var(--mate-frame-dim)"
         >
           Components
         </div>
@@ -98,7 +131,8 @@
         >
 
         <div
-          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-dim)]"
+          class="px-5 pb-1.5 mt-5 text-[11px] font-semibold uppercase tracking-widest"
+          style="color: var(--mate-frame-dim)"
         >
           Document layout
         </div>
@@ -113,7 +147,8 @@
         >
 
         <div
-          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-dim)]"
+          class="px-5 pb-1.5 mt-5 text-[11px] font-semibold uppercase tracking-widest"
+          style="color: var(--mate-frame-dim)"
         >
           Resources
         </div>
@@ -121,42 +156,39 @@
           class="sidebar-link"
           href="file:///Users/robson.scheffer/brain/wiki/artifact/index.html"
           target="_blank"
-          ><span class="num">↗</span> Artifact Index</a
         >
+          <span class="num">↗</span> Artifact Index
+        </a>
       </aside>
 
       <main class="flex-1 min-w-0">
         <div class="artifact-header">
-          <div
-            class="breadcrumbs text-sm"
-            style="color: var(--mate-frame-muted)"
-          >
-            <ul>
-              <li><a>Artifacts</a></li>
-              <li><a>Reports</a></li>
-              <li>Component Library</li>
-            </ul>
-          </div>
+          <ol class="breadcrumb">
+            <li><a href="#">Artifacts</a></li>
+            <li><a href="#">Reports</a></li>
+            <li aria-current="page">Component Library</li>
+          </ol>
           <h1>mate-ds — <em>Component Library</em></h1>
           <div class="artifact-meta">
-            <span class="meta-pill accent">v1.0</span>
+            <span class="meta-pill accent">v1.1</span>
             <span class="meta-pill">DaisyUI v5</span>
             <span class="meta-pill">Tailwind v4</span>
-            <span class="meta-pill">updated 2026-06-09</span>
+            <span class="meta-pill">updated 2026-06-28</span>
             <span class="meta-pill">owner robson</span>
           </div>
         </div>
 
         <div class="page-content">
+          <!-- 01 Navigation -->
           <section class="ds-section" id="nav">
             <div class="section-header">
               <h2>01 — Navigation</h2>
               <span class="section-tag">.navbar / .breadcrumbs</span>
             </div>
             <p class="section-desc">
-              The top frame and the trail back. Navbar carries the brand,
-              primary destinations, and a single high-intent action. Breadcrumbs
-              sit above the document title and show provenance without nagging.
+              Top frame and the trail back. Navbar carries the brand, primary
+              destinations, and a single high-intent action. Breadcrumbs sit
+              above the document title.
             </p>
             <div class="preview-card">
               <div
@@ -170,14 +202,15 @@
                   <span
                     style="
                       font-family: var(--mate-font-display);
-                      font-size: 18px;
+                      font-size: 17px;
                       color: var(--mate-frame-text);
                     "
-                    >mate-<em
+                  >
+                    mate-<em
                       style="color: var(--mate-primary); font-weight: 400"
                       >ds</em
-                    ></span
-                  >
+                    >
+                  </span>
                   <a class="text-sm" style="color: var(--mate-frame-text)"
                     >Components</a
                   >
@@ -189,113 +222,122 @@
                   >
                 </div>
                 <div class="flex items-center gap-2 px-2">
-                  <span class="badge badge-soft badge-warning">v1.0</span>
+                  <span class="badge badge-soft badge-warning">v1.1</span>
                   <button class="btn btn-primary btn-sm">Publish</button>
                 </div>
               </div>
-
               <div class="preview-divider"></div>
-
-              <div class="breadcrumbs text-sm">
-                <ul>
-                  <li><a>Artifacts</a></li>
-                  <li><a>Reports</a></li>
-                  <li>Component Library</li>
-                </ul>
-              </div>
+              <ol class="breadcrumb">
+                <li><a href="#">Artifacts</a></li>
+                <li><a href="#">Reports</a></li>
+                <li aria-current="page">Component Library</li>
+              </ol>
             </div>
           </section>
 
+          <!-- 02 Buttons -->
           <section class="ds-section" id="buttons">
             <div class="section-header">
               <h2>02 — Buttons</h2>
               <span class="section-tag">.btn / .btn-*</span>
             </div>
             <p class="section-desc">
-              One primary per surface. Secondary is for the lesser choice in the
-              same decision. Ghost for tertiary tucked into a row. Error only
-              when the action destroys.
+              One primary per surface. Secondary for the lesser choice. Ghost
+              for tertiary tucked into a row. Error only when the action
+              destroys.
             </p>
             <div class="preview-card">
               <div class="preview-row">
                 <button class="btn btn-primary">Save changes</button>
-                <button class="btn btn-outline btn-secondary">Cancel</button>
-                <button class="btn btn-ghost">Dismiss</button>
-                <button class="btn btn-error">Delete report</button>
+                <button class="btn btn-secondary">Secondary</button>
+                <button class="btn btn-outline">Outline</button>
+                <button class="btn btn-ghost">Ghost</button>
+                <button class="btn btn-error">Delete</button>
               </div>
               <div class="preview-divider"></div>
               <div class="preview-row">
-                <button class="btn">Default</button>
-                <button class="btn btn-sm">Small</button>
-                <button class="btn btn-outline btn-sm">Outline small</button>
-                <button class="btn btn-ghost btn-sm">Ghost small</button>
+                <button class="btn btn-primary btn-lg">Large</button>
+                <button class="btn btn-primary">Default</button>
+                <button class="btn btn-primary btn-sm">Small</button>
+                <button class="btn btn-primary btn-xs">XS</button>
+              </div>
+              <div class="preview-divider"></div>
+              <div class="preview-row">
+                <button class="btn btn-primary" disabled>Disabled</button>
+                <button class="btn btn-primary">
+                  <span class="loading loading-spinner loading-sm"></span>
+                  Saving…
+                </button>
+                <button class="btn btn-outline btn-primary">
+                  Outline primary
+                </button>
+                <button class="btn btn-soft btn-primary">Soft primary</button>
               </div>
             </div>
           </section>
 
+          <!-- 03 Forms -->
           <section class="ds-section" id="forms">
             <div class="section-header">
               <h2>03 — Forms</h2>
-              <span class="section-tag">.input / .select / .label</span>
+              <span class="section-tag">.input / .select / .textarea</span>
             </div>
             <p class="section-desc">
               Two columns until you can't. Labels live above inputs, hints
-              below, errors replace hints. Submit row sits at the bottom-right
-              with the primary action terminal.
+              below, errors replace hints. Submit sits bottom-right with the
+              primary action terminal.
             </p>
             <div class="preview-card">
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="form-label">Title</label>
                   <input
                     type="text"
-                    class="input input-bordered w-full"
+                    class="input w-full"
                     value="Component Library Showcase"
                   />
-                  <div class="form-hint">
+                  <p class="form-hint">
                     Shown in the artifact header and in the index.
-                  </div>
+                  </p>
                 </div>
                 <div>
                   <label class="form-label">Type</label>
-                  <select class="select select-bordered w-full">
+                  <select class="select w-full">
                     <option>report</option>
                     <option selected>spec</option>
                     <option>prototype</option>
                     <option>dashboard</option>
                   </select>
-                  <div class="form-hint">
+                  <p class="form-hint">
                     Drives sidebar grouping and default template.
-                  </div>
+                  </p>
                 </div>
-                <div class="col-span-2">
+                <div class="col-span-1 md:col-span-2">
                   <label class="form-label">Notes</label>
-                  <textarea class="textarea textarea-bordered w-full" rows="3">
-Captures decisions taken during the embedded-beneficiaries audit, plus open questions on modal height.</textarea
-                  >
+                  <textarea class="textarea w-full" rows="3">
+Captures decisions from the embedded-beneficiaries audit, plus open questions on modal height.</textarea>
                 </div>
                 <div>
                   <label class="form-label">Owner key</label>
                   <input
                     type="text"
-                    class="input input-bordered input-error w-full"
+                    class="input input-error w-full"
                     value="rsche"
                   />
-                  <div class="form-err">
-                    Owner key must be 8+ characters. Re-authenticate with
-                    html-publisher.
-                  </div>
+                  <p class="form-err">
+                    Must be 8+ characters. Re-authenticate with html-publisher.
+                  </p>
                 </div>
                 <div>
                   <label class="form-label">Visibility</label>
-                  <select class="select select-bordered w-full">
+                  <select class="select w-full">
                     <option>private (default)</option>
                     <option>shared with team</option>
                     <option>public</option>
                   </select>
-                  <div class="form-hint">
+                  <p class="form-hint">
                     Private artifacts never leave your vault.
-                  </div>
+                  </p>
                 </div>
               </div>
               <div class="preview-divider"></div>
@@ -306,6 +348,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </div>
           </section>
 
+          <!-- 04 Alerts -->
           <section class="ds-section" id="alerts">
             <div class="section-header">
               <h2>04 — Alerts</h2>
@@ -314,22 +357,64 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             <p class="section-desc">
               Four registers: info to orient, success to confirm, warning to
               slow you down, error to stop you. One alert per surface, top of
-              the content area.
+              content area.
             </p>
             <div class="preview-card space-y-3">
               <div class="alert alert-info">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
                 <span
                   ><strong>Heads up — </strong>This artifact was generated by
                   the html-artifact skill at 09:14 this morning.</span
                 >
               </div>
               <div class="alert alert-success">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
                 <span
-                  ><strong>Published — </strong>v1.0 is live at the canonical
+                  ><strong>Published — </strong>v1.1 is live at the canonical
                   URL. Old preview links will redirect for 30 days.</span
                 >
               </div>
               <div class="alert alert-warning">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                  />
+                </svg>
                 <span
                   ><strong>Stale source — </strong>Two referenced wiki pages
                   were last updated over 180 days ago. Run
@@ -337,6 +422,20 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                 >
               </div>
               <div class="alert alert-error">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
                 <span
                   ><strong>Publish blocked — </strong>Owner key mismatch.
                   Re-authenticate with html-publisher before retrying.</span
@@ -345,6 +444,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </div>
           </section>
 
+          <!-- 05 Progress -->
           <section class="ds-section" id="progress">
             <div class="section-header">
               <h2>05 — Progress</h2>
@@ -357,7 +457,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             <div class="preview-card space-y-4">
               <div>
                 <div
-                  class="flex justify-between text-sm"
+                  class="flex justify-between text-sm mb-1"
                   style="color: var(--mate-frame-text)"
                 >
                   <span>Plan phase</span><span class="mono">100%</span>
@@ -370,7 +470,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
               </div>
               <div>
                 <div
-                  class="flex justify-between text-sm"
+                  class="flex justify-between text-sm mb-1"
                   style="color: var(--mate-frame-text)"
                 >
                   <span>Build phase</span><span class="mono">68%</span>
@@ -383,7 +483,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
               </div>
               <div>
                 <div
-                  class="flex justify-between text-sm"
+                  class="flex justify-between text-sm mb-1"
                   style="color: var(--mate-frame-text)"
                 >
                   <span>Verify phase</span><span class="mono">22%</span>
@@ -394,9 +494,23 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                   max="100"
                 ></progress>
               </div>
+              <div>
+                <div
+                  class="flex justify-between text-sm mb-1"
+                  style="color: var(--mate-frame-muted)"
+                >
+                  <span>Not started</span><span class="mono">0%</span>
+                </div>
+                <progress
+                  class="progress w-full"
+                  value="0"
+                  max="100"
+                ></progress>
+              </div>
             </div>
           </section>
 
+          <!-- 06 Stats -->
           <section class="ds-section" id="stats">
             <div class="section-header">
               <h2>06 — Stats</h2>
@@ -408,16 +522,27 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </p>
             <div class="preview-card">
               <div
-                class="stats stats-vertical lg:stats-horizontal shadow w-full"
+                class="stats stats-vertical lg:stats-horizontal w-full"
+                style="background: transparent"
               >
                 <div class="stat">
                   <div class="stat-title">PRS REVIEWED</div>
-                  <div class="stat-value">14</div>
+                  <div
+                    class="stat-value"
+                    style="font-family: var(--mate-font-display)"
+                  >
+                    14
+                  </div>
                   <div class="stat-delta delta-up">↑ 3 vs last week</div>
                 </div>
                 <div class="stat">
                   <div class="stat-title">FINDINGS</div>
-                  <div class="stat-value">37</div>
+                  <div
+                    class="stat-value"
+                    style="font-family: var(--mate-font-display)"
+                  >
+                    37
+                  </div>
                   <div
                     class="stat-delta"
                     style="color: var(--mate-frame-muted)"
@@ -427,12 +552,22 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                 </div>
                 <div class="stat">
                   <div class="stat-title">SHIP RATE</div>
-                  <div class="stat-value">94%</div>
+                  <div
+                    class="stat-value"
+                    style="font-family: var(--mate-font-display)"
+                  >
+                    94%
+                  </div>
                   <div class="stat-delta delta-up">↑ 2pp</div>
                 </div>
                 <div class="stat">
                   <div class="stat-title">AVG CYCLE</div>
-                  <div class="stat-value">1.4d</div>
+                  <div
+                    class="stat-value"
+                    style="font-family: var(--mate-font-display)"
+                  >
+                    1.4d
+                  </div>
                   <div
                     class="stat-delta"
                     style="color: var(--mate-frame-muted)"
@@ -444,6 +579,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </div>
           </section>
 
+          <!-- 07 Badges -->
           <section class="ds-section" id="badges">
             <div class="section-header">
               <h2>07 — Badges</h2>
@@ -455,26 +591,39 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
               list.
             </p>
             <div class="preview-card">
-              <div
+              <p
                 class="text-xs uppercase tracking-wider mb-2"
-                style="color: var(--mate-frame-muted)"
+                style="color: var(--mate-frame-muted); font-weight: 600"
               >
                 Lifecycle
-              </div>
-              <div class="preview-row">
+              </p>
+              <div class="preview-row mb-4">
                 <span class="badge badge-soft badge-open">open</span>
                 <span class="badge badge-soft badge-ready">ready</span>
                 <span class="badge badge-soft badge-building">building</span>
                 <span class="badge badge-soft badge-done">done</span>
                 <span class="badge badge-soft badge-dropped">dropped</span>
               </div>
-              <div class="preview-divider"></div>
-              <div
+              <p
                 class="text-xs uppercase tracking-wider mb-2"
-                style="color: var(--mate-frame-muted)"
+                style="color: var(--mate-frame-muted); font-weight: 600"
+              >
+                Lifecycle — outline variant
+              </p>
+              <div class="preview-row mb-4">
+                <span class="badge badge-outline badge-open">open</span>
+                <span class="badge badge-outline badge-ready">ready</span>
+                <span class="badge badge-outline badge-building">building</span>
+                <span class="badge badge-outline badge-done">done</span>
+                <span class="badge badge-outline badge-dropped">dropped</span>
+              </div>
+              <div class="preview-divider"></div>
+              <p
+                class="text-xs uppercase tracking-wider mb-2"
+                style="color: var(--mate-frame-muted); font-weight: 600"
               >
                 Severity
-              </div>
+              </p>
               <div class="preview-row">
                 <span class="sev sev-critical">critical</span>
                 <span class="sev sev-major">major</span>
@@ -484,95 +633,159 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </div>
           </section>
 
+          <!-- 08 Palette -->
           <section class="ds-section" id="palette">
             <div class="section-header">
               <h2>08 — Palette</h2>
-              <span class="section-tag">tokens.yaml</span>
+              <span class="section-tag">tokens.css</span>
             </div>
             <p class="section-desc">
               Warm earth on dark frame. Brand colors carry the work; semantics
-              signal state. Hex values are the source of truth — DaisyUI tokens
-              derive from them.
+              signal state. Switch the theme selector in the header to preview
+              all four palettes.
             </p>
             <div class="preview-card">
-              <div class="swatch-group-label">Brand</div>
+              <p class="swatch-group-label">Brand</p>
               <div class="swatch-grid">
                 <div class="swatch">
-                  <div class="swatch-chip" style="background: #d4764e"></div>
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-primary)"
+                  ></div>
                   <div class="swatch-name">Primary</div>
-                  <div class="swatch-hex">#d4764e</div>
+                  <div class="swatch-hex">var(--mate-primary)</div>
                 </div>
                 <div class="swatch">
-                  <div class="swatch-chip" style="background: #c4956a"></div>
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-secondary)"
+                  ></div>
                   <div class="swatch-name">Secondary</div>
-                  <div class="swatch-hex">#c4956a</div>
+                  <div class="swatch-hex">var(--mate-secondary)</div>
                 </div>
                 <div class="swatch">
-                  <div class="swatch-chip" style="background: #5a9a4e"></div>
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-erva)"
+                  ></div>
                   <div class="swatch-name">Erva</div>
-                  <div class="swatch-hex">#5a9a4e</div>
+                  <div class="swatch-hex">var(--mate-erva)</div>
                 </div>
                 <div class="swatch">
-                  <div class="swatch-chip" style="background: #18150f"></div>
-                  <div class="swatch-name">Frame</div>
-                  <div class="swatch-hex">#18150f</div>
+                  <div
+                    class="swatch-chip"
+                    style="
+                      background: var(--mate-frame-bg);
+                      border: 1px solid var(--mate-frame-border);
+                    "
+                  ></div>
+                  <div class="swatch-name">Frame bg</div>
+                  <div class="swatch-hex">var(--mate-frame-bg)</div>
                 </div>
               </div>
-
-              <div class="swatch-group-label">Semantic</div>
+              <p class="swatch-group-label">Semantic</p>
               <div class="swatch-grid">
                 <div class="swatch">
-                  <div class="swatch-chip" style="background: #7db46e"></div>
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-success)"
+                  ></div>
                   <div class="swatch-name">Success</div>
-                  <div class="swatch-hex">#7db46e</div>
+                  <div class="swatch-hex">var(--mate-success)</div>
                 </div>
                 <div class="swatch">
-                  <div class="swatch-chip" style="background: #e8b84a"></div>
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-warning)"
+                  ></div>
                   <div class="swatch-name">Warning</div>
-                  <div class="swatch-hex">#e8b84a</div>
+                  <div class="swatch-hex">var(--mate-warning)</div>
                 </div>
                 <div class="swatch">
-                  <div class="swatch-chip" style="background: #e05252"></div>
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-error)"
+                  ></div>
                   <div class="swatch-name">Error</div>
-                  <div class="swatch-hex">#e05252</div>
+                  <div class="swatch-hex">var(--mate-error)</div>
                 </div>
                 <div class="swatch">
-                  <div class="swatch-chip" style="background: #6b9fb4"></div>
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-info)"
+                  ></div>
                   <div class="swatch-name">Info</div>
-                  <div class="swatch-hex">#6b9fb4</div>
+                  <div class="swatch-hex">var(--mate-info)</div>
+                </div>
+              </div>
+              <p class="swatch-group-label">Surfaces</p>
+              <div class="swatch-grid">
+                <div class="swatch">
+                  <div
+                    class="swatch-chip"
+                    style="
+                      background: var(--mate-frame-nav);
+                      border: 1px solid var(--mate-frame-border);
+                    "
+                  ></div>
+                  <div class="swatch-name">Nav</div>
+                  <div class="swatch-hex">frame-nav</div>
+                </div>
+                <div class="swatch">
+                  <div
+                    class="swatch-chip"
+                    style="
+                      background: var(--mate-frame-sidebar);
+                      border: 1px solid var(--mate-frame-border);
+                    "
+                  ></div>
+                  <div class="swatch-name">Sidebar</div>
+                  <div class="swatch-hex">frame-sidebar</div>
+                </div>
+                <div class="swatch">
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-frame-text)"
+                  ></div>
+                  <div class="swatch-name">Text</div>
+                  <div class="swatch-hex">frame-text</div>
+                </div>
+                <div class="swatch">
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-frame-muted)"
+                  ></div>
+                  <div class="swatch-name">Muted</div>
+                  <div class="swatch-hex">frame-muted</div>
                 </div>
               </div>
             </div>
           </section>
 
+          <!-- 09 Typography -->
           <section class="ds-section" id="typography">
             <div class="section-header">
               <h2>09 — Typography</h2>
               <span class="section-tag">--mate-font-*</span>
             </div>
             <p class="section-desc">
-              Three-font system. Display for hero headings — the weight
-              justifies the extravagance. Body for everything readable. Mono for
-              code, paths, and numbers that must align.
+              Three-font system. Display for hero headings. Body for everything
+              readable. Mono for code, paths, and numbers that must align.
             </p>
-
-            <!-- Font stacks -->
             <div
               class="preview-card"
               style="display: flex; flex-direction: column; gap: 2rem"
             >
-              <!-- Display -->
               <div>
-                <div
+                <p
                   class="text-xs uppercase tracking-wider mb-3"
                   style="color: var(--mate-frame-muted); font-weight: 600"
                 >
                   Display —
-                  <code
-                    style="font-family: var(--mate-font-mono); font-size: 11px"
+                  <code class="mono" style="font-size: 11px"
                     >--mate-font-display</code
                   >
-                </div>
+                </p>
                 <div
                   style="
                     font-family: var(--mate-font-display);
@@ -580,7 +793,6 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                     font-weight: 400;
                     line-height: 1.15;
                     color: var(--mate-frame-text);
-                    margin-bottom: 0.25rem;
                   "
                 >
                   Cormorant Garamond
@@ -593,7 +805,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                     line-height: 1.15;
                     color: var(--mate-frame-text);
                     font-style: italic;
-                    margin-bottom: 0.75rem;
+                    margin-top: 4px;
                   "
                 >
                   Bold &amp; Italic
@@ -604,57 +816,51 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                     font-size: 1rem;
                     line-height: 1.6;
                     color: var(--mate-frame-muted);
+                    margin-top: 8px;
                   "
                 >
-                  ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
-                  abcdefghijklmnopqrstuvwxyz 0123456789
+                  ABCDEFGHIJKLMNOPQRSTUVWXYZ · abcdefghijklmnopqrstuvwxyz ·
+                  0123456789
                 </div>
               </div>
-
               <div style="border-top: 1px solid var(--mate-frame-border)"></div>
-
-              <!-- Body -->
               <div>
-                <div
+                <p
                   class="text-xs uppercase tracking-wider mb-3"
                   style="color: var(--mate-frame-muted); font-weight: 600"
                 >
                   Body —
-                  <code
-                    style="font-family: var(--mate-font-mono); font-size: 11px"
+                  <code class="mono" style="font-size: 11px"
                     >--mate-font-body</code
                   >
-                </div>
+                </p>
                 <div
                   style="
                     font-family: var(--mate-font-body);
                     font-size: 1.5rem;
                     font-weight: 400;
-                    line-height: 1.4;
                     color: var(--mate-frame-text);
-                    margin-bottom: 0.25rem;
                   "
                 >
                   Inter — the workhorse
                 </div>
-                <div
+                <p
                   style="
                     font-family: var(--mate-font-body);
                     font-size: 15px;
                     line-height: 1.7;
                     color: var(--mate-frame-text);
                     max-width: 56ch;
-                    margin-bottom: 0.75rem;
+                    margin: 8px 0;
                   "
                 >
-                  Body copy should breathe. Inter at 15px/1.7 gives the eye
-                  enough room to scan without losing density. Tighten to 14px
-                  for secondary text — never below that.
-                </div>
+                  Body copy should breathe. Inter at 15px/1.7 gives the eye room
+                  to scan without losing density. Never below 14px for secondary
+                  text.
+                </p>
                 <div
+                  class="flex gap-6"
                   style="
-                    display: flex;
-                    gap: 1.5rem;
                     font-family: var(--mate-font-body);
                     font-size: 14px;
                     color: var(--mate-frame-muted);
@@ -666,209 +872,50 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                   <span style="font-weight: 600">SemiBold 600</span>
                 </div>
               </div>
-
               <div style="border-top: 1px solid var(--mate-frame-border)"></div>
-
-              <!-- Mono -->
               <div>
-                <div
+                <p
                   class="text-xs uppercase tracking-wider mb-3"
                   style="color: var(--mate-frame-muted); font-weight: 600"
                 >
                   Mono —
-                  <code
-                    style="font-family: var(--mate-font-mono); font-size: 11px"
+                  <code class="mono" style="font-size: 11px"
                     >--mate-font-mono</code
                   >
-                </div>
+                </p>
                 <div
+                  class="mono"
                   style="
-                    font-family: var(--mate-font-mono);
                     font-size: 1.1rem;
                     font-weight: 400;
-                    line-height: 1.4;
                     color: var(--mate-frame-text);
-                    margin-bottom: 0.5rem;
                   "
                 >
                   JetBrains Mono
                 </div>
                 <div
+                  class="mono"
                   style="
-                    font-family: var(--mate-font-mono);
                     font-size: 13px;
                     line-height: 1.6;
                     color: var(--mate-frame-text);
-                    margin-bottom: 0.75rem;
+                    margin: 8px 0;
                   "
                 >
                   const embed = (path: string) =&gt; &lt;iframe src={path} /&gt;
                 </div>
                 <div
-                  style="
-                    display: flex;
-                    gap: 1.5rem;
-                    font-family: var(--mate-font-mono);
-                    font-size: 13px;
-                    color: var(--mate-frame-muted);
-                  "
+                  class="flex gap-6 mono"
+                  style="font-size: 13px; color: var(--mate-frame-muted)"
                 >
                   <span style="font-weight: 400">Regular 400</span>
                   <span style="font-weight: 500">Medium 500</span>
                 </div>
               </div>
             </div>
-
-            <!-- Type scale -->
-            <div class="preview-card" style="margin-top: 1.5rem">
-              <div
-                class="text-xs uppercase tracking-wider mb-4"
-                style="color: var(--mate-frame-muted); font-weight: 600"
-              >
-                Heading scale — walk document
-              </div>
-
-              <!-- Page title -->
-              <div
-                style="
-                  margin-bottom: 1.5rem;
-                  padding-bottom: 1.5rem;
-                  border-bottom: 1px solid var(--mate-frame-border);
-                "
-              >
-                <div
-                  style="
-                    font-family: var(--mate-font-mono);
-                    font-size: 10px;
-                    color: var(--mate-frame-dim);
-                    margin-bottom: 0.4rem;
-                    letter-spacing: 0.05em;
-                  "
-                >
-                  PAGE TITLE · Cormorant 400 · ~2.5rem
-                </div>
-                <div
-                  style="
-                    font-family: var(--mate-font-display);
-                    font-size: 2.5rem;
-                    font-weight: 400;
-                    line-height: 1.1;
-                    color: var(--mate-frame-text);
-                  "
-                >
-                  Walk: #23542 · Embed the loan dashboard
-                </div>
-              </div>
-
-              <!-- Group heading -->
-              <div
-                style="
-                  margin-bottom: 1.5rem;
-                  padding-bottom: 1.5rem;
-                  border-bottom: 1px solid var(--mate-frame-border);
-                "
-              >
-                <div
-                  style="
-                    font-family: var(--mate-font-mono);
-                    font-size: 10px;
-                    color: var(--mate-frame-dim);
-                    margin-bottom: 0.4rem;
-                    letter-spacing: 0.05em;
-                  "
-                >
-                  GROUP TITLE · Cormorant 600 · 1.4rem
-                </div>
-                <h2
-                  style="
-                    font-family: var(--mate-font-display);
-                    font-size: 1.4rem;
-                    font-weight: 600;
-                    margin: 0;
-                    line-height: 1.2;
-                  "
-                >
-                  <span
-                    style="
-                      font-size: 0.7rem;
-                      font-family: var(--mate-font-body);
-                      font-weight: 700;
-                      color: var(--mate-frame-muted);
-                      letter-spacing: 0.1em;
-                      vertical-align: middle;
-                      margin-right: 0.5em;
-                    "
-                    >01</span
-                  >
-                  Shared embed shell
-                </h2>
-              </div>
-
-              <!-- Section label -->
-              <div
-                style="
-                  margin-bottom: 1.5rem;
-                  padding-bottom: 1.5rem;
-                  border-bottom: 1px solid var(--mate-frame-border);
-                "
-              >
-                <div
-                  style="
-                    font-family: var(--mate-font-mono);
-                    font-size: 10px;
-                    color: var(--mate-frame-dim);
-                    margin-bottom: 0.4rem;
-                    letter-spacing: 0.05em;
-                  "
-                >
-                  SECTION LABEL · Inter 700 · 0.7rem uppercase
-                </div>
-                <h3
-                  style="
-                    font-family: var(--mate-font-body);
-                    font-size: 0.7rem;
-                    font-weight: 700;
-                    color: var(--mate-frame-muted);
-                    text-transform: uppercase;
-                    letter-spacing: 0.12em;
-                    margin: 0;
-                  "
-                >
-                  The story
-                </h3>
-              </div>
-
-              <!-- Body -->
-              <div>
-                <div
-                  style="
-                    font-family: var(--mate-font-mono);
-                    font-size: 10px;
-                    color: var(--mate-frame-dim);
-                    margin-bottom: 0.4rem;
-                    letter-spacing: 0.05em;
-                  "
-                >
-                  BODY · Inter 400 · 15px / 1.7
-                </div>
-                <p
-                  style="
-                    font-family: var(--mate-font-body);
-                    font-size: 15px;
-                    line-height: 1.7;
-                    color: var(--mate-frame-text);
-                    margin: 0;
-                  "
-                >
-                  The authentication service had session state locked inside the
-                  legacy monolith; to surface it in the new platform the author
-                  extracted a shared session container and rebuilt both surfaces
-                  as thin adapters on top of it.
-                </p>
-              </div>
-            </div>
           </section>
 
+          <!-- 10 Code Diff -->
           <section class="ds-section" id="diff">
             <div class="section-header">
               <h2>10 — Code Diff</h2>
@@ -882,9 +929,9 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
               <div class="diff-block">
                 <div class="diff-file-header">
                   <span>src/hooks/useEmbeddedContext.ts</span>
-                  <span class="diff-stats"
-                    ><span class="plus">+3</span>
-                    <span class="minus">-1</span></span
+                  <span
+                    ><span style="color: var(--mate-success)">+3</span>
+                    <span style="color: var(--mate-error)">-1</span></span
                   >
                 </div>
                 <div class="diff-hunk-header">
@@ -933,18 +980,16 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </div>
           </section>
 
+          <!-- 11 Spec / Right Rail -->
           <section class="ds-section" id="spec">
             <div class="section-header">
               <h2>11 — Spec / Right Rail</h2>
               <span class="section-tag">.spec-rail</span>
             </div>
             <p class="section-desc">
-              The rail sits <em>alongside</em> a panel, never inside it — panel
-              and rail are siblings in a <code>1fr 172px</code> grid row. Each
-              section carries only the metadata relevant to that section. A
-              panel with no rail just spans alone.
+              The rail sits alongside a panel, never inside it — panel and rail
+              are siblings in a <code>1fr 172px</code> grid row.
             </p>
-            <!-- Pattern A: panel + rail as siblings -->
             <div class="preview-card" style="padding: 0; overflow: hidden">
               <div
                 style="
@@ -975,7 +1020,13 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                     padding: 20px;
                   "
                 >
-                  <h3 style="margin: 0 0 10px; font-size: 17px">
+                  <h3
+                    style="
+                      margin: 0 0 10px;
+                      font-size: 17px;
+                      color: var(--mate-frame-text);
+                    "
+                  >
                     Modal Height — Embedded Context
                   </h3>
                   <p
@@ -1021,65 +1072,14 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                   </div>
                   <div class="spec-rail-row">
                     <div class="spec-rail-label">Target</div>
-                    <div class="spec-rail-value">2026-06-14</div>
+                    <div class="spec-rail-value mono">2026-06-28</div>
                   </div>
                 </aside>
               </div>
             </div>
-            <!-- Pattern B: panel alone, no rail -->
-            <div
-              class="preview-card"
-              style="padding: 0; overflow: hidden; margin-top: 12px"
-            >
-              <div
-                style="
-                  padding: 12px 16px;
-                  border-bottom: 1px solid var(--mate-frame-border);
-                  font-size: 11px;
-                  font-family: var(--mate-font-mono);
-                  color: var(--mate-frame-muted);
-                  letter-spacing: 0.05em;
-                "
-              >
-                PANEL ALONE
-              </div>
-              <div style="padding: 24px">
-                <div
-                  style="
-                    background: var(--mate-frame-bg);
-                    border: 1px solid var(--mate-frame-border);
-                    border-radius: 8px;
-                    padding: 20px;
-                  "
-                >
-                  <h3 style="margin: 0 0 10px; font-size: 17px">
-                    Acceptance Criteria
-                  </h3>
-                  <ol
-                    style="
-                      font-size: 14px;
-                      line-height: 2;
-                      padding-left: 20px;
-                      margin: 0;
-                      color: var(--mate-frame-text);
-                    "
-                  >
-                    <li>
-                      Modal height is capped at <code>80vh</code> in embedded
-                      context.
-                    </li>
-                    <li>
-                      Host page scrollbar does not appear when modal is open.
-                    </li>
-                    <li>
-                      Internal scroll handles overflow at 320×568 viewport.
-                    </li>
-                  </ol>
-                </div>
-              </div>
-            </div>
           </section>
 
+          <!-- 12 Tooltips -->
           <section class="ds-section" id="tooltips">
             <div class="section-header">
               <h2>12 — Tooltips</h2>
@@ -1087,8 +1087,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </div>
             <p class="section-desc">
               For details the eye doesn't need until it asks. Anchor on dense
-              identifiers — ticket IDs, abbreviations, mono spans — never on
-              prose.
+              identifiers — ticket IDs, abbreviations — never on prose.
             </p>
             <div class="preview-card">
               <div class="preview-row">
@@ -1118,23 +1117,23 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                 </div>
               </div>
               <div class="preview-divider"></div>
-              <p>
+              <p style="font-size: 14px; color: var(--mate-frame-text)">
                 Active ticket:
                 <span
                   class="tooltip tooltip-top"
                   data-tip="Modal height — embedded context · major · building"
-                  ><code>TICKET-001</code></span
                 >
-                — beneficiaries modal in the embedded host. Hover the ID for the
-                one-line summary.
+                  <code class="mono" style="font-size: 13px">TICKET-001</code>
+                </span>
+                — hover the ID for the one-line summary.
               </p>
             </div>
           </section>
         </div>
 
         <footer class="artifact-footer">
-          <span>mate-ds v1.0 — DaisyUI v5 · Tailwind v4</span>
-          <span>generated 2026-06-09</span>
+          <span>mate-ds v1.1 · DaisyUI v5 · Tailwind v4</span>
+          <span>generated 2026-06-28</span>
         </footer>
       </main>
     </div>

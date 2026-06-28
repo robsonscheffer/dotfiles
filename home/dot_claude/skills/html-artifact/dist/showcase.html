@@ -4,12 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>mate-ds — Component Library</title>
-    <meta
-      name="description"
-      content="mate-ds component library — DaisyUI v5 + Tailwind v4 with the mate dark theme. Buttons, forms, alerts, badges, progress, stats, palette swatches, and document layout patterns."
-    />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <style rel="stylesheet" crossorigin>
@@ -39,6 +35,7 @@
             --tw-ring-offset-width: 0px;
             --tw-ring-offset-color: #fff;
             --tw-ring-offset-shadow: 0 0 #0000;
+            --tw-outline-style: solid;
           }
         }
       }
@@ -433,14 +430,23 @@
         .z-20 {
           z-index: 20;
         }
-        .col-span-2 {
-          grid-column: span 2 / span 2;
+        .col-span-1 {
+          grid-column: span 1 / span 1;
         }
         .mt-5 {
           margin-top: calc(var(--spacing) * 5);
         }
+        .mb-1 {
+          margin-bottom: calc(var(--spacing) * 1);
+        }
         .mb-2 {
           margin-bottom: calc(var(--spacing) * 2);
+        }
+        .mb-3 {
+          margin-bottom: calc(var(--spacing) * 3);
+        }
+        .mb-4 {
+          margin-bottom: calc(var(--spacing) * 4);
         }
         .mb-6 {
           margin-bottom: calc(var(--spacing) * 6);
@@ -484,8 +490,8 @@
         .w-5 {
           width: calc(var(--spacing) * 5);
         }
-        .w-56 {
-          width: calc(var(--spacing) * 56);
+        .w-52 {
+          width: calc(var(--spacing) * 52);
         }
         .w-full {
           width: 100%;
@@ -499,8 +505,8 @@
         .shrink-0 {
           flex-shrink: 0;
         }
-        .grid-cols-2 {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .grid-cols-1 {
+          grid-template-columns: repeat(1, minmax(0, 1fr));
         }
         .items-center {
           align-items: center;
@@ -513,9 +519,6 @@
         }
         .gap-2 {
           gap: calc(var(--spacing) * 2);
-        }
-        .gap-3 {
-          gap: calc(var(--spacing) * 3);
         }
         .gap-4 {
           gap: calc(var(--spacing) * 4);
@@ -551,10 +554,6 @@
           border-style: var(--tw-border-style);
           border-width: 1px;
         }
-        .border-r {
-          border-right-style: var(--tw-border-style);
-          border-right-width: 1px;
-        }
         .border-b {
           border-bottom-style: var(--tw-border-style);
           border-bottom-width: 1px;
@@ -565,14 +564,14 @@
         .bg-\[var\(--mate-frame-nav\)\] {
           background-color: var(--mate-frame-nav);
         }
-        .bg-\[var\(--mate-frame-sidebar\)\] {
-          background-color: var(--mate-frame-sidebar);
-        }
         .stroke-current {
           stroke: currentColor;
         }
         .px-2 {
           padding-inline: calc(var(--spacing) * 2);
+        }
+        .px-4 {
+          padding-inline: calc(var(--spacing) * 4);
         }
         .px-5 {
           padding-inline: calc(var(--spacing) * 5);
@@ -609,9 +608,6 @@
           --tw-tracking: var(--tracking-widest);
           letter-spacing: var(--tracking-widest);
         }
-        .text-\[var\(--mate-frame-dim\)\] {
-          color: var(--mate-frame-dim);
-        }
         .uppercase {
           text-transform: uppercase;
         }
@@ -624,12 +620,31 @@
             var(--tw-ring-offset-shadow), var(--tw-ring-shadow),
             var(--tw-shadow);
         }
+        .outline {
+          outline-style: var(--tw-outline-style);
+          outline-width: 1px;
+        }
         .first\:mt-0:first-child {
           margin-top: calc(var(--spacing) * 0);
         }
         @media (min-width: 48rem) {
+          .md\:col-span-2 {
+            grid-column: span 2 / span 2;
+          }
+          .md\:block {
+            display: block;
+          }
           .md\:flex {
             display: flex;
+          }
+          .md\:inline-flex {
+            display: inline-flex;
+          }
+          .md\:grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+          .md\:px-6 {
+            padding-inline: calc(var(--spacing) * 6);
           }
         }
         .alert {
@@ -17580,16 +17595,26 @@
       }
       [data-theme="mate"] {
         color-scheme: dark;
-        --color-primary: oklch(66.2805% 0.129825 43.149);
-        --color-secondary: oklch(70.4384% 0.0811 63.3617);
-        --color-success: oklch(71.4151% 0.113775 139.111);
-        --color-warning: oklch(80.6102% 0.136459 84.8865);
-        --color-error: oklch(62.945% 0.177594 23.7237);
-        --color-info: oklch(67.3688% 0.0632274 225.279);
-        --color-base-100: oklch(19.7123% 0.0124681 84.5075);
-        --color-base-200: oklch(22.8602% 0.014354 81.5902);
-        --color-base-300: oklch(21.0997% 0.0161978 84.4177);
-        --color-base-content: oklch(90.9738% 0.0183401 78.2365);
+        --color-primary: oklch(57% 0.165 38);
+        --color-primary-content: oklch(98% 0.005 38);
+        --color-secondary: oklch(46% 0.085 58);
+        --color-secondary-content: oklch(98% 0.005 58);
+        --color-accent: oklch(62% 0.14 155);
+        --color-accent-content: oklch(13% 0.03 155);
+        --color-neutral: oklch(24% 0.018 55);
+        --color-neutral-content: oklch(74% 0.015 65);
+        --color-base-100: oklch(13% 0.013 55);
+        --color-base-200: oklch(18% 0.016 55);
+        --color-base-300: oklch(25% 0.018 55);
+        --color-base-content: oklch(92% 0.01 75);
+        --color-info: oklch(62% 0.15 245);
+        --color-info-content: oklch(98% 0.01 245);
+        --color-success: oklch(62% 0.152 155);
+        --color-success-content: oklch(13% 0.03 155);
+        --color-warning: oklch(73% 0.162 82);
+        --color-warning-content: oklch(13% 0.03 82);
+        --color-error: oklch(59% 0.21 22);
+        --color-error-content: oklch(98% 0.01 22);
         --radius-selector: 9999px;
         --radius-field: 0.375rem;
         --radius-box: 0.5rem;
@@ -17598,33 +17623,164 @@
         --border: 1px;
         --depth: 0;
         --noise: 0;
+        --mate-frame-nav: oklch(11% 0.012 55);
+        --mate-frame-bg: oklch(13% 0.013 55);
+        --mate-frame-sidebar: oklch(18% 0.016 55);
+        --mate-frame-border: oklch(100% 0 0/0.08);
+        --mate-frame-text: oklch(92% 0.01 75);
+        --mate-frame-muted: oklch(58% 0.02 65);
+        --mate-frame-dim: oklch(42% 0.018 60);
+        --mate-primary: oklch(57% 0.165 38);
+        --mate-secondary: oklch(46% 0.085 58);
+        --mate-success: oklch(62% 0.152 155);
+        --mate-warning: oklch(73% 0.162 82);
+        --mate-error: oklch(59% 0.21 22);
+        --mate-info: oklch(62% 0.15 245);
+        --mate-erva: oklch(62% 0.152 155);
+      }
+      [data-theme="mate-light"] {
+        color-scheme: light;
+        --color-primary: oklch(46% 0.165 38);
+        --color-primary-content: oklch(98% 0.005 38);
+        --color-secondary: oklch(38% 0.085 58);
+        --color-secondary-content: oklch(98% 0.005 58);
+        --color-accent: oklch(46% 0.14 155);
+        --color-accent-content: oklch(98% 0.01 155);
+        --color-neutral: oklch(88% 0.018 65);
+        --color-neutral-content: oklch(25% 0.015 55);
+        --color-base-100: oklch(98% 0.008 75);
+        --color-base-200: oklch(94% 0.012 75);
+        --color-base-300: oklch(88% 0.018 65);
+        --color-base-content: oklch(18% 0.013 55);
+        --color-info: oklch(46% 0.15 245);
+        --color-info-content: oklch(98% 0.01 245);
+        --color-success: oklch(42% 0.152 155);
+        --color-success-content: oklch(98% 0.01 155);
+        --color-warning: oklch(52% 0.162 82);
+        --color-warning-content: oklch(98% 0.01 82);
+        --color-error: oklch(46% 0.21 22);
+        --color-error-content: oklch(98% 0.01 22);
+        --radius-selector: 9999px;
+        --radius-field: 0.375rem;
+        --radius-box: 0.5rem;
+        --size-selector: 0.25rem;
+        --size-field: 0.25rem;
+        --border: 1px;
+        --depth: 0;
+        --noise: 0;
+        --mate-frame-nav: oklch(99% 0.006 75);
+        --mate-frame-bg: oklch(98% 0.008 75);
+        --mate-frame-sidebar: oklch(94% 0.012 75);
+        --mate-frame-border: oklch(0% 0 0/0.09);
+        --mate-frame-text: oklch(18% 0.013 55);
+        --mate-frame-muted: oklch(42% 0.018 60);
+        --mate-frame-dim: oklch(58% 0.02 65);
+        --mate-primary: oklch(46% 0.165 38);
+        --mate-secondary: oklch(38% 0.085 58);
+        --mate-success: oklch(42% 0.152 155);
+        --mate-warning: oklch(52% 0.162 82);
+        --mate-error: oklch(46% 0.21 22);
+        --mate-info: oklch(46% 0.15 245);
+        --mate-erva: oklch(42% 0.152 155);
+      }
+      [data-theme="gruvbox"] {
+        color-scheme: dark;
+        --color-primary: oklch(62.1735% 0.170672 45.8116);
+        --color-primary-content: oklch(98% 0.005 38);
+        --color-secondary: oklch(72.5123% 0.142867 77.7079);
+        --color-secondary-content: oklch(13% 0.03 80);
+        --color-neutral: oklch(34.4068% 0.00660333 48.5231);
+        --color-neutral-content: oklch(89.4146% 0.0565895 89.2406);
+        --color-base-100: oklch(27.6848% 3.332e-8 26.5651);
+        --color-base-200: oklch(31.0882% 0.0033755 48.6189);
+        --color-base-300: oklch(34.4068% 0.00660333 48.5231);
+        --color-base-content: oklch(89.4146% 0.0565895 89.2406);
+        --color-success: oklch(75.5528% 0.107754 137.676);
+        --color-success-content: oklch(13% 0.03 155);
+        --color-warning: oklch(83.2488% 0.159484 82.9866);
+        --color-warning-content: oklch(13% 0.03 82);
+        --color-error: oklch(65.9686% 0.217509 30.3918);
+        --color-error-content: oklch(98% 0.01 22);
+        --color-info: oklch(69.2655% 0.0419778 169.768);
+        --color-info-content: oklch(13% 0.02 180);
+        --radius-selector: 9999px;
+        --radius-field: 0.375rem;
+        --radius-box: 0.5rem;
+        --size-selector: 0.25rem;
+        --size-field: 0.25rem;
+        --border: 1px;
+        --depth: 0;
+        --noise: 0;
+        --mate-frame-nav: #1d2021;
+        --mate-frame-bg: #282828;
+        --mate-frame-sidebar: #32302f;
+        --mate-frame-border: #ffffff14;
+        --mate-frame-text: #ebdbb2;
+        --mate-frame-muted: #928374;
+        --mate-frame-dim: #7c6f64;
+        --mate-primary: #d65d0e;
+        --mate-secondary: #d79921;
+        --mate-success: #8ec07c;
+        --mate-warning: #d79921;
+        --mate-error: #fb4934;
+        --mate-info: #83a598;
+        --mate-erva: #98971a;
+      }
+      [data-theme="gruvbox-light"] {
+        color-scheme: light;
+        --color-primary: oklch(51.2622% 0.161595 39.2968);
+        --color-primary-content: oklch(98% 0.005 38);
+        --color-secondary: oklch(61.7644% 0.127664 70.6739);
+        --color-secondary-content: oklch(98% 0.01 80);
+        --color-neutral: oklch(82.549% 0.0506764 85.1156);
+        --color-neutral-content: oklch(34.4068% 0.00660333 48.5231);
+        --color-base-100: oklch(95.5523% 0.0554591 96.1549);
+        --color-base-200: oklch(92.2022% 0.0553378 92.5257);
+        --color-base-300: oklch(89.4146% 0.0565895 89.2406);
+        --color-base-content: oklch(34.4068% 0.00660333 48.5231);
+        --color-success: oklch(53.3593% 0.0822069 155.401);
+        --color-success-content: oklch(98% 0.01 155);
+        --color-warning: oklch(61.7644% 0.127664 70.6739);
+        --color-warning-content: oklch(98% 0.01 82);
+        --color-error: oklch(43.737% 0.178914 28.2597);
+        --color-error-content: oklch(98% 0.01 22);
+        --color-info: oklch(47.0644% 0.0816409 215.806);
+        --color-info-content: oklch(98% 0.01 200);
+        --radius-selector: 9999px;
+        --radius-field: 0.375rem;
+        --radius-box: 0.5rem;
+        --size-selector: 0.25rem;
+        --size-field: 0.25rem;
+        --border: 1px;
+        --depth: 0;
+        --noise: 0;
+        --mate-frame-nav: #f9f5d7;
+        --mate-frame-bg: #fbf1c7;
+        --mate-frame-sidebar: #f2e5bc;
+        --mate-frame-border: #00000017;
+        --mate-frame-text: #3c3836;
+        --mate-frame-muted: #7c6f64;
+        --mate-frame-dim: #928374;
+        --mate-primary: #af3a03;
+        --mate-secondary: #b57614;
+        --mate-success: #427b58;
+        --mate-warning: #b57614;
+        --mate-error: #9d0006;
+        --mate-info: #076678;
+        --mate-erva: #79740e;
       }
       :root {
-        --mate-primary: #d4764e;
-        --mate-secondary: #c4956a;
-        --mate-success: #7db46e;
-        --mate-warning: #e8b84a;
-        --mate-error: #e05252;
-        --mate-info: #6b9fb4;
-        --mate-erva: #5a9a4e;
-        --mate-frame-bg: #18150f;
-        --mate-frame-sidebar: #201c15;
-        --mate-frame-nav: #1c1810;
-        --mate-frame-border: #ffffff12;
-        --mate-frame-text: #e8e0d4;
-        --mate-frame-muted: #a0927e;
-        --mate-frame-dim: #857363;
         --mate-font-display: "Cormorant Garamond", Georgia, serif;
         --mate-font-body: "Inter", system-ui, sans-serif;
-        --mate-font-mono: "JetBrains Mono", monospace;
+        --mate-font-mono: "JetBrains Mono", "Fira Code", monospace;
       }
       body {
         font-family: var(--mate-font-body);
         background: var(--mate-frame-bg);
+        color: var(--mate-frame-text);
         -webkit-font-smoothing: antialiased;
       }
-      body:after {
-        content: "";
+      .grain {
         pointer-events: none;
         z-index: 9998;
         opacity: 0.028;
@@ -17646,7 +17802,10 @@
         font-size: 14px;
         font-weight: 400;
         text-decoration: none;
-        transition: all 0.15s;
+        transition:
+          color 0.12s,
+          background 0.12s,
+          border-color 0.12s;
         display: flex;
       }
       .sidebar-link .num {
@@ -17663,7 +17822,7 @@
         .sidebar-link:hover {
           background: color-mix(
             in oklab,
-            var(--mate-frame-text) 4%,
+            var(--mate-frame-text) 5%,
             transparent
           );
         }
@@ -17675,7 +17834,11 @@
       }
       @supports (color: color-mix(in lab, red, red)) {
         .sidebar-link.active {
-          background: color-mix(in oklab, var(--color-primary) 8%, transparent);
+          background: color-mix(
+            in oklab,
+            var(--color-primary) 10%,
+            transparent
+          );
         }
       }
       .sidebar-link.active {
@@ -17711,7 +17874,9 @@
       }
       .breadcrumb a {
         color: var(--mate-frame-muted);
+        text-decoration: none;
       }
+      .breadcrumb a:hover,
       .breadcrumb li[aria-current="page"] {
         color: var(--mate-frame-text);
       }
@@ -17728,14 +17893,60 @@
         color: var(--mate-primary);
         font-style: italic;
       }
-      .artifact-header .meta {
-        font-family: var(--mate-font-body);
-        color: var(--mate-frame-muted);
+      .artifact-meta {
         flex-wrap: wrap;
         align-items: center;
-        gap: 14px;
-        font-size: 13px;
+        gap: 8px;
+        margin-top: 4px;
         display: flex;
+      }
+      .meta-pill {
+        font-family: var(--mate-font-body);
+        color: var(--mate-frame-muted);
+        background: var(--mate-frame-text);
+        align-items: center;
+        font-size: 12px;
+        display: inline-flex;
+      }
+      @supports (color: color-mix(in lab, red, red)) {
+        .meta-pill {
+          background: color-mix(
+            in oklab,
+            var(--mate-frame-text) 6%,
+            transparent
+          );
+        }
+      }
+      .meta-pill {
+        border: 1px solid var(--mate-frame-border);
+        white-space: nowrap;
+        border-radius: 4px;
+        padding: 2px 8px;
+      }
+      .meta-pill.accent {
+        color: var(--mate-primary);
+        background: var(--color-primary);
+      }
+      @supports (color: color-mix(in lab, red, red)) {
+        .meta-pill.accent {
+          background: color-mix(
+            in oklab,
+            var(--color-primary) 10%,
+            transparent
+          );
+        }
+      }
+      .meta-pill.accent {
+        border-color: var(--color-primary);
+      }
+      @supports (color: color-mix(in lab, red, red)) {
+        .meta-pill.accent {
+          border-color: color-mix(
+            in oklab,
+            var(--color-primary) 30%,
+            transparent
+          );
+        }
       }
       .page-content {
         padding-bottom: 80px;
@@ -17745,9 +17956,9 @@
         opacity: 0;
         padding: 40px;
         transition:
-          opacity 0.5s,
-          transform 0.5s;
-        transform: translateY(16px);
+          opacity 0.4s,
+          transform 0.4s;
+        transform: translateY(12px);
       }
       .ds-section:first-child {
         border-top: none;
@@ -17799,11 +18010,47 @@
       }
       .preview-card {
         background: var(--mate-frame-sidebar);
+        border: 1px solid var(--mate-frame-border);
         color: var(--mate-frame-text);
         border-radius: 10px;
         margin-top: 16px;
         padding: 24px;
-        box-shadow: 0 2px 16px #0006;
+      }
+      .preview-row {
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        display: flex;
+      }
+      .preview-divider {
+        background: var(--mate-frame-border);
+        height: 1px;
+        margin: 20px 0;
+      }
+      .form-label {
+        font-family: var(--mate-font-body);
+        color: var(--mate-frame-text);
+        margin-bottom: 5px;
+        font-size: 13px;
+        font-weight: 500;
+        display: block;
+      }
+      .form-hint {
+        font-family: var(--mate-font-body);
+        color: var(--mate-frame-muted);
+        margin-top: 4px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .form-err {
+        font-family: var(--mate-font-body);
+        color: var(--mate-error);
+        margin-top: 4px;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .mono {
+        font-family: var(--mate-font-mono);
       }
       .artifact-footer {
         background: var(--mate-frame-nav);
@@ -17822,6 +18069,26 @@
       }
       .artifact-footer a:hover {
         color: var(--mate-frame-text);
+      }
+      @media (max-width: 768px) {
+        .artifact-header {
+          padding: 20px 20px 16px;
+        }
+        .artifact-header h1 {
+          font-size: 28px;
+        }
+        .ds-section {
+          padding: 24px 20px;
+        }
+        .preview-card {
+          padding: 16px;
+        }
+        .artifact-footer {
+          text-align: center;
+          flex-direction: column;
+          gap: 4px;
+          padding: 12px 20px;
+        }
       }
       .sev {
         border-radius: var(--radius-field);
@@ -18117,37 +18384,40 @@
       .swatch-grid {
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
         gap: 12px;
+        margin-bottom: 20px;
         display: grid;
       }
-      .swatch-card {
+      .swatch-group-label {
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--mate-frame-muted);
+        font-size: 11px;
+        font-weight: 700;
+        font-family: var(--mate-font-body);
+        margin: 0 0 8px;
+      }
+      .swatch {
         border: 1px solid var(--mate-frame-border);
-        background: var(--mate-frame-sidebar);
+        background: var(--mate-frame-bg);
         border-radius: 8px;
         overflow: hidden;
       }
-      .swatch-color {
-        height: 64px;
-      }
-      .swatch-meta {
-        padding: 8px 10px;
+      .swatch-chip {
+        width: 100%;
+        height: 60px;
       }
       .swatch-name {
         color: var(--mate-frame-text);
         font-size: 12px;
         font-weight: 600;
         font-family: var(--mate-font-body);
-      }
-      .swatch-token {
-        color: var(--mate-frame-muted);
-        font-size: 10px;
-        font-family: var(--mate-font-mono);
-        margin-top: 1px;
+        padding: 6px 10px 0;
       }
       .swatch-hex {
-        color: var(--mate-frame-dim);
+        color: var(--mate-frame-muted);
         font-size: 11px;
         font-family: var(--mate-font-mono);
-        margin-top: 2px;
+        padding: 2px 10px 8px;
       }
       @property --tw-space-y-reverse {
         syntax: "*";
@@ -18232,26 +18502,36 @@
         inherits: false;
         initial-value: 0 0 #0000;
       }
+      @property --tw-outline-style {
+        syntax: "*";
+        inherits: false;
+        initial-value: solid;
+      }
     </style>
-    <link rel="stylesheet" href="http://localhost:52010/style/main.css" />
   </head>
   <body>
     <div class="grain"></div>
 
     <header
-      class="sticky top-0 z-20 h-12 flex items-center px-6 bg-[var(--mate-frame-nav)] border-b border-[var(--mate-frame-border)]"
+      class="sticky top-0 z-20 h-12 flex items-center px-4 md:px-6 gap-4"
+      style="
+        background: var(--mate-frame-nav);
+        border-bottom: 1px solid var(--mate-frame-border);
+      "
     >
-      <div class="flex-1 flex items-center gap-6">
-        <div
+      <div class="flex-1 flex items-center gap-6 min-w-0">
+        <span
           style="
             font-family: var(--mate-font-display);
             font-size: 18px;
             color: var(--mate-frame-text);
+            white-space: nowrap;
           "
+          >mate-<em style="color: var(--mate-primary); font-weight: 400"
+            >ds</em
+          ></span
         >
-          mate-<em style="color: var(--mate-primary); font-weight: 400">ds</em>
-        </div>
-        <div class="hidden md:flex items-center gap-4">
+        <nav class="hidden md:flex items-center gap-4">
           <a class="text-sm" style="color: var(--mate-frame-text)" href="#nav"
             >Components</a
           >
@@ -18273,24 +18553,51 @@
             href="templates/prototype.html"
             >Prototypes</a
           >
-        </div>
+        </nav>
       </div>
-      <div class="flex items-center gap-3">
-        <span
-          class="badge badge-outline"
-          style="color: var(--mate-primary); border-color: var(--mate-primary)"
-          >v1.0</span
+      <div class="flex items-center gap-2">
+        <select
+          id="theme-switcher"
+          onchange="
+            document.documentElement.setAttribute('data-theme', this.value)
+          "
+          style="
+            font-family: var(--mate-font-body);
+            font-size: 12px;
+            color: var(--mate-frame-muted);
+            background: var(--mate-frame-sidebar);
+            border: 1px solid var(--mate-frame-border);
+            border-radius: 6px;
+            padding: 3px 8px;
+            cursor: pointer;
+            outline: none;
+          "
         >
-        <button class="btn btn-primary btn-sm">Publish</button>
+          <option value="mate">mate</option>
+          <option value="mate-light">mate-light</option>
+          <option value="gruvbox">gruvbox</option>
+          <option value="gruvbox-light">gruvbox-light</option>
+        </select>
+        <span
+          class="badge badge-outline hidden md:inline-flex"
+          style="color: var(--mate-primary); border-color: var(--mate-primary)"
+          >v1.1</span
+        >
       </div>
     </header>
 
     <div class="flex min-h-[calc(100vh-3rem)]">
       <aside
-        class="w-56 shrink-0 sticky top-12 h-[calc(100vh-3rem)] overflow-y-auto bg-[var(--mate-frame-sidebar)] border-r border-[var(--mate-frame-border)] py-5"
+        id="sidebar"
+        class="w-52 shrink-0 sticky top-12 h-[calc(100vh-3rem)] overflow-y-auto py-5 hidden md:block"
+        style="
+          background: var(--mate-frame-sidebar);
+          border-right: 1px solid var(--mate-frame-border);
+        "
       >
         <div
-          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-muted)]"
+          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest"
+          style="color: var(--mate-frame-dim)"
         >
           Components
         </div>
@@ -18318,64 +18625,69 @@
         <a class="sidebar-link" href="#palette"
           ><span class="num">08</span> Palette</a
         >
+        <a class="sidebar-link" href="#typography"
+          ><span class="num">09</span> Typography</a
+        >
 
         <div
-          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-muted)]"
+          class="px-5 pb-1.5 mt-5 text-[11px] font-semibold uppercase tracking-widest"
+          style="color: var(--mate-frame-dim)"
         >
           Document layout
         </div>
         <a class="sidebar-link" href="#diff"
-          ><span class="num">09</span> Code Diff</a
+          ><span class="num">10</span> Code Diff</a
         >
         <a class="sidebar-link" href="#spec"
-          ><span class="num">10</span> Spec / Right Rail</a
+          ><span class="num">11</span> Spec / Right Rail</a
         >
         <a class="sidebar-link" href="#tooltips"
-          ><span class="num">11</span> Tooltips</a
+          ><span class="num">12</span> Tooltips</a
         >
 
         <div
-          class="px-5 pb-1.5 mt-5 first:mt-0 text-[11px] font-semibold uppercase tracking-widest text-[var(--mate-frame-muted)]"
+          class="px-5 pb-1.5 mt-5 text-[11px] font-semibold uppercase tracking-widest"
+          style="color: var(--mate-frame-dim)"
         >
           Resources
         </div>
-        <a class="sidebar-link" href="#" target="_blank"
-          ><span class="num">↗</span> Artifact Index</a
+        <a
+          class="sidebar-link"
+          href="file:///Users/robson.scheffer/brain/wiki/artifact/index.html"
+          target="_blank"
         >
+          <span class="num">↗</span> Artifact Index
+        </a>
       </aside>
 
       <main class="flex-1 min-w-0">
         <div class="artifact-header">
-          <div
-            class="breadcrumbs text-sm"
-            style="color: var(--mate-frame-muted)"
-          >
-            <ul>
-              <li><a>Artifacts</a></li>
-              <li><a>Reports</a></li>
-              <li>Component Library</li>
-            </ul>
-          </div>
+          <ol class="breadcrumb">
+            <li><a href="#">Artifacts</a></li>
+            <li><a href="#">Reports</a></li>
+            <li aria-current="page">Component Library</li>
+          </ol>
           <h1>mate-ds — <em>Component Library</em></h1>
           <div class="artifact-meta">
-            <span class="meta-pill accent">v1.0</span>
+            <span class="meta-pill accent">v1.1</span>
             <span class="meta-pill">DaisyUI v5</span>
             <span class="meta-pill">Tailwind v4</span>
-            <span class="meta-pill">updated 2026-06-09</span>
+            <span class="meta-pill">updated 2026-06-28</span>
             <span class="meta-pill">owner robson</span>
           </div>
         </div>
 
         <div class="page-content">
+          <!-- 01 Navigation -->
           <section class="ds-section" id="nav">
             <div class="section-header">
               <h2>01 — Navigation</h2>
               <span class="section-tag">.navbar / .breadcrumbs</span>
             </div>
             <p class="section-desc">
-              The top frame and the trail back. Navbar carries the brand,
-              primary destinations, and a single high-intent action. Breadcrumbs
-              sit above the document title and show provenance without nagging.
+              Top frame and the trail back. Navbar carries the brand, primary
+              destinations, and a single high-intent action. Breadcrumbs sit
+              above the document title.
             </p>
             <div class="preview-card">
               <div
@@ -18389,14 +18701,15 @@
                   <span
                     style="
                       font-family: var(--mate-font-display);
-                      font-size: 18px;
+                      font-size: 17px;
                       color: var(--mate-frame-text);
                     "
-                    >mate-<em
+                  >
+                    mate-<em
                       style="color: var(--mate-primary); font-weight: 400"
                       >ds</em
-                    ></span
-                  >
+                    >
+                  </span>
                   <a class="text-sm" style="color: var(--mate-frame-text)"
                     >Components</a
                   >
@@ -18408,125 +18721,122 @@
                   >
                 </div>
                 <div class="flex items-center gap-2 px-2">
-                  <span class="badge badge-soft badge-warning">v1.0</span>
+                  <span class="badge badge-soft badge-warning">v1.1</span>
                   <button class="btn btn-primary btn-sm">Publish</button>
                 </div>
               </div>
-
               <div class="preview-divider"></div>
-
-              <div class="breadcrumbs text-sm">
-                <ul>
-                  <li><a>Artifacts</a></li>
-                  <li><a>Reports</a></li>
-                  <li>Component Library</li>
-                </ul>
-              </div>
+              <ol class="breadcrumb">
+                <li><a href="#">Artifacts</a></li>
+                <li><a href="#">Reports</a></li>
+                <li aria-current="page">Component Library</li>
+              </ol>
             </div>
           </section>
 
+          <!-- 02 Buttons -->
           <section class="ds-section" id="buttons">
             <div class="section-header">
               <h2>02 — Buttons</h2>
               <span class="section-tag">.btn / .btn-*</span>
             </div>
             <p class="section-desc">
-              One primary per surface. Secondary is for the lesser choice in the
-              same decision. Ghost for tertiary tucked into a row. Error only
-              when the action destroys.
+              One primary per surface. Secondary for the lesser choice. Ghost
+              for tertiary tucked into a row. Error only when the action
+              destroys.
             </p>
             <div class="preview-card">
-              <div class="preview-row items-center">
+              <div class="preview-row">
                 <button class="btn btn-primary">Save changes</button>
-                <button class="btn btn-outline">Cancel</button>
-                <button class="btn btn-ghost">Dismiss</button>
-                <button class="btn btn-error">Delete report</button>
+                <button class="btn btn-secondary">Secondary</button>
+                <button class="btn btn-outline">Outline</button>
+                <button class="btn btn-ghost">Ghost</button>
+                <button class="btn btn-error">Delete</button>
               </div>
               <div class="preview-divider"></div>
-              <div class="preview-row items-end">
-                <button class="btn btn-lg btn-primary">Large</button>
+              <div class="preview-row">
+                <button class="btn btn-primary btn-lg">Large</button>
                 <button class="btn btn-primary">Default</button>
-                <button class="btn btn-sm btn-primary">Small</button>
-                <button class="btn btn-xs btn-primary">X-small</button>
+                <button class="btn btn-primary btn-sm">Small</button>
+                <button class="btn btn-primary btn-xs">XS</button>
+              </div>
+              <div class="preview-divider"></div>
+              <div class="preview-row">
+                <button class="btn btn-primary" disabled>Disabled</button>
+                <button class="btn btn-primary">
+                  <span class="loading loading-spinner loading-sm"></span>
+                  Saving…
+                </button>
+                <button class="btn btn-outline btn-primary">
+                  Outline primary
+                </button>
+                <button class="btn btn-soft btn-primary">Soft primary</button>
               </div>
             </div>
           </section>
 
+          <!-- 03 Forms -->
           <section class="ds-section" id="forms">
             <div class="section-header">
               <h2>03 — Forms</h2>
-              <span class="section-tag">.input / .select / .label</span>
+              <span class="section-tag">.input / .select / .textarea</span>
             </div>
             <p class="section-desc">
               Two columns until you can't. Labels live above inputs, hints
-              below, errors replace hints. Submit row sits at the bottom-right
-              with the primary action terminal.
+              below, errors replace hints. Submit sits bottom-right with the
+              primary action terminal.
             </p>
             <div class="preview-card">
-              <div class="grid grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="form-label" for="form-title">Title</label>
+                  <label class="form-label">Title</label>
                   <input
-                    id="form-title"
                     type="text"
-                    class="input input-bordered w-full"
+                    class="input w-full"
                     value="Component Library Showcase"
                   />
-                  <div class="form-hint">
+                  <p class="form-hint">
                     Shown in the artifact header and in the index.
-                  </div>
+                  </p>
                 </div>
                 <div>
-                  <label class="form-label" for="form-type">Type</label>
-                  <select id="form-type" class="select select-bordered w-full">
+                  <label class="form-label">Type</label>
+                  <select class="select w-full">
                     <option>report</option>
                     <option selected>spec</option>
                     <option>prototype</option>
                     <option>dashboard</option>
                   </select>
-                  <div class="form-hint">
+                  <p class="form-hint">
                     Drives sidebar grouping and default template.
-                  </div>
+                  </p>
                 </div>
-                <div class="col-span-2">
-                  <label class="form-label" for="form-notes">Notes</label>
-                  <textarea
-                    id="form-notes"
-                    class="textarea textarea-bordered w-full"
-                    rows="3"
-                  >
-Captures decisions taken during the embedded-beneficiaries audit, plus open questions on modal height.</textarea>
+                <div class="col-span-1 md:col-span-2">
+                  <label class="form-label">Notes</label>
+                  <textarea class="textarea w-full" rows="3">
+Captures decisions from the embedded-beneficiaries audit, plus open questions on modal height.</textarea>
                 </div>
                 <div>
-                  <label class="form-label" for="form-owner-key"
-                    >Owner key</label
-                  >
+                  <label class="form-label">Owner key</label>
                   <input
-                    id="form-owner-key"
                     type="text"
-                    class="input input-bordered input-error w-full"
+                    class="input input-error w-full"
                     value="rsche"
                   />
-                  <div class="form-err">
-                    Owner key must be 8+ characters. Re-authenticate with
-                    html-publisher.
-                  </div>
+                  <p class="form-err">
+                    Must be 8+ characters. Re-authenticate with html-publisher.
+                  </p>
                 </div>
                 <div>
-                  <label class="form-label" for="form-visibility"
-                    >Visibility</label
-                  >
-                  <select
-                    id="form-visibility"
-                    class="select select-bordered w-full"
-                  >
+                  <label class="form-label">Visibility</label>
+                  <select class="select w-full">
                     <option>private (default)</option>
                     <option>shared with team</option>
                     <option>public</option>
                   </select>
-                  <div class="form-hint">
+                  <p class="form-hint">
                     Private artifacts never leave your vault.
-                  </div>
+                  </p>
                 </div>
               </div>
               <div class="preview-divider"></div>
@@ -18537,6 +18847,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </div>
           </section>
 
+          <!-- 04 Alerts -->
           <section class="ds-section" id="alerts">
             <div class="section-header">
               <h2>04 — Alerts</h2>
@@ -18545,22 +18856,64 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             <p class="section-desc">
               Four registers: info to orient, success to confirm, warning to
               slow you down, error to stop you. One alert per surface, top of
-              the content area.
+              content area.
             </p>
             <div class="preview-card space-y-3">
               <div class="alert alert-info">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
                 <span
                   ><strong>Heads up — </strong>This artifact was generated by
                   the html-artifact skill at 09:14 this morning.</span
                 >
               </div>
               <div class="alert alert-success">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
                 <span
-                  ><strong>Published — </strong>v1.0 is live at the canonical
+                  ><strong>Published — </strong>v1.1 is live at the canonical
                   URL. Old preview links will redirect for 30 days.</span
                 >
               </div>
               <div class="alert alert-warning">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+                  />
+                </svg>
                 <span
                   ><strong>Stale source — </strong>Two referenced wiki pages
                   were last updated over 180 days ago. Run
@@ -18568,6 +18921,20 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                 >
               </div>
               <div class="alert alert-error">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4 shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
                 <span
                   ><strong>Publish blocked — </strong>Owner key mismatch.
                   Re-authenticate with html-publisher before retrying.</span
@@ -18576,6 +18943,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </div>
           </section>
 
+          <!-- 05 Progress -->
           <section class="ds-section" id="progress">
             <div class="section-header">
               <h2>05 — Progress</h2>
@@ -18588,7 +18956,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             <div class="preview-card space-y-4">
               <div>
                 <div
-                  class="flex justify-between text-sm"
+                  class="flex justify-between text-sm mb-1"
                   style="color: var(--mate-frame-text)"
                 >
                   <span>Plan phase</span><span class="mono">100%</span>
@@ -18601,7 +18969,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
               </div>
               <div>
                 <div
-                  class="flex justify-between text-sm"
+                  class="flex justify-between text-sm mb-1"
                   style="color: var(--mate-frame-text)"
                 >
                   <span>Build phase</span><span class="mono">68%</span>
@@ -18614,7 +18982,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
               </div>
               <div>
                 <div
-                  class="flex justify-between text-sm"
+                  class="flex justify-between text-sm mb-1"
                   style="color: var(--mate-frame-text)"
                 >
                   <span>Verify phase</span><span class="mono">22%</span>
@@ -18625,9 +18993,23 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                   max="100"
                 ></progress>
               </div>
+              <div>
+                <div
+                  class="flex justify-between text-sm mb-1"
+                  style="color: var(--mate-frame-muted)"
+                >
+                  <span>Not started</span><span class="mono">0%</span>
+                </div>
+                <progress
+                  class="progress w-full"
+                  value="0"
+                  max="100"
+                ></progress>
+              </div>
             </div>
           </section>
 
+          <!-- 06 Stats -->
           <section class="ds-section" id="stats">
             <div class="section-header">
               <h2>06 — Stats</h2>
@@ -18639,16 +19021,27 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </p>
             <div class="preview-card">
               <div
-                class="stats stats-vertical lg:stats-horizontal shadow w-full"
+                class="stats stats-vertical lg:stats-horizontal w-full"
+                style="background: transparent"
               >
                 <div class="stat">
                   <div class="stat-title">PRS REVIEWED</div>
-                  <div class="stat-value">14</div>
+                  <div
+                    class="stat-value"
+                    style="font-family: var(--mate-font-display)"
+                  >
+                    14
+                  </div>
                   <div class="stat-delta delta-up">↑ 3 vs last week</div>
                 </div>
                 <div class="stat">
                   <div class="stat-title">FINDINGS</div>
-                  <div class="stat-value">37</div>
+                  <div
+                    class="stat-value"
+                    style="font-family: var(--mate-font-display)"
+                  >
+                    37
+                  </div>
                   <div
                     class="stat-delta"
                     style="color: var(--mate-frame-muted)"
@@ -18658,12 +19051,22 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                 </div>
                 <div class="stat">
                   <div class="stat-title">SHIP RATE</div>
-                  <div class="stat-value">94%</div>
+                  <div
+                    class="stat-value"
+                    style="font-family: var(--mate-font-display)"
+                  >
+                    94%
+                  </div>
                   <div class="stat-delta delta-up">↑ 2pp</div>
                 </div>
                 <div class="stat">
                   <div class="stat-title">AVG CYCLE</div>
-                  <div class="stat-value">1.4d</div>
+                  <div
+                    class="stat-value"
+                    style="font-family: var(--mate-font-display)"
+                  >
+                    1.4d
+                  </div>
                   <div
                     class="stat-delta"
                     style="color: var(--mate-frame-muted)"
@@ -18675,6 +19078,7 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </div>
           </section>
 
+          <!-- 07 Badges -->
           <section class="ds-section" id="badges">
             <div class="section-header">
               <h2>07 — Badges</h2>
@@ -18686,26 +19090,39 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
               list.
             </p>
             <div class="preview-card">
-              <div
+              <p
                 class="text-xs uppercase tracking-wider mb-2"
-                style="color: var(--mate-frame-muted)"
+                style="color: var(--mate-frame-muted); font-weight: 600"
               >
                 Lifecycle
-              </div>
-              <div class="preview-row">
+              </p>
+              <div class="preview-row mb-4">
                 <span class="badge badge-soft badge-open">open</span>
                 <span class="badge badge-soft badge-ready">ready</span>
                 <span class="badge badge-soft badge-building">building</span>
                 <span class="badge badge-soft badge-done">done</span>
                 <span class="badge badge-soft badge-dropped">dropped</span>
               </div>
-              <div class="preview-divider"></div>
-              <div
+              <p
                 class="text-xs uppercase tracking-wider mb-2"
-                style="color: var(--mate-frame-muted)"
+                style="color: var(--mate-frame-muted); font-weight: 600"
+              >
+                Lifecycle — outline variant
+              </p>
+              <div class="preview-row mb-4">
+                <span class="badge badge-outline badge-open">open</span>
+                <span class="badge badge-outline badge-ready">ready</span>
+                <span class="badge badge-outline badge-building">building</span>
+                <span class="badge badge-outline badge-done">done</span>
+                <span class="badge badge-outline badge-dropped">dropped</span>
+              </div>
+              <div class="preview-divider"></div>
+              <p
+                class="text-xs uppercase tracking-wider mb-2"
+                style="color: var(--mate-frame-muted); font-weight: 600"
               >
                 Severity
-              </div>
+              </p>
               <div class="preview-row">
                 <span class="sev sev-critical">critical</span>
                 <span class="sev sev-major">major</span>
@@ -18715,464 +19132,292 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </div>
           </section>
 
+          <!-- 08 Palette -->
           <section class="ds-section" id="palette">
             <div class="section-header">
               <h2>08 — Palette</h2>
-              <span class="section-tag">tokens.yaml</span>
+              <span class="section-tag">tokens.css</span>
             </div>
             <p class="section-desc">
-              Two themes — dark (fully designed) and light (plumbing stub). Hex
-              values are the source of truth; TUI terminal values and web CSS
-              tokens are calibrated separately for their rendering contexts.
+              Warm earth on dark frame. Brand colors carry the work; semantics
+              signal state. Switch the theme selector in the header to preview
+              all four palettes.
             </p>
-
-            <div class="preview-card" style="margin-bottom: 16px">
-              <div
-                style="
-                  font-size: 11px;
-                  font-weight: 700;
-                  letter-spacing: 0.08em;
-                  text-transform: uppercase;
-                  color: var(--mate-frame-muted);
-                  margin-bottom: 20px;
-                "
-              >
-                Dark — tui-design-system.yaml
-              </div>
-
-              <div class="swatch-group-label">Brand</div>
-              <div class="swatch-grid" style="margin-bottom: 20px">
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #d4764e"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Primary</div>
-                    <div class="swatch-token">colors.primary</div>
-                    <div class="swatch-hex">#d4764e</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #c4956a"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Secondary</div>
-                    <div class="swatch-token">colors.secondary</div>
-                    <div class="swatch-hex">#c4956a</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #5a9a4e"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Erva</div>
-                    <div class="swatch-token">chimarrao.erva</div>
-                    <div class="swatch-hex">#5a9a4e</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #8b6942"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Bomba</div>
-                    <div class="swatch-token">chimarrao.bomba</div>
-                    <div class="swatch-hex">#8b6942</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="swatch-group-label">Semantic</div>
-              <div class="swatch-grid" style="margin-bottom: 20px">
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #7db46e"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Success</div>
-                    <div class="swatch-token">colors.success</div>
-                    <div class="swatch-hex">#7db46e</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #e8b84a"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Warning</div>
-                    <div class="swatch-token">colors.warning</div>
-                    <div class="swatch-hex">#e8b84a</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #e05252"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Error</div>
-                    <div class="swatch-token">colors.error</div>
-                    <div class="swatch-hex">#e05252</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #6b9fb4"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Info</div>
-                    <div class="swatch-token">colors.info</div>
-                    <div class="swatch-hex">#6b9fb4</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="swatch-group-label">Text</div>
-              <div class="swatch-grid" style="margin-bottom: 20px">
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #d4cfc8"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Primary</div>
-                    <div class="swatch-token">text.primary</div>
-                    <div class="swatch-hex">#d4cfc8</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #b0a898"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Secondary</div>
-                    <div class="swatch-token">text.secondary</div>
-                    <div class="swatch-hex">#b0a898</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #7a7268"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Muted</div>
-                    <div class="swatch-token">text.muted</div>
-                    <div class="swatch-hex">#7a7268</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #5a5545"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Dim</div>
-                    <div class="swatch-token">text.dim</div>
-                    <div class="swatch-hex">#5a5545</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div
-                    class="swatch-color"
-                    style="
-                      background: #1a1816;
-                      border-bottom: 1px solid var(--mate-frame-border);
-                    "
-                  ></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Inverse</div>
-                    <div class="swatch-token">text.inverse</div>
-                    <div class="swatch-hex">#1a1816</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="swatch-group-label">Surfaces</div>
-              <div class="swatch-grid" style="margin-bottom: 20px">
-                <div class="swatch-card">
-                  <div
-                    class="swatch-color"
-                    style="
-                      background: #131210;
-                      border-bottom: 1px solid var(--mate-frame-border);
-                    "
-                  ></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Deep</div>
-                    <div class="swatch-token">bg.deep</div>
-                    <div class="swatch-hex">#131210</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div
-                    class="swatch-color"
-                    style="
-                      background: #1a1816;
-                      border-bottom: 1px solid var(--mate-frame-border);
-                    "
-                  ></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Primary</div>
-                    <div class="swatch-token">bg.primary</div>
-                    <div class="swatch-hex">#1a1816</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div
-                    class="swatch-color"
-                    style="
-                      background: #252220;
-                      border-bottom: 1px solid var(--mate-frame-border);
-                    "
-                  ></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Secondary</div>
-                    <div class="swatch-token">bg.secondary</div>
-                    <div class="swatch-hex">#252220</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #302c28"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Elevated</div>
-                    <div class="swatch-token">bg.elevated</div>
-                    <div class="swatch-hex">#302c28</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #1e2a32"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Selected</div>
-                    <div class="swatch-token">bg.selected</div>
-                    <div class="swatch-hex">#1e2a32</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="swatch-group-label">Severity</div>
-              <div class="swatch-grid" style="margin-bottom: 20px">
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #e05252"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Critical</div>
-                    <div class="swatch-token">severity.critical</div>
-                    <div class="swatch-hex">#e05252</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #e8b84a"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Major</div>
-                    <div class="swatch-token">severity.major</div>
-                    <div class="swatch-hex">#e8b84a</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #6b9fb4"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Minor</div>
-                    <div class="swatch-token">severity.minor</div>
-                    <div class="swatch-hex">#6b9fb4</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #5a5545"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Nit</div>
-                    <div class="swatch-token">severity.nit</div>
-                    <div class="swatch-hex">#5a5545</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="swatch-group-label">Stage</div>
-              <div class="swatch-grid">
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #6b9fb4"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Open</div>
-                    <div class="swatch-token">stage.open</div>
-                    <div class="swatch-hex">#6b9fb4</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #e8b84a"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">In review</div>
-                    <div class="swatch-token">stage.inreview</div>
-                    <div class="swatch-hex">#e8b84a</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #c4956a"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Triaged</div>
-                    <div class="swatch-token">stage.triaged</div>
-                    <div class="swatch-hex">#c4956a</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #7db46e"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Posted</div>
-                    <div class="swatch-token">stage.posted</div>
-                    <div class="swatch-hex">#7db46e</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #5a5545"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Done</div>
-                    <div class="swatch-token">stage.done</div>
-                    <div class="swatch-hex">#5a5545</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div class="preview-card">
-              <div
-                style="
-                  font-size: 11px;
-                  font-weight: 700;
-                  letter-spacing: 0.08em;
-                  text-transform: uppercase;
-                  color: var(--mate-frame-muted);
-                  margin-bottom: 8px;
-                "
-              >
-                Light — tui-design-system-light.yaml
-              </div>
-              <p
-                style="
-                  font-size: 13px;
-                  color: var(--mate-frame-muted);
-                  margin-bottom: 20px;
-                  font-style: italic;
-                "
-              >
-                First-pass plumbing. Accents darkened for light surfaces; no
-                designed contrast curves yet. A follow-up ticket is open.
-              </p>
-
-              <div class="swatch-group-label">Brand</div>
-              <div class="swatch-grid" style="margin-bottom: 20px">
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #b85a32"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Primary</div>
-                    <div class="swatch-token">colors.primary</div>
-                    <div class="swatch-hex">#b85a32</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #8a6238"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Secondary</div>
-                    <div class="swatch-token">colors.secondary</div>
-                    <div class="swatch-hex">#8a6238</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #3d6b35"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Erva</div>
-                    <div class="swatch-token">chimarrao.erva</div>
-                    <div class="swatch-hex">#3d6b35</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="swatch-group-label">Semantic</div>
-              <div class="swatch-grid" style="margin-bottom: 20px">
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #3f7a3a"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Success</div>
-                    <div class="swatch-token">colors.success</div>
-                    <div class="swatch-hex">#3f7a3a</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #a07c1a"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Warning</div>
-                    <div class="swatch-token">colors.warning</div>
-                    <div class="swatch-hex">#a07c1a</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #b03030"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Error</div>
-                    <div class="swatch-token">colors.error</div>
-                    <div class="swatch-hex">#b03030</div>
-                  </div>
-                </div>
-                <div class="swatch-card">
-                  <div class="swatch-color" style="background: #3a6f88"></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Info</div>
-                    <div class="swatch-token">colors.info</div>
-                    <div class="swatch-hex">#3a6f88</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="swatch-group-label">Surfaces</div>
+              <p class="swatch-group-label">Brand</p>
               <div class="swatch-grid">
-                <div class="swatch-card">
+                <div class="swatch">
                   <div
-                    class="swatch-color"
-                    style="
-                      background: #fbfaf7;
-                      border-bottom: 1px solid #cbc4b8;
-                    "
+                    class="swatch-chip"
+                    style="background: var(--mate-primary)"
                   ></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Primary</div>
-                    <div class="swatch-token">bg.primary</div>
-                    <div class="swatch-hex">#fbfaf7</div>
-                  </div>
+                  <div class="swatch-name">Primary</div>
+                  <div class="swatch-hex">var(--mate-primary)</div>
                 </div>
-                <div class="swatch-card">
+                <div class="swatch">
                   <div
-                    class="swatch-color"
-                    style="
-                      background: #f1ece4;
-                      border-bottom: 1px solid #cbc4b8;
-                    "
+                    class="swatch-chip"
+                    style="background: var(--mate-secondary)"
                   ></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Secondary</div>
-                    <div class="swatch-token">bg.secondary</div>
-                    <div class="swatch-hex">#f1ece4</div>
-                  </div>
+                  <div class="swatch-name">Secondary</div>
+                  <div class="swatch-hex">var(--mate-secondary)</div>
                 </div>
-                <div class="swatch-card">
+                <div class="swatch">
                   <div
-                    class="swatch-color"
-                    style="
-                      background: #e6e0d4;
-                      border-bottom: 1px solid #cbc4b8;
-                    "
+                    class="swatch-chip"
+                    style="background: var(--mate-erva)"
                   ></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Elevated</div>
-                    <div class="swatch-token">bg.elevated</div>
-                    <div class="swatch-hex">#e6e0d4</div>
-                  </div>
+                  <div class="swatch-name">Erva</div>
+                  <div class="swatch-hex">var(--mate-erva)</div>
                 </div>
-                <div class="swatch-card">
+                <div class="swatch">
                   <div
-                    class="swatch-color"
+                    class="swatch-chip"
                     style="
-                      background: #dfe6ee;
-                      border-bottom: 1px solid #cbc4b8;
+                      background: var(--mate-frame-bg);
+                      border: 1px solid var(--mate-frame-border);
                     "
                   ></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Selected</div>
-                    <div class="swatch-token">bg.selected</div>
-                    <div class="swatch-hex">#dfe6ee</div>
-                  </div>
+                  <div class="swatch-name">Frame bg</div>
+                  <div class="swatch-hex">var(--mate-frame-bg)</div>
                 </div>
-                <div class="swatch-card">
+              </div>
+              <p class="swatch-group-label">Semantic</p>
+              <div class="swatch-grid">
+                <div class="swatch">
                   <div
-                    class="swatch-color"
+                    class="swatch-chip"
+                    style="background: var(--mate-success)"
+                  ></div>
+                  <div class="swatch-name">Success</div>
+                  <div class="swatch-hex">var(--mate-success)</div>
+                </div>
+                <div class="swatch">
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-warning)"
+                  ></div>
+                  <div class="swatch-name">Warning</div>
+                  <div class="swatch-hex">var(--mate-warning)</div>
+                </div>
+                <div class="swatch">
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-error)"
+                  ></div>
+                  <div class="swatch-name">Error</div>
+                  <div class="swatch-hex">var(--mate-error)</div>
+                </div>
+                <div class="swatch">
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-info)"
+                  ></div>
+                  <div class="swatch-name">Info</div>
+                  <div class="swatch-hex">var(--mate-info)</div>
+                </div>
+              </div>
+              <p class="swatch-group-label">Surfaces</p>
+              <div class="swatch-grid">
+                <div class="swatch">
+                  <div
+                    class="swatch-chip"
                     style="
-                      background: #f7f4ee;
-                      border-bottom: 1px solid #cbc4b8;
+                      background: var(--mate-frame-nav);
+                      border: 1px solid var(--mate-frame-border);
                     "
                   ></div>
-                  <div class="swatch-meta">
-                    <div class="swatch-name">Deep</div>
-                    <div class="swatch-token">bg.deep</div>
-                    <div class="swatch-hex">#f7f4ee</div>
-                  </div>
+                  <div class="swatch-name">Nav</div>
+                  <div class="swatch-hex">frame-nav</div>
+                </div>
+                <div class="swatch">
+                  <div
+                    class="swatch-chip"
+                    style="
+                      background: var(--mate-frame-sidebar);
+                      border: 1px solid var(--mate-frame-border);
+                    "
+                  ></div>
+                  <div class="swatch-name">Sidebar</div>
+                  <div class="swatch-hex">frame-sidebar</div>
+                </div>
+                <div class="swatch">
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-frame-text)"
+                  ></div>
+                  <div class="swatch-name">Text</div>
+                  <div class="swatch-hex">frame-text</div>
+                </div>
+                <div class="swatch">
+                  <div
+                    class="swatch-chip"
+                    style="background: var(--mate-frame-muted)"
+                  ></div>
+                  <div class="swatch-name">Muted</div>
+                  <div class="swatch-hex">frame-muted</div>
                 </div>
               </div>
             </div>
           </section>
 
+          <!-- 09 Typography -->
+          <section class="ds-section" id="typography">
+            <div class="section-header">
+              <h2>09 — Typography</h2>
+              <span class="section-tag">--mate-font-*</span>
+            </div>
+            <p class="section-desc">
+              Three-font system. Display for hero headings. Body for everything
+              readable. Mono for code, paths, and numbers that must align.
+            </p>
+            <div
+              class="preview-card"
+              style="display: flex; flex-direction: column; gap: 2rem"
+            >
+              <div>
+                <p
+                  class="text-xs uppercase tracking-wider mb-3"
+                  style="color: var(--mate-frame-muted); font-weight: 600"
+                >
+                  Display —
+                  <code class="mono" style="font-size: 11px"
+                    >--mate-font-display</code
+                  >
+                </p>
+                <div
+                  style="
+                    font-family: var(--mate-font-display);
+                    font-size: 2.25rem;
+                    font-weight: 400;
+                    line-height: 1.15;
+                    color: var(--mate-frame-text);
+                  "
+                >
+                  Cormorant Garamond
+                </div>
+                <div
+                  style="
+                    font-family: var(--mate-font-display);
+                    font-size: 2.25rem;
+                    font-weight: 600;
+                    line-height: 1.15;
+                    color: var(--mate-frame-text);
+                    font-style: italic;
+                    margin-top: 4px;
+                  "
+                >
+                  Bold &amp; Italic
+                </div>
+                <div
+                  style="
+                    font-family: var(--mate-font-display);
+                    font-size: 1rem;
+                    line-height: 1.6;
+                    color: var(--mate-frame-muted);
+                    margin-top: 8px;
+                  "
+                >
+                  ABCDEFGHIJKLMNOPQRSTUVWXYZ · abcdefghijklmnopqrstuvwxyz ·
+                  0123456789
+                </div>
+              </div>
+              <div style="border-top: 1px solid var(--mate-frame-border)"></div>
+              <div>
+                <p
+                  class="text-xs uppercase tracking-wider mb-3"
+                  style="color: var(--mate-frame-muted); font-weight: 600"
+                >
+                  Body —
+                  <code class="mono" style="font-size: 11px"
+                    >--mate-font-body</code
+                  >
+                </p>
+                <div
+                  style="
+                    font-family: var(--mate-font-body);
+                    font-size: 1.5rem;
+                    font-weight: 400;
+                    color: var(--mate-frame-text);
+                  "
+                >
+                  Inter — the workhorse
+                </div>
+                <p
+                  style="
+                    font-family: var(--mate-font-body);
+                    font-size: 15px;
+                    line-height: 1.7;
+                    color: var(--mate-frame-text);
+                    max-width: 56ch;
+                    margin: 8px 0;
+                  "
+                >
+                  Body copy should breathe. Inter at 15px/1.7 gives the eye room
+                  to scan without losing density. Never below 14px for secondary
+                  text.
+                </p>
+                <div
+                  class="flex gap-6"
+                  style="
+                    font-family: var(--mate-font-body);
+                    font-size: 14px;
+                    color: var(--mate-frame-muted);
+                  "
+                >
+                  <span style="font-weight: 300">Light 300</span>
+                  <span style="font-weight: 400">Regular 400</span>
+                  <span style="font-weight: 500">Medium 500</span>
+                  <span style="font-weight: 600">SemiBold 600</span>
+                </div>
+              </div>
+              <div style="border-top: 1px solid var(--mate-frame-border)"></div>
+              <div>
+                <p
+                  class="text-xs uppercase tracking-wider mb-3"
+                  style="color: var(--mate-frame-muted); font-weight: 600"
+                >
+                  Mono —
+                  <code class="mono" style="font-size: 11px"
+                    >--mate-font-mono</code
+                  >
+                </p>
+                <div
+                  class="mono"
+                  style="
+                    font-size: 1.1rem;
+                    font-weight: 400;
+                    color: var(--mate-frame-text);
+                  "
+                >
+                  JetBrains Mono
+                </div>
+                <div
+                  class="mono"
+                  style="
+                    font-size: 13px;
+                    line-height: 1.6;
+                    color: var(--mate-frame-text);
+                    margin: 8px 0;
+                  "
+                >
+                  const embed = (path: string) =&gt; &lt;iframe src={path} /&gt;
+                </div>
+                <div
+                  class="flex gap-6 mono"
+                  style="font-size: 13px; color: var(--mate-frame-muted)"
+                >
+                  <span style="font-weight: 400">Regular 400</span>
+                  <span style="font-weight: 500">Medium 500</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 10 Code Diff -->
           <section class="ds-section" id="diff">
             <div class="section-header">
-              <h2>09 — Code Diff</h2>
+              <h2>10 — Code Diff</h2>
               <span class="section-tag">.diff-block</span>
             </div>
             <p class="section-desc">
@@ -19183,9 +19428,9 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
               <div class="diff-block">
                 <div class="diff-file-header">
                   <span>src/hooks/useEmbeddedContext.ts</span>
-                  <span class="diff-stats"
-                    ><span class="plus">+3</span>
-                    <span class="minus">-1</span></span
+                  <span
+                    ><span style="color: var(--mate-success)">+3</span>
+                    <span style="color: var(--mate-error)">-1</span></span
                   >
                 </div>
                 <div class="diff-hunk-header">
@@ -19234,18 +19479,16 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
             </div>
           </section>
 
+          <!-- 11 Spec / Right Rail -->
           <section class="ds-section" id="spec">
             <div class="section-header">
-              <h2>10 — Spec / Right Rail</h2>
+              <h2>11 — Spec / Right Rail</h2>
               <span class="section-tag">.spec-rail</span>
             </div>
             <p class="section-desc">
-              The rail sits <em>alongside</em> a panel, never inside it — panel
-              and rail are siblings in a <code>1fr 172px</code> grid row. Each
-              section carries only the metadata relevant to that section. A
-              panel with no rail just spans alone.
+              The rail sits alongside a panel, never inside it — panel and rail
+              are siblings in a <code>1fr 172px</code> grid row.
             </p>
-            <!-- Pattern A: panel + rail as siblings -->
             <div class="preview-card" style="padding: 0; overflow: hidden">
               <div
                 style="
@@ -19276,7 +19519,13 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                     padding: 20px;
                   "
                 >
-                  <h3 style="margin: 0 0 10px; font-size: 17px">
+                  <h3
+                    style="
+                      margin: 0 0 10px;
+                      font-size: 17px;
+                      color: var(--mate-frame-text);
+                    "
+                  >
                     Modal Height — Embedded Context
                   </h3>
                   <p
@@ -19322,74 +19571,22 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                   </div>
                   <div class="spec-rail-row">
                     <div class="spec-rail-label">Target</div>
-                    <div class="spec-rail-value">2026-06-14</div>
+                    <div class="spec-rail-value mono">2026-06-28</div>
                   </div>
                 </aside>
               </div>
             </div>
-            <!-- Pattern B: panel alone, no rail -->
-            <div
-              class="preview-card"
-              style="padding: 0; overflow: hidden; margin-top: 12px"
-            >
-              <div
-                style="
-                  padding: 12px 16px;
-                  border-bottom: 1px solid var(--mate-frame-border);
-                  font-size: 11px;
-                  font-family: var(--mate-font-mono);
-                  color: var(--mate-frame-muted);
-                  letter-spacing: 0.05em;
-                "
-              >
-                PANEL ALONE
-              </div>
-              <div style="padding: 24px">
-                <div
-                  style="
-                    background: var(--mate-frame-bg);
-                    border: 1px solid var(--mate-frame-border);
-                    border-radius: 8px;
-                    padding: 20px;
-                  "
-                >
-                  <h3 style="margin: 0 0 10px; font-size: 17px">
-                    Acceptance Criteria
-                  </h3>
-                  <ol
-                    style="
-                      font-size: 14px;
-                      line-height: 2;
-                      padding-left: 20px;
-                      margin: 0;
-                      color: var(--mate-frame-text);
-                    "
-                  >
-                    <li>
-                      Modal height is capped at <code>80vh</code> in embedded
-                      context.
-                    </li>
-                    <li>
-                      Host page scrollbar does not appear when modal is open.
-                    </li>
-                    <li>
-                      Internal scroll handles overflow at 320×568 viewport.
-                    </li>
-                  </ol>
-                </div>
-              </div>
-            </div>
           </section>
 
+          <!-- 12 Tooltips -->
           <section class="ds-section" id="tooltips">
             <div class="section-header">
-              <h2>11 — Tooltips</h2>
+              <h2>12 — Tooltips</h2>
               <span class="section-tag">.tooltip</span>
             </div>
             <p class="section-desc">
               For details the eye doesn't need until it asks. Anchor on dense
-              identifiers — ticket IDs, abbreviations, mono spans — never on
-              prose.
+              identifiers — ticket IDs, abbreviations — never on prose.
             </p>
             <div class="preview-card">
               <div class="preview-row">
@@ -19419,23 +19616,23 @@ Captures decisions taken during the embedded-beneficiaries audit, plus open ques
                 </div>
               </div>
               <div class="preview-divider"></div>
-              <p>
+              <p style="font-size: 14px; color: var(--mate-frame-text)">
                 Active ticket:
                 <span
                   class="tooltip tooltip-top"
                   data-tip="Modal height — embedded context · major · building"
-                  ><code>TICKET-001</code></span
                 >
-                — beneficiaries modal in the embedded host. Hover the ID for the
-                one-line summary.
+                  <code class="mono" style="font-size: 13px">TICKET-001</code>
+                </span>
+                — hover the ID for the one-line summary.
               </p>
             </div>
           </section>
         </div>
 
         <footer class="artifact-footer">
-          <span>mate-ds v1.0 — DaisyUI v5 · Tailwind v4</span>
-          <span>generated 2026-06-09</span>
+          <span>mate-ds v1.1 · DaisyUI v5 · Tailwind v4</span>
+          <span>generated 2026-06-28</span>
         </footer>
       </main>
     </div>

@@ -1,0 +1,149 @@
+# mate design system — token reference
+# Default theme: mate (dark). Four themes available: mate, mate-light, gruvbox, gruvbox-light.
+# All values are CSS custom properties on [data-theme]. Reference as var(--mate-*) in inline styles.
+
+palette:
+  primary:
+    {
+      value: "oklch(57% 0.165 38)",
+      hex: "#c0613a",
+      name: "Terracotta",
+      usage: "Brand, CTAs, active states",
+    }
+  secondary:
+    {
+      value: "oklch(46% 0.085 58)",
+      hex: "#8a6b3c",
+      name: "Warm Umber",
+      usage: "Secondary actions, accents",
+    }
+  success:
+    {
+      value: "oklch(62% 0.152 155)",
+      hex: "#4da870",
+      name: "Sage Green",
+      usage: "Success states, done badges",
+    }
+  warning:
+    {
+      value: "oklch(73% 0.162 82)",
+      hex: "#d4a827",
+      name: "Amber",
+      usage: "Warning states, in-progress",
+    }
+  error:
+    {
+      value: "oklch(59% 0.210 22)",
+      hex: "#d4412a",
+      name: "Coral Red",
+      usage: "Error states, destructive",
+    }
+  info:
+    {
+      value: "oklch(62% 0.150 245)",
+      hex: "#4a82c7",
+      name: "Steel Blue",
+      usage: "Info states, minor severity",
+    }
+  erva:
+    {
+      value: "oklch(62% 0.152 155)",
+      hex: "#4da870",
+      name: "Chimarrão",
+      usage: "Alternate success, erva mate",
+    }
+
+frame:
+  bg:
+    {
+      value: "oklch(13% 0.013 55)",
+      hex: "#1a160f",
+      name: "Dark Parchment",
+      usage: "Page background",
+    }
+  sidebar:
+    {
+      value: "oklch(18% 0.016 55)",
+      hex: "#241e14",
+      name: "Dark Oak",
+      usage: "Sidebar background",
+    }
+  nav:
+    {
+      value: "oklch(11% 0.012 55)",
+      hex: "#150f08",
+      name: "Dark Bark",
+      usage: "Top nav background",
+    }
+  border:
+    {
+      value: "oklch(100% 0 0 / 0.08)",
+      hex: "rgba(255,255,255,0.08)",
+      usage: "Dividers on dark surfaces",
+    }
+  text:
+    {
+      value: "oklch(92% 0.010 75)",
+      hex: "#ebe4d9",
+      name: "Warm White",
+      usage: "Primary text on dark",
+    }
+  muted:
+    {
+      value: "oklch(58% 0.020 65)",
+      hex: "#9c8a72",
+      name: "Warm Gray",
+      usage: "Secondary text, labels",
+    }
+  dim:
+    {
+      value: "oklch(42% 0.018 60)",
+      hex: "#6e5e4a",
+      name: "Dark Tan",
+      usage: "Tertiary text, icons",
+    }
+
+typography:
+  display:
+    {
+      family: "Cormorant Garamond",
+      weights: [400, 600],
+      usage: "Headings, artifact titles, stat values",
+    }
+  body:
+    {
+      family: "Inter",
+      weights: [300, 400, 500, 600],
+      usage: "UI text, labels, descriptions",
+    }
+  mono:
+    {
+      family: "JetBrains Mono",
+      weights: [400, 500],
+      usage: "Code, hex values, numbers, monospaced data",
+    }
+
+spacing:
+  xs: "4px"
+  s: "8px"
+  m: "16px"
+  l: "24px"
+  xl: "40px"
+
+themes:
+  - id: mate
+    label: "mate (dark)"
+    color-scheme: dark
+    base-100: "oklch(13% 0.013 55)"
+  - id: mate-light
+    label: "mate-light"
+    color-scheme: light
+    base-100: "oklch(98% 0.008 75)"
+  - id: gruvbox
+    label: "gruvbox (dark)"
+    color-scheme: dark
+    base-100: "#282828"
+  - id: gruvbox-light
+    label: "gruvbox-light"
+    color-scheme: light
+    base-100: "#fbf1c7"
