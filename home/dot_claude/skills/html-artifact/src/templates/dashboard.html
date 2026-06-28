@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><!-- TITLE --></title>
+    <script>
+      (function () {
+        var t = localStorage.getItem("mate-theme");
+        if (t) document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
     <link
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
@@ -11,20 +17,27 @@
     <link rel="stylesheet" href="../style/main.css" />
   </head>
   <body>
+    <div class="grain"></div>
     <header
-      class="sticky top-0 z-20 h-12 flex items-center px-6 bg-[var(--mate-frame-nav)] border-b border-[var(--mate-frame-border)]"
+      class="sticky top-0 z-20 h-12 flex items-center px-4 md:px-6 gap-4"
+      style="
+        background: var(--mate-frame-nav);
+        border-bottom: 1px solid var(--mate-frame-border);
+      "
     >
-      <div class="flex-1 flex items-center gap-6">
-        <div
+      <div class="flex-1 flex items-center gap-6 min-w-0">
+        <span
           style="
             font-family: var(--mate-font-display);
             font-size: 18px;
             color: var(--mate-frame-text);
+            white-space: nowrap;
           "
+          >mate-<em style="color: var(--mate-primary); font-weight: 400"
+            >ds</em
+          ></span
         >
-          mate-<em style="color: var(--mate-primary); font-weight: 400">ds</em>
-        </div>
-        <div class="hidden md:flex items-center gap-4">
+        <nav class="hidden md:flex items-center gap-4">
           <a
             class="text-sm"
             style="color: var(--mate-frame-muted)"
@@ -49,8 +62,28 @@
             href="prototype.html"
             >Prototypes</a
           >
-        </div>
+        </nav>
       </div>
+      <select
+        id="theme-switcher"
+        onchange="setTheme(this.value)"
+        style="
+          font-family: var(--mate-font-body);
+          font-size: 12px;
+          color: var(--mate-frame-muted);
+          background: var(--mate-frame-sidebar);
+          border: 1px solid var(--mate-frame-border);
+          border-radius: 6px;
+          padding: 3px 8px;
+          cursor: pointer;
+          outline: none;
+        "
+      >
+        <option value="mate">mate</option>
+        <option value="mate-light">mate-light</option>
+        <option value="gruvbox">gruvbox</option>
+        <option value="gruvbox-light">gruvbox-light</option>
+      </select>
     </header>
 
     <main style="max-width: 900px; margin: 0 auto; padding: 40px 40px 80px">
@@ -121,5 +154,17 @@
         <span><!-- FOOTER LINK --></span>
       </footer>
     </main>
+    <script>
+      function setTheme(v) {
+        document.documentElement.setAttribute("data-theme", v);
+        localStorage.setItem("mate-theme", v);
+        var s = document.getElementById("theme-switcher");
+        if (s) s.value = v;
+      }
+      var sel = document.getElementById("theme-switcher");
+      if (sel)
+        sel.value =
+          document.documentElement.getAttribute("data-theme") || "mate";
+    </script>
   </body>
 </html>

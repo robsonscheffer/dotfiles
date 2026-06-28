@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>mate-ds — Component Library</title>
+    <script>
+      (function () {
+        var t = localStorage.getItem("mate-theme");
+        if (t) document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
     <link
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
@@ -554,16 +560,6 @@
           border-style: var(--tw-border-style);
           border-width: 1px;
         }
-        .border-b {
-          border-bottom-style: var(--tw-border-style);
-          border-bottom-width: 1px;
-        }
-        .border-\[var\(--mate-frame-border\)\] {
-          border-color: var(--mate-frame-border);
-        }
-        .bg-\[var\(--mate-frame-nav\)\] {
-          background-color: var(--mate-frame-nav);
-        }
         .stroke-current {
           stroke: currentColor;
         }
@@ -575,9 +571,6 @@
         }
         .px-5 {
           padding-inline: calc(var(--spacing) * 5);
-        }
-        .px-6 {
-          padding-inline: calc(var(--spacing) * 6);
         }
         .py-5 {
           padding-block: calc(var(--spacing) * 5);
@@ -18558,9 +18551,7 @@
       <div class="flex items-center gap-2">
         <select
           id="theme-switcher"
-          onchange="
-            document.documentElement.setAttribute('data-theme', this.value)
-          "
+          onchange="setTheme(this.value)"
           style="
             font-family: var(--mate-font-body);
             font-size: 12px;
@@ -19692,6 +19683,18 @@ Captures decisions from the embedded-beneficiaries audit, plus open questions on
           });
         });
       })();
+    </script>
+    <script>
+      function setTheme(v) {
+        document.documentElement.setAttribute("data-theme", v);
+        localStorage.setItem("mate-theme", v);
+        var s = document.getElementById("theme-switcher");
+        if (s) s.value = v;
+      }
+      var sel = document.getElementById("theme-switcher");
+      if (sel)
+        sel.value =
+          document.documentElement.getAttribute("data-theme") || "mate";
     </script>
   </body>
 </html>
