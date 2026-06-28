@@ -1,4 +1,3 @@
-/* ── Base ─────────────────────────────────────────────────── */
 body {
   font-family: var(--mate-font-body);
   background: var(--mate-frame-bg);
@@ -16,7 +15,6 @@ body {
   background-size: 200px 200px;
 }
 
-/* ── Sidebar navigation ───────────────────────────────────── */
 .sidebar-link {
   display: flex;
   align-items: center;
@@ -53,7 +51,6 @@ body {
   color: var(--mate-primary);
 }
 
-/* ── Artifact header ──────────────────────────────────────── */
 .artifact-header {
   background: var(--mate-frame-bg);
   padding: 32px 40px 24px;
@@ -130,7 +127,6 @@ body {
   border-color: color-mix(in oklab, var(--color-primary) 30%, transparent);
 }
 
-/* ── Content sections ─────────────────────────────────────── */
 .page-content {
   padding-bottom: 80px;
 }
@@ -182,7 +178,6 @@ body {
   margin: 0;
 }
 
-/* ── Preview card — component demo wrapper ────────────────── */
 .preview-card {
   background: var(--mate-frame-sidebar);
   border: 1px solid var(--mate-frame-border);
@@ -203,7 +198,6 @@ body {
   margin: 20px 0;
 }
 
-/* ── Form utilities ───────────────────────────────────────── */
 .form-label {
   display: block;
   font-family: var(--mate-font-body);
@@ -227,12 +221,10 @@ body {
   line-height: 1.5;
 }
 
-/* ── Mono utility ─────────────────────────────────────────── */
 .mono {
   font-family: var(--mate-font-mono);
 }
 
-/* ── Artifact footer ──────────────────────────────────────── */
 .artifact-footer {
   background: var(--mate-frame-nav);
   border-top: 1px solid var(--mate-frame-border);
@@ -252,7 +244,6 @@ body {
   color: var(--mate-frame-text);
 }
 
-/* ── Responsive ───────────────────────────────────────────── */
 @media (max-width: 768px) {
   .artifact-header {
     padding: 20px 20px 16px;
