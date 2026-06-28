@@ -17478,7 +17478,7 @@ body:after {
   color: var(--mate-frame-bg);
 }
 
-/* DaisyUI error button is too saturated for mate dark theme — use a soft destructive style */
+/* DaisyUI btn-error default is too saturated for the mate dark theme */
 .btn-error {
   --btn-color: color-mix(
     in oklab,
@@ -17489,7 +17489,7 @@ body:after {
   --btn-border: color-mix(in oklab, var(--mate-error) 45%, transparent);
 }
 
-/* btn default has no --size set; pin to md (2.5rem) so size variants are comparable */
+/* DaisyUI .btn has no --size default; pin to md so size variants are comparable */
 .btn:not(.btn-xs):not(.btn-sm):not(.btn-md):not(.btn-lg):not(.btn-xl) {
   --size: calc(var(--size-field, 0.25rem) * 10);
 }
