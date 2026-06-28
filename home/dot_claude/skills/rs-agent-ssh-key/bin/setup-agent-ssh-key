@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+# Key lives in macOS Keychain — survives laptop lock. 1Password not involved.
+
+set -euo pipefail
+
+usage() {
+  printf "usage: setup-agent-ssh-key [--email EMAIL] [--key-path PATH]\n"
+  printf "  --email     agent git email (default: git config user.email with +agent inserted)\n"
+  printf "  --key-path  SSH key path    (default: ~/.ssh/agents/work/id_ed25519)\n"
+  exit 1
+}
+
+AGENT_EMAIL=""
+KEY_PATH=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --email)    AGENT_EMAIL="$2"; shift 2 ;;
+    --key-path) KEY_PATH="$2";    shift 2 ;;
+    *)          usage ;;
+  esac
+done
+
+if [[ -z "$AGENT_EMAIL" ]]; then
+  GIT_EMAIL="$(git config user.email 2>/dev/null || true)"
+  [[ -z "$GIT_EMAIL" ]] && { printf "error: git config user.email not set — pass --email\n" >&2; exit 1; }
+  AGENT_EMAIL="${GIT_EMAIL/@/+agent@}"
+fi
+
+[[ -z "$KEY_PATH" ]] && KEY_PATH="$HOME/.ssh/agents/work/id_ed25519"
+
+GITCONFIG_D="$HOME/.gitconfig.d"
+GITCONFIG_AGENT="$GITCONFIG_D/claude-agent-work"
+CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+ZSHRC="$HOME/.zshrc"
+SSH_CONFIG="$HOME/.ssh/config"
+
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
+step() { printf "\n${YELLOW}▶ %s${NC}\n" "$1"; }
+ok()   { printf "  ${GREEN}✓${NC} %s\n" "$1"; }
+warn() { printf "  ${YELLOW}!${NC} %s\n" "$1"; }
+
+printf "email:    %s\n" "$AGENT_EMAIL"
+printf "key path: %s\n" "$KEY_PATH"
+
+step "1/7 — SSH key"
+if [[ -f "$KEY_PATH" ]]; then
+  ok "Key already exists at $KEY_PATH"
+else
+  mkdir -p "$(dirname "$KEY_PATH")"
+  chmod 700 "$(dirname "$KEY_PATH")"
+  ssh-keygen -t ed25519 -f "$KEY_PATH" -C "$AGENT_EMAIL" -N ""
+  ok "Key generated at $KEY_PATH"
+fi
+
+step "2/7 — macOS Keychain"
+if ssh-add -l 2>/dev/null | grep -qF "$KEY_PATH"; then
+  ok "Key already loaded"
+else
+  ssh-add --apple-use-keychain "$KEY_PATH"
+  ok "Key loaded into macOS Keychain"
+fi
+
+step "3/7 — Shell startup (~/.zshrc)"
+if grep -qF "apple-load-keychain" "$ZSHRC" 2>/dev/null; then
+  ok "apple-load-keychain already in ~/.zshrc"
+else
+  printf '\n# Load SSH keys from macOS Keychain at shell start\nssh-add --apple-load-keychain 2>/dev/null\n' >> "$ZSHRC"
+  ok "Added apple-load-keychain to ~/.zshrc"
+fi
+
+step "4/7 — ~/.ssh/config"
+if grep -qF "UseKeychain yes" "$SSH_CONFIG" 2>/dev/null; then
+  ok "UseKeychain already in ~/.ssh/config"
+else
+  cat >> "$SSH_CONFIG" <<'SSHEOF'
+
+Host *
+  AddKeysToAgent yes
+  UseKeychain yes
+SSHEOF
+  ok "Added UseKeychain/AddKeysToAgent to ~/.ssh/config"
+fi
+
+step "5/7 — ~/.gitconfig.d/claude-agent-work"
+mkdir -p "$GITCONFIG_D"
+cat > "$GITCONFIG_AGENT" <<GITEOF
+[user]
+    name = Claude Agent
+    email = ${AGENT_EMAIL}
+    signingkey = ${KEY_PATH}.pub
+
+[gpg]
+    format = ssh
+
+[gpg "ssh"]
+    # ssh-keygen bypasses op-ssh-sign — no 1Password prompt, works through laptop lock
+    program = ssh-keygen
+
+[commit]
+    gpgsign = true
+
+[core]
+    sshCommand = ssh -i ${KEY_PATH} -F /dev/null
+GITEOF
+ok "Written $GITCONFIG_AGENT"
+
+step "6/7 — GitHub registration"
+PUB_KEY_BODY="$(awk '{print $2}' "${KEY_PATH}.pub")"
+PUB_KEY_FULL="$(cat "${KEY_PATH}.pub")"
+HOSTNAME_SHORT="$(hostname -s)"
+
+if gh api user/ssh_signing_keys --jq '.[].key' 2>/dev/null | grep -qF "$PUB_KEY_BODY"; then
+  ok "Signing key already on GitHub"
+else
+  gh api user/ssh_signing_keys \
+    -f key="$PUB_KEY_FULL" \
+    -f name="worker-agent-signing-${HOSTNAME_SHORT}" >/dev/null
+  ok "Registered signing key on GitHub"
+fi
+
+if gh api user/keys --jq '.[].key' 2>/dev/null | grep -qF "$PUB_KEY_BODY"; then
+  ok "Auth key already on GitHub"
+else
+  gh api user/keys \
+    -f key="$PUB_KEY_FULL" \
+    -f title="worker-agent-${HOSTNAME_SHORT}" >/dev/null
+  ok "Registered auth key on GitHub"
+fi
+
+warn "ACTION REQUIRED: Add ${AGENT_EMAIL} as a verified email on GitHub → https://github.com/settings/emails"
+warn "Then authorize SSO for your GitHub orgs on that signing key."
+
+step "7/7 — GIT_CONFIG_GLOBAL in ~/.claude/settings.json"
+if ! command -v jq >/dev/null 2>&1; then
+  warn "jq not found — add manually to ~/.claude/settings.json:"
+  warn "  \"env\": { \"GIT_CONFIG_GLOBAL\": \"${GITCONFIG_AGENT}\" }"
+elif jq -e '.env.GIT_CONFIG_GLOBAL' "$CLAUDE_SETTINGS" >/dev/null 2>&1; then
+  ok "GIT_CONFIG_GLOBAL already set"
+else
+  TMP="$(mktemp)"
+  jq --arg v "$GITCONFIG_AGENT" '.env.GIT_CONFIG_GLOBAL = $v' "$CLAUDE_SETTINGS" > "$TMP"
+  mv "$TMP" "$CLAUDE_SETTINGS"
+  ok "Set GIT_CONFIG_GLOBAL=${GITCONFIG_AGENT}"
+fi
+
+printf "\n${GREEN}Done.${NC} Verify with:\n"
+printf "  ssh-add -l | grep agents/work\n"
+printf "  GIT_CONFIG_GLOBAL=%s git config --list | grep -E 'user|gpg|commit'\n" "$GITCONFIG_AGENT"
+printf "  ssh -T git@github.com 2>&1\n"

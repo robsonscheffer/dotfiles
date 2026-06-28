@@ -1,5 +1,7 @@
 {
-  "env": {},
+  "env": {
+    "GIT_CONFIG_GLOBAL": "~/.gitconfig.d/claude-agent-work"
+  },
   "permissions": {
     "allow": [
       "Bash(bundle *)",
@@ -54,11 +56,7 @@
       "Read(./dist/**)",
       "Read(./node_modules/**)"
     ],
-    "ask": [
-      "Bash(rm *)",
-      "Bash(jj git push *)",
-      "Bash(git push *)"
-    ]
+    "ask": ["Bash(rm *)", "Bash(jj git push *)", "Bash(git push *)"]
   },
   "hooks": {
     "PostToolUse": [
