@@ -33,11 +33,6 @@ Before any operation, read these three files. Never rely on values remembered
 from a previous session or stated in this skill — the user may have changed
 their config or the design system may have been updated.
 
-> **Cold-start check:** if `dist/templates/` is missing or empty, run
-> `npm run build` in `~/.claude/skills/html-artifact/` before proceeding.
-> Templates are pre-built and committed — this should only be needed after
-> a fresh install or a skill update that added new templates.
-
 **1. User config** — `~/.config/html-artifact.json`
 
 Provides `base_dir`, `port` (default: `52010`), `md_roots`. If the file does
@@ -72,7 +67,7 @@ URLs from `base_dir` and `port` read from config — never hard-code them.**
 | style   | (served from skill dist/)                         | `http://localhost:<port>/style/main.css`               |
 | md view | (any file under md_roots)                         | `http://localhost:<port>/md?path=<encoded-path>`       |
 
-`<type>` is one of: `spec`, `report`, `prototype`, `dashboard`, `blog`.
+`<type>` is one of: `spec`, `report`, `prototype`, `dashboard`.
 
 The route prefixes (`/scratch/`, `/artifacts/`) are fixed conventions — they
 do not change with config. Only `base_dir` and `port` vary per user.
@@ -89,7 +84,6 @@ do not change with config. Only `base_dir` and `port` vary per user.
    - **report** — findings, audit results, data analysis
    - **prototype** — interactive UI demo
    - **dashboard** — metrics and data tables
-   - **blog** — long-form prose article with optional TOC
 
 2. Read the pre-built template for the chosen type:
 
@@ -106,7 +100,7 @@ do not change with config. Only `base_dir` and `port` vary per user.
 
    ```html
    <link
-     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
      rel="stylesheet"
    />
    <link rel="stylesheet" href="http://localhost:<port>/style/main.css" />
@@ -230,38 +224,32 @@ mdview --url <absolute-path-to-file>
 # → http://localhost:<port>/md?path=%2FUsers%2F...%2Ffile.md
 ```
 
-**Add a row to `wiki/artifact/index.html`** — use the `/md?path=` URL as the
-title link `href`:
+**Append an entry to `wiki/artifact/artifacts.json`** — set `file` to the
+full `/md?path=...` URL:
 
-```html
-<tr>
-  <td>
-    <a href="/md?path=/Users/.../file.md" style="color:var(--mate-primary);"
-      >My Plan</a
-    >
-  </td>
-  <td><span class="badge badge-open">spec</span></td>
-  <td
-    style="font-family:var(--mate-font-mono);font-size:14px;color:var(--mate-frame-muted);"
-  >
-    2026-06-15
-  </td>
-  <td>—</td>
-</tr>
+```json
+{
+  "title": "My Plan",
+  "type": "spec",
+  "tier": "wiki",
+  "created": "2026-06-15",
+  "url": null,
+  "file": "/md?path=/Users/.../file.md"
+}
 ```
 
-Commit only the updated `index.html`. No HTML file is created or committed.
+Commit only `artifacts.json`. No HTML file is created or modified.
 
 ### new
 
 1. `AskUserQuestion`: "Scratch (ephemeral) or wiki (committed)?" → `scratch` / `wiki`
-2. `AskUserQuestion`: "Type?" → `spec` / `report` / `prototype` / `dashboard` / `blog`
+2. `AskUserQuestion`: "Type?" → `spec` / `report` / `prototype` / `dashboard`
 3. Derive a slug from the user's topic (kebab-case, max 40 chars, date-prefixed: `YYYY-MM-DD-<slug>`).
 4. Generate the HTML file following **Generating an artifact** above.
 5. Write to:
    - scratch → `<base_dir>/.scratch/artifact/<type>/<slug>.html`
    - wiki → `<base_dir>/wiki/artifact/<type>/<slug>.html`
-6. If tier is `wiki`: add row to `wiki/artifact/index.html`, commit:
+6. If tier is `wiki`: append entry to `wiki/artifact/artifacts.json`, commit:
    `git -C <base_dir> add wiki/artifact/ && git -C <base_dir> commit -m "chore: add artifact <slug>"`.
    Open at `http://localhost:<port>/artifacts/<type>/<slug>.html`.
 7. If tier is `scratch`: write file only. No index update, no commit.
@@ -272,7 +260,7 @@ Commit only the updated `index.html`. No HTML file is created or committed.
 1. List `.scratch/artifact/` to show user the available scratch artifacts.
 2. `mv <base_dir>/.scratch/artifact/<type>/<slug>.html <base_dir>/wiki/artifact/<type>/`
 3. If a `<slug>.html.pub.json` sidecar exists alongside it, move that too.
-4. Add row to `wiki/artifact/index.html`.
+4. Append entry to `wiki/artifact/artifacts.json`.
 5. Commit: `git -C <base_dir> add wiki/artifact/ && git -C <base_dir> commit -m "chore: promote artifact <slug>"`.
 6. Open at `http://localhost:<port>/artifacts/<type>/<slug>.html`.
 
@@ -313,7 +301,7 @@ The source file on disk is never modified.
 4. Call html-publisher using the **temp file** as `--source`:
 
    ```bash
-   RESULT=$(${PLUGIN_ROOT:-html-publisher}/bin/publish share-html \
+   RESULT=$(${PLUGIN_ROOT:html-publisher}/bin/publish share-html \
      --source /tmp/<slug>-publish.html \
      [--slug <slug> --owner-key <key>])
    ```
@@ -334,34 +322,10 @@ The source file on disk is never modified.
    }
    ```
 
-8. Update `index.html`: find the `<tr>` whose `<a href>` matches the artifact's
-   relative path (e.g. `report/2026-06-09-my-report.html`) and update its
-   Published `<td>` with `<a href="[url]">share ↗</a>`. Add a row if none exists.
+8. Update `artifacts.json`: find the entry whose `file` matches the artifact's
+   relative path and set its `url` to the share URL. Add an entry if none exists.
 
 9. Surface both `url` (share) and `manage_url` (author) to the user.
-
-### burndown-sync
-
-Generate an epic progress dashboard from a repo's `docs/plans/` ticket structure.
-
-```bash
-burndown-sync \
-  --repo <repo-root> \
-  --prefix <PREFIX> \
-  --epic <path-to-epic.md> \
-  --out <base_dir>/wiki/artifact/dashboard/<slug>.html
-```
-
-| Flag       | Required | Description                                            |
-| ---------- | -------- | ------------------------------------------------------ |
-| `--repo`   | yes      | Repo root containing `docs/plans/{active,done}/`       |
-| `--prefix` | yes      | Ticket prefix (e.g. `CANVAS`, `MATE`)                  |
-| `--epic`   | yes      | Path to `docs/epics/<slug>.md`                         |
-| `--out`    | yes      | Output HTML path (write to `wiki/artifact/dashboard/`) |
-| `--title`  | no       | Epic title (default: first `#` heading in epic md)     |
-| `--date`   | no       | Generation date `YYYY-MM-DD` (default: today)          |
-
-After writing, add a row to `wiki/artifact/index.html` and commit.
 
 ### serve
 
@@ -382,10 +346,12 @@ Triggers when `~/.config/html-artifact.json` is missing.
 
 1. `AskUserQuestion`: "Where should artifacts live? (default: ~/brain)"
    → store as `base_dir`
-2. Create `~/.config/` if needed, then write `~/.config/html-artifact.json`:
+2. `AskUserQuestion`: "Where should shared assets live? (default: <base_dir>/assets)"
+   → store as `assets_dir`
+3. Create `~/.config/` if needed, then write `~/.config/html-artifact.json`:
 
    ```json
-   { "base_dir": "<answer>" }
+   { "base_dir": "<answer1>", "assets_dir": "<answer2>" }
    ```
 
    **Optional config keys:**
@@ -393,21 +359,26 @@ Triggers when `~/.config/html-artifact.json` is missing.
    - `md_roots` — array of absolute paths the `/md` route is allowed to serve from.
      Example: `"md_roots": ["/Users/me/brain", "/Users/me/apps/myrepo/docs"]`
 
-3. Create directories (route convention shown alongside):
+4. Create directories (route convention shown alongside):
    ```
    <base_dir>/wiki/artifact/spec/          → /artifacts/spec/
    <base_dir>/wiki/artifact/report/        → /artifacts/report/
    <base_dir>/wiki/artifact/prototype/     → /artifacts/prototype/
    <base_dir>/wiki/artifact/dashboard/     → /artifacts/dashboard/
-   <base_dir>/wiki/artifact/blog/          → /artifacts/blog/
    <base_dir>/.scratch/artifact/spec/      → /scratch/spec/
    <base_dir>/.scratch/artifact/report/    → /scratch/report/
    <base_dir>/.scratch/artifact/prototype/ → /scratch/prototype/
    <base_dir>/.scratch/artifact/dashboard/ → /scratch/dashboard/
-   <base_dir>/.scratch/artifact/blog/      → /scratch/blog/
+   <assets_dir>/
    ```
-4. Write empty `wiki/artifact/index.html` (see **index.html** below, with empty tbody).
-5. Proceed with the original operation.
+5. Bootstrap the index from the skill's own templates:
+   ```bash
+   cp ~/.claude/skills/html-artifact/dist/templates/index.html <base_dir>/wiki/artifact/index.html
+   cp ~/.claude/skills/html-artifact/dist/templates/artifacts.json <base_dir>/wiki/artifact/artifacts.json
+   ```
+   `index.html` is the full UI shell; `artifacts.json` starts as `[]`.
+   Commit both: `git -C <base_dir> add wiki/artifact/index.html wiki/artifact/artifacts.json && git -C <base_dir> commit -m "chore: bootstrap artifact index"`.
+6. Proceed with the original operation.
 
 ---
 
@@ -416,56 +387,207 @@ Triggers when `~/.config/html-artifact.json` is missing.
 The manifest file at `<base_dir>/wiki/artifact/index.html`. Update on every
 `new` (wiki), `promote`, `link-md`, and `publish` operation.
 
-Use the `dashboard` pre-built template as the base. Fill `<!-- TITLE -->` with
-`Artifact Index`, then replace `<!-- CONTENT -->` with:
+**Do not regenerate from scratch.** The index fetches its data from
+`<base_dir>/wiki/artifact/artifacts.json` at runtime. Agents only touch the
+JSON file — never the HTML.
+
+To add an artifact, append one object to `artifacts.json`:
+
+```json
+{
+  "title": "My Report",
+  "type": "report",
+  "tier": "wiki",
+  "created": "2026-06-09",
+  "url": null,
+  "file": "report/2026-06-09-my-report.html"
+}
+```
+
+Fields:
+
+- `type` — `report` | `spec` | `prototype` | `dashboard` | `walk`
+- `tier` — `wiki` | `scratch`
+- `url` — live share URL if published, `null` otherwise
+- `file` — relative path from `/artifacts/`, **or** a full `/md?path=...` URL for markdown routes
+
+**When publish succeeds**, set `url` on the matching entry to the share URL.
+
+The index renders, sorts newest-first, filters, and updates the "Updated" line
+automatically from the JSON data — no HTML changes needed.
+
+---
+
+## Layout patterns — critical gotchas
+
+These are hard-won findings from building the index. Apply them any time you
+write a full-page artifact layout (not just content slots inside a template).
+
+### Container class collision
+
+Never name a layout wrapper `.container` — Tailwind has a built-in `.container`
+utility that will override it and produce narrower-than-intended widths. Use
+`.page-wrap` instead:
+
+```css
+.page-wrap {
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+```
+
+The `width: 100%` is mandatory. In a `flex-direction: column` parent,
+`margin: 0 auto` cancels `align-items: stretch` and shrinks the item to content
+width — `width: 100%` restores full-width behavior.
+
+### Inline styles for CSS custom properties
+
+Tailwind arbitrary-value classes like `bg-[var(--mate-frame-nav)]` silently
+produce no output. Always use `style=""` for `var(--mate-*)` values:
 
 ```html
-<table class="table w-full">
-  <thead>
-    <tr>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Title
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Type
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Date
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Published
-      </th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- one <tr> per artifact — added by Claude on new/promote/publish/link-md -->
-    <!-- HTML artifact row (href is relative to /artifacts/):
-    <tr>
-      <td><a href="report/2026-06-09-my-report.html" style="color:var(--mate-primary);">My Report</a></td>
-      <td><span class="badge badge-done">report</span></td>
-      <td style="font-family:var(--mate-font-mono);font-size:14px;color:var(--mate-frame-muted);">2026-06-09</td>
-      <td>—</td>
-    </tr>
-    -->
-    <!-- Markdown row (href is the full /md?path= server URL):
-    <tr>
-      <td><a href="/md?path=/Users/.../file.md" style="color:var(--mate-primary);">My Plan</a></td>
-      <td><span class="badge badge-open">spec</span></td>
-      <td style="font-family:var(--mate-font-mono);font-size:14px;color:var(--mate-frame-muted);">2026-06-15</td>
-      <td>—</td>
-    </tr>
-    -->
-    <!-- Published — fill the Published td with the share URL:
-    <td><a href="https://..." style="color:var(--mate-primary);">share ↗</a></td>
-    -->
-  </tbody>
-</table>
+<!-- Wrong — Tailwind silently ignores this -->
+<header class="bg-[var(--mate-frame-nav)]">
+  <!-- Right -->
+  <header style="background: var(--mate-frame-nav);"></header>
+</header>
+```
+
+### Hero band layout
+
+Full-width tinted section behind the page title; inner `.page-wrap` sizes the
+content. No stats strip — the filter count already answers "how many".
+
+```html
+<div
+  style="background: var(--mate-frame-sidebar); border-bottom: 1px solid var(--mate-frame-border);"
+>
+  <div class="page-wrap" style="padding-top: 2rem; padding-bottom: 1.75rem;">
+    <h1
+      style="font-family: var(--mate-font-display); font-size: 2rem; font-weight: 700; margin: 0 0 .4rem; color: var(--mate-frame-text);"
+    >
+      Page Title
+    </h1>
+    <p
+      style="margin: 0 0 .5rem; font-size: 15px; color: var(--mate-frame-text);"
+    >
+      One-line subtitle.
+    </p>
+    <span
+      id="last-updated"
+      style="font-size: 12px; font-family: var(--mate-font-mono); color: var(--mate-frame-muted);"
+    ></span>
+  </div>
+</div>
+```
+
+Populate "last updated" from data — in the index this happens inside the
+`fetch().then()` callback after `artifacts.json` loads, never from `new Date()`.
+
+### Table scroll with always-visible footer
+
+Makes the table scroll in its own height so the footer stays on screen.
+
+```html
+<main
+  style="display: flex; flex-direction: column; min-height: calc(100vh - 48px);"
+>
+  <div
+    class="page-wrap"
+    style="padding-top: 1.5rem; padding-bottom: 2rem; flex: 1; display: flex; flex-direction: column;"
+  >
+    <!-- toolbar here -->
+    <div
+      style="flex: 1; overflow: hidden; border-top: 1px solid var(--mate-frame-border);"
+    >
+      <div style="height: 100%; overflow-y: auto; overflow-x: auto;">
+        <table class="table" style="min-width: 480px;">
+          <thead
+            style="position: sticky; top: 0; z-index: 1; background: var(--mate-frame-sidebar);"
+          >
+            ...
+          </thead>
+          <tbody>
+            ...
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- footer here, always visible -->
+  </div>
+</main>
+```
+
+### Mobile filter scroll
+
+Prevent the `join` pill group from wrapping and breaking its border on small screens:
+
+```html
+<div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+  <div class="join" style="flex-wrap: nowrap; white-space: nowrap;">
+    <button class="btn btn-sm btn-active join-item" data-filter="all">
+      All
+    </button>
+    ...
+  </div>
+</div>
+```
+
+Hide secondary table columns on mobile with a class:
+
+```css
+@media (max-width: 640px) {
+  th.hide-mobile,
+  td.hide-mobile {
+    display: none;
+  }
+}
+```
+
+### Theme switcher
+
+Use a plain `<select>` with inline styles — the DaisyUI `select` class breaks
+the compact look. The four valid theme options are exactly:
+
+```html
+<select
+  onchange="document.documentElement.setAttribute('data-theme', this.value)"
+  style="background: var(--mate-frame-nav); color: var(--mate-frame-text); border: 1px solid var(--mate-frame-border); border-radius: 6px; padding: 2px 8px; font-size: 13px; cursor: pointer;"
+>
+  <option value="mate">mate</option>
+  <option value="mate-light">mate-light</option>
+  <option value="gruvbox">gruvbox</option>
+  <option value="gruvbox-light">gruvbox-light</option>
+</select>
+```
+
+Do not add any other theme options — they will silently render with broken colors.
+
+### Filter state with class toggling
+
+Toggle `btn-active` / `btn-ghost` classes — do not use `aria-pressed` for
+visual state in this system:
+
+```js
+document.querySelectorAll("[data-filter]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("[data-filter]").forEach((b) => {
+      b.classList.remove("btn-active");
+      b.classList.add("btn-ghost");
+    });
+    btn.classList.add("btn-active");
+    btn.classList.remove("btn-ghost");
+    applyFilters();
+  });
+});
+```
+
+### Sort newest-first
+
+Default sort for any date-ordered list:
+
+```js
+const sorted = [...items].sort((a, b) => b.created.localeCompare(a.created));
 ```

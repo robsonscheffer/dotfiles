@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en" data-theme="mate">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Artifact Index — mate-ds</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+    />
+    <link rel="stylesheet" href="http://localhost:52010/style/main.css" />
+    <style>
+      .page-wrap {
+        max-width: 1100px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+      }
+      tr.hidden {
+        display: none;
+      }
+
+      @media (max-width: 640px) {
+        .hero-inner {
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+        .search-input {
+          width: 100% !important;
+        }
+        .filter-toolbar {
+          flex-direction: column;
+          align-items: stretch;
+          gap: 0.5rem;
+        }
+        .filter-scroll {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+        .filter-scroll .join {
+          flex-wrap: nowrap;
+          white-space: nowrap;
+        }
+        th.hide-mobile,
+        td.hide-mobile {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header
+      class="sticky top-0 z-20"
+      style="
+        background: var(--mate-frame-nav);
+        border-bottom: 1px solid var(--mate-frame-border);
+      "
+    >
+      <div
+        class="page-wrap"
+        style="height: 48px; display: flex; align-items: center; gap: 1rem"
+      >
+        <span
+          style="
+            font-family: var(--mate-font-display);
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--mate-primary);
+          "
+          >mate-ds</span
+        >
+        <span style="color: var(--mate-frame-muted); font-size: 13px"
+          >/ artifacts</span
+        >
+        <div style="flex: 1"></div>
+        <select
+          id="theme-switcher"
+          onchange="setTheme(this.value)"
+          style="
+            font-family: var(--mate-font-body);
+            font-size: 12px;
+            color: var(--mate-frame-muted);
+            background: var(--mate-frame-sidebar);
+            border: 1px solid var(--mate-frame-border);
+            border-radius: 4px;
+            padding: 2px 8px;
+            cursor: pointer;
+            min-width: 110px;
+          "
+        >
+          <option value="mate">mate</option>
+          <option value="mate-light">mate-light</option>
+          <option value="gruvbox">gruvbox</option>
+          <option value="gruvbox-light">gruvbox-light</option>
+        </select>
+      </div>
+    </header>
+
+    <div
+      style="
+        background: var(--mate-frame-sidebar);
+        border-bottom: 1px solid var(--mate-frame-border);
+      "
+    >
+      <div
+        class="page-wrap hero-inner"
+        style="
+          padding-top: 2rem;
+          padding-bottom: 1.75rem;
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          gap: 1rem;
+        "
+      >
+        <div>
+          <h1
+            style="
+              font-family: var(--mate-font-display);
+              font-size: 2rem;
+              font-weight: 700;
+              margin: 0 0 0.4rem;
+              color: var(--mate-frame-text);
+            "
+          >
+            Artifact Index
+          </h1>
+          <p
+            style="
+              margin: 0 0 0.5rem;
+              font-size: 15px;
+              color: var(--mate-frame-text);
+            "
+          >
+            Generated HTML artifacts — scratch and wiki tiers.
+          </p>
+          <span
+            id="last-updated"
+            style="
+              font-size: 12px;
+              font-family: var(--mate-font-mono);
+              color: var(--mate-frame-muted);
+            "
+          ></span>
+        </div>
+      </div>
+    </div>
+
+    <main
+      style="
+        display: flex;
+        flex-direction: column;
+        min-height: calc(100vh - 48px);
+      "
+    >
+      <div
+        class="page-wrap"
+        style="
+          padding-top: 1.5rem;
+          padding-bottom: 2rem;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        "
+      >
+        <div
+          class="filter-toolbar flex items-center gap-2 flex-wrap mb-4"
+          role="group"
+          aria-label="Filter and search artifacts"
+        >
+          <div class="filter-scroll" style="flex: 1 1 auto; min-width: 0">
+            <div class="join">
+              <button class="btn btn-sm join-item btn-active" data-filter="all">
+                All
+              </button>
+              <button class="btn btn-sm btn-ghost join-item" data-filter="spec">
+                Spec
+              </button>
+              <button
+                class="btn btn-sm btn-ghost join-item"
+                data-filter="report"
+              >
+                Report
+              </button>
+              <button
+                class="btn btn-sm btn-ghost join-item"
+                data-filter="prototype"
+              >
+                Prototype
+              </button>
+              <button
+                class="btn btn-sm btn-ghost join-item"
+                data-filter="dashboard"
+              >
+                Dashboard
+              </button>
+              <button class="btn btn-sm btn-ghost join-item" data-filter="walk">
+                Walk
+              </button>
+            </div>
+          </div>
+          <div style="flex: 1"></div>
+          <input
+            type="search"
+            placeholder="Search artifacts…"
+            aria-label="Search artifacts"
+            id="search-box"
+            class="search-input"
+            style="
+              font-family: var(--mate-font-body);
+              font-size: 14px;
+              background: var(--mate-frame-sidebar);
+              border: 1px solid var(--mate-frame-border);
+              border-radius: 6px;
+              padding: 5px 14px;
+              color: var(--mate-frame-text);
+              width: 220px;
+              outline: none;
+            "
+          />
+        </div>
+
+        <div class="flex items-center justify-between mb-2">
+          <span
+            id="section-label"
+            style="
+              font-size: 11px;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              font-weight: 600;
+              color: var(--mate-frame-muted);
+            "
+            >All artifacts</span
+          >
+          <span
+            id="table-count-badge"
+            class="badge badge-sm"
+            style="font-variant-numeric: tabular-nums"
+            >0</span
+          >
+        </div>
+
+        <div
+          style="
+            flex: 1;
+            overflow: hidden;
+            border-top: 1px solid var(--mate-frame-border);
+          "
+        >
+          <div style="height: 100%; overflow-y: auto; overflow-x: auto">
+            <table
+              class="table artifact-table"
+              role="grid"
+              aria-label="Artifacts"
+              style="min-width: 480px"
+            >
+              <thead
+                style="
+                  position: sticky;
+                  top: 0;
+                  z-index: 1;
+                  background: var(--mate-frame-sidebar);
+                "
+              >
+                <tr>
+                  <th
+                    style="
+                      color: var(--mate-frame-muted);
+                      font-size: 11px;
+                      letter-spacing: 0.05em;
+                      text-transform: uppercase;
+                    "
+                  >
+                    Title
+                  </th>
+                  <th
+                    style="
+                      color: var(--mate-frame-muted);
+                      font-size: 11px;
+                      letter-spacing: 0.05em;
+                      text-transform: uppercase;
+                      width: 100px;
+                    "
+                  >
+                    Type
+                  </th>
+                  <th
+                    class="hide-mobile"
+                    style="
+                      color: var(--mate-frame-muted);
+                      font-size: 11px;
+                      letter-spacing: 0.05em;
+                      text-transform: uppercase;
+                      width: 80px;
+                    "
+                  >
+                    Tier
+                  </th>
+                  <th
+                    class="hide-mobile"
+                    style="
+                      color: var(--mate-frame-muted);
+                      font-size: 11px;
+                      letter-spacing: 0.05em;
+                      text-transform: uppercase;
+                      width: 110px;
+                    "
+                  >
+                    Created
+                  </th>
+                  <th
+                    style="
+                      color: var(--mate-frame-muted);
+                      font-size: 11px;
+                      letter-spacing: 0.05em;
+                      text-transform: uppercase;
+                      width: 90px;
+                    "
+                  >
+                    Published
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="artifact-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div
+          id="empty-state"
+          style="display: none; text-align: center; padding: 4rem 1rem"
+          aria-live="polite"
+        >
+          <div style="font-size: 2rem; margin-bottom: 0.75rem; opacity: 0.4">
+            &#128196;
+          </div>
+          <p
+            style="
+              font-size: 15px;
+              font-weight: 600;
+              margin: 0 0 0.25rem;
+              color: var(--mate-frame-text);
+            "
+          >
+            No artifacts found
+          </p>
+          <p style="font-size: 14px; margin: 0; color: var(--mate-frame-text)">
+            Try a different filter, or run <code>/artifact new</code> to create
+            the first one.
+          </p>
+        </div>
+
+        <div
+          class="flex justify-between items-center mt-4 pt-4"
+          style="border-top: 1px solid var(--mate-frame-border)"
+        >
+          <span style="font-size: 12px; color: var(--mate-frame-muted)"
+            >html-artifact skill · <span id="footer-date"></span
+          ></span>
+          <span style="font-size: 12px"
+            ><a href="ds-showcase.html" style="color: var(--mate-frame-muted)"
+              >DS Showcase ↗</a
+            ></span
+          >
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const TYPE_BADGE = {
+        spec: "badge badge-soft badge-secondary badge-sm",
+        report: "badge badge-soft badge-info badge-sm",
+        prototype: "badge badge-soft badge-warning badge-sm",
+        dashboard: "badge badge-soft badge-success badge-sm",
+        walk: "badge badge-soft badge-accent badge-sm",
+      };
+
+      const tbody = document.getElementById("artifact-tbody");
+      const emptyState = document.getElementById("empty-state");
+
+      function renderRows(items) {
+        const sorted = [...items].sort((a, b) =>
+          b.created.localeCompare(a.created),
+        );
+        tbody.innerHTML = "";
+        const tableWrapper = tbody.closest(
+          'div[style*="overflow-y"]',
+        ).parentElement;
+        if (items.length === 0) {
+          tableWrapper.style.display = "none";
+          emptyState.style.display = "";
+        } else {
+          tableWrapper.style.display = "";
+          emptyState.style.display = "none";
+        }
+        sorted.forEach((a) => {
+          const tr = document.createElement("tr");
+          tr.className = "hover";
+          tr.dataset.type = a.type;
+          tr.dataset.tier = a.tier;
+          const tierCls =
+            a.tier === "wiki"
+              ? "badge badge-soft badge-success badge-sm"
+              : "badge badge-ghost badge-sm";
+          const pubCell = a.url
+            ? `<a class="badge badge-soft badge-success badge-sm" href="${a.url}" target="_blank" rel="noopener" style="text-decoration:none;">Live &#8599;</a>`
+            : `<span style="color:var(--mate-frame-muted); font-size:13px;">&#8212;</span>`;
+          tr.innerHTML = `
+      <td><a href="${a.file}" style="color:var(--mate-primary); font-weight: 500;">${a.title}</a></td>
+      <td><span class="${TYPE_BADGE[a.type] || "badge badge-sm"}">${a.type}</span></td>
+      <td class="hide-mobile"><span class="${tierCls}">${a.tier}</span></td>
+      <td class="hide-mobile" style="color:var(--mate-frame-muted);font-size:13px;font-family:var(--mate-font-mono);">${a.created}</td>
+      <td>${pubCell}</td>
+    `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function updateStats(items) {
+        const badge = document.getElementById("table-count-badge");
+        if (badge) badge.textContent = items.length;
+        const label = document.getElementById("section-label");
+        if (label)
+          label.textContent =
+            currentFilter === "all" ? "All artifacts" : currentFilter + "s";
+      }
+
+      let currentFilter = "all";
+      let currentSearch = "";
+
+      let ARTIFACTS = [];
+
+      function applyFilters() {
+        const q = currentSearch.toLowerCase();
+        const filtered = ARTIFACTS.filter((a) => {
+          const matchType = currentFilter === "all" || a.type === currentFilter;
+          const matchSearch = !q || a.title.toLowerCase().includes(q);
+          return matchType && matchSearch;
+        });
+        renderRows(filtered);
+        updateStats(filtered);
+      }
+
+      document.querySelectorAll("[data-filter]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll("[data-filter]").forEach((b) => {
+            b.classList.remove("btn-active");
+            b.classList.add("btn-ghost");
+          });
+          btn.classList.add("btn-active");
+          btn.classList.remove("btn-ghost");
+          currentFilter = btn.dataset.filter;
+          applyFilters();
+        });
+      });
+
+      document.getElementById("search-box").addEventListener("input", (e) => {
+        currentSearch = e.target.value;
+        applyFilters();
+      });
+
+      document.getElementById("footer-date").textContent = new Date()
+        .toISOString()
+        .slice(0, 10);
+
+      fetch("/artifacts/artifacts.json")
+        .then((r) => r.json())
+        .then((data) => {
+          ARTIFACTS = data;
+          const latestDate = ARTIFACTS.map((a) => a.created)
+            .sort()
+            .reverse()[0];
+          const el = document.getElementById("last-updated");
+          if (el) el.textContent = "Updated " + latestDate;
+          renderRows(ARTIFACTS);
+          updateStats(ARTIFACTS);
+        })
+        .catch(() => {
+          document.getElementById("empty-state").style.display = "";
+          document.getElementById("empty-state").textContent =
+            "Could not load artifacts.json — is the server running?";
+        });
+
+      function setTheme(t) {
+        document.documentElement.setAttribute("data-theme", t);
+        localStorage.setItem("mate-theme", t);
+      }
+      (function () {
+        const t = localStorage.getItem("mate-theme") || "mate";
+        setTheme(t);
+        const sel = document.getElementById("theme-switcher");
+        if (sel) sel.value = t;
+      })();
+    </script>
+  </body>
+</html>
