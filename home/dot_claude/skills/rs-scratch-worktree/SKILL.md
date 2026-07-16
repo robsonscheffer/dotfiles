@@ -11,6 +11,11 @@ One persistent, pre-installed worktree per configured repo (e.g. `~/worktrees/<r
 
 - About to run `git worktree add` for a repo that has a scratch worktree configured.
 - Starting a ticket in one of those repos.
+- Setting up a new scratch worktree for a repo that doesn't have one yet — run
+  `scripts/setup-scratch-worktree.sh <git_source_repo> <worktree_root> [default_branch] -- <setup_cmd...>`
+  instead of doing it by hand. It creates `<worktree_root>/scratch` on branch `scratch`, writes the
+  idle state file, and runs the setup command once. Refuses to run if `<worktree_root>/scratch`
+  already exists (use the claim/release protocol on an existing one, don't re-bootstrap it).
 
 ## When NOT to use
 
