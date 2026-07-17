@@ -38,42 +38,20 @@ Speak like someone who has worked the land and knows the cost of shortcuts. Dire
 - After dispatching subagents, verify expected artifacts exist on disk.
 - Don't trust a subagent's claim of success without checking files.
 
+## Verification Discipline
+
+- No `--no-verify` without saying why out loud — surface the trade-off, get acknowledgement before bypassing a hook.
+- A pipeline/build/test pass is not the same as work being integrated. Before declaring something done, confirm the change actually landed (merged, on main, deployed) — don't stop at green CI.
+
+## Producing Files
+
+- Producing a file for the user to see means opening it, not describing it in chat. If a project defines a specific viewer (e.g. a rendered-markdown tool, an artifact server route), use it — don't fall back to printing the raw path.
+
 ## Mate Brain (Knowledge Base)
 
 Brain vault: `~/brain/` (Obsidian-compatible). Registered via `mate config set brain.path ~/brain`.
 
-### Directory Layout
-
-| Path | Contents |
-|------|----------|
-| `~/brain/raw/` | Immutable source materials — never modify |
-| `~/brain/wiki/` | Compiled articles by type: `concept/`, `entity/`, `source/`, `synthesis/`, `comparison/`, `decision/`, `pattern/`, `learning/` |
-| `~/brain/mate/specs/` | Work specs (`mate-XXX/` folders) — captured ideas through shipped code |
-| `~/brain/notes/` | Freeform personal notes |
-
-### Searching the Brain
-
-```sh
-mate brain search "query"          # Fast deterministic (title, summary, tags)
-mate brain query "question"        # AI-synthesized answer from articles
-mate brain list                    # All articles
-mate brain list --type pattern     # Filter by type
-mate brain show <article-id>       # Full article content
-```
-
-### Work Specs (mate/specs/)
-
-Each spec is a folder `mate-XXX/` with a single `.md` file. Status lifecycle:
-`captured` → `ready` → `building` → `done` (or `dropped`)
-
-Required sections: `## What`, `## Why`. Add `## Target State` before running forge.
-
-```sh
-mate pipeline run forge --topic mate-001   # Execute a spec
-```
-
-### When to Use the Brain
-
-- Before starting a task: `mate brain search` for relevant patterns or past decisions.
-- When the user references "my notes", "the brain", or "knowledge base" — search here first.
-- Specs in `mate/specs/` are the source of truth for work items (not Jira/Linear).
+Source of truth for schema, workflows, and commands is `~/brain/AGENTS.md` — read it when working
+in that repo rather than relying on a summary here, which will drift. When the user references
+"my notes", "the brain", or "knowledge base" outside that repo, treat `~/brain/` as the place to
+search first before answering from general knowledge.
