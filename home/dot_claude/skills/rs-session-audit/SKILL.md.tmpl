@@ -16,6 +16,7 @@ allowed-tools:
   - Bash(sort:*)
   - Bash(xargs ls:*)
   - Bash(wc:*)
+  - Workflow
 ---
 
 # rs-session-audit — Skill Gap Audit from Session History
@@ -59,7 +60,9 @@ construction and dilute the ranking with loop noise. If the project set is known
 multiple unrelated areas, scope `find` to the interactive project dirs only (e.g. pass explicit
 paths instead of `~/.claude/projects`) rather than relying on the exclusion alone.
 
-Cap at 25 highest-ranked sessions, not the 25 largest.
+Cap at 25 highest-ranked sessions for light mode (inline, one context). Heavy mode can afford
+more since batches run in parallel via `Workflow` — 40 sessions in batches of 5 (`head -40`
+above) is a set size that's worked well.
 
 ---
 
@@ -94,48 +97,156 @@ messages so one noisy retry loop doesn't dominate the sample.
 
 ## Step 4 — Analyze
 
-### Light mode
+Both modes end in the same shape: a JSON record per session with **verbatim** quotes, never
+invented prose. The failure mode this guards against: N agents each free-writing markdown, then
+the orchestrator hand-summarizing N prose blobs into a "superficial list." Locking the shape with
+a schema removes that lossy re-summarization step — aggregation becomes mechanical, not prose.
 
-Analyze all extracted messages inline. For each session identify:
+Per-session record shape (used by both modes):
+```json
+{
+  "session_id": "string",
+  "one_line": "what the user was doing",
+  "skills_invoked": ["string"],
+  "frictions": [
+    {"type": "unverified-claim|rework|tool-misfire|scope-drift|infra",
+     "quote": "verbatim from the extracted messages — never invented",
+     "severity": 1}
+  ],
+  "candidate_fix": {"kind": "skill|habit|infra|none", "target": "string", "note": "string"}
+}
+```
 
-1. **What** the user was doing (one sentence)
-2. **Skills invoked** (`/skill-name` patterns in messages)
-3. **Friction signals** — flag these patterns:
-   - Same instruction repeated 2+ times (or in ALL CAPS like "ALWAYS USE LINKS")
-   - Manual fallback: "go lets do it manually", "I'll just do it"
-   - Confusion about skill: "POKE is a workflow from mate, what are u doing?"
-   - Agent wandered before correct path: long back-and-forth before task started
+### Light mode (small N, inline)
 
-### Heavy mode
+Produce the record above directly, per session, from the extracted messages — no subagents. Same
+verbatim-quote rule applies: if you can't point to the exact line, don't include the friction.
 
-Batch sessions into groups of 3–4. For each batch, dispatch one Agent with:
+### Heavy mode (large N, schema-locked delegation)
 
-> "Analyze these JSONL session files. Per session: (1) what the user was doing, (2) skills invoked, (3) friction points — repeated instructions, fallbacks to manual, confusion signals. Return structured markdown. Do not suggest skills that already exist: [paste existing skills list]."
+Three stages — deterministic → schema-locked → deterministic. The agent step is sandwiched
+between two mechanical steps; it never does the final synthesis.
 
-Pass the session file paths and existing skills list.
+1. **Select (done in Step 1, deterministic).** Sessions are already ranked and capped.
+2. **Extract (agent, schema-locked).** Call the `Workflow` tool with a script that batches the
+   ranked session paths (5 per batch worked well) and dispatches one `agent()` call per batch,
+   each forced to return the per-session record shape above via `schema` — not prose:
 
-**If agents fail (API 529 overloaded):** Fall back to light-mode inline analysis immediately. Do not retry.
+   ```js
+   export const meta = {
+     name: 'session-audit-extract',
+     description: 'Schema-locked friction extraction from ranked session batches',
+     phases: [{ title: 'Extract' }],
+   }
+
+   const RECORD_SCHEMA = {
+     type: 'object',
+     properties: {
+       sessions: {
+         type: 'array',
+         items: {
+           type: 'object',
+           properties: {
+             session_id: { type: 'string' },
+             one_line: { type: 'string' },
+             skills_invoked: { type: 'array', items: { type: 'string' } },
+             frictions: {
+               type: 'array',
+               items: {
+                 type: 'object',
+                 properties: {
+                   type: { type: 'string', enum: ['unverified-claim', 'rework', 'tool-misfire', 'scope-drift', 'infra'] },
+                   quote: { type: 'string' },
+                   severity: { type: 'integer', minimum: 1, maximum: 3 },
+                 },
+                 required: ['type', 'quote', 'severity'],
+               },
+             },
+             candidate_fix: {
+               type: 'object',
+               properties: {
+                 kind: { type: 'string', enum: ['skill', 'habit', 'infra', 'none'] },
+                 target: { type: 'string' },
+                 note: { type: 'string' },
+               },
+               required: ['kind'],
+             },
+           },
+           required: ['session_id', 'one_line', 'frictions', 'candidate_fix'],
+         },
+       },
+     },
+     required: ['sessions'],
+   }
+
+   const results = await pipeline(
+     args.batches, // array of arrays of file paths
+     batch => agent(
+       `Analyze these Claude Code session JSONL files: ${batch.join(', ')}. ` +
+       `Per session return session_id, one_line, skills_invoked, frictions (verbatim quotes ` +
+       `only — never invent), candidate_fix. Do not suggest skills that already exist: ` +
+       `${args.existingSkills.join(', ')}.`,
+       { schema: RECORD_SCHEMA, phase: 'Extract' }
+     )
+   )
+   const allSessions = results.filter(Boolean).flatMap(r => r.sessions)
+
+   // Stage 3 — aggregate: plain code, no agent, no re-summarization
+   const byType = {}
+   for (const s of allSessions) {
+     for (const f of s.frictions || []) {
+       byType[f.type] ??= { type: f.type, count: 0, severitySum: 0, quotes: [] }
+       byType[f.type].count += 1
+       byType[f.type].severitySum += f.severity
+       byType[f.type].quotes.push({ session_id: s.session_id, quote: f.quote })
+     }
+   }
+   const ranked = Object.values(byType)
+     .map(f => ({ ...f, score: f.count * (f.severitySum / f.count) }))
+     .sort((a, b) => b.score - a.score)
+
+   return { sessions: allSessions, ranked_frictions: ranked }
+   ```
+
+   Pass `args: { batches: [...], existingSkills: [...] }` — batches from Step 1's ranked list
+   (chunks of 5), existing skills from Step 2.
+
+3. **Aggregate (deterministic, inside the script above).** Frictions are deduped by `type` and
+   ranked by `count × mean severity` — mechanically, not by an orchestrator eyeballing prose.
+
+**If a Workflow agent call fails (API 529 overloaded):** the failed batch resolves to `null` and
+is dropped via `.filter(Boolean)` — the pipeline keeps going. Don't retry the whole run.
+
+**Goal-based self-check before returning results:** every friction has a real quote traceable to
+the extracted messages (not invented), recurrence counts came from the aggregation code (not a
+guess), and every session record matches the schema. If any of these fail, the run is broken —
+fix the script, don't patch the output by hand.
 
 ---
 
 ## Step 5 — Output Report
 
+Build the report from `ranked_frictions` (already sorted) and the per-session records — don't
+re-derive priority by re-reading prose.
+
 ```markdown
 ## Skill Audit — [N]-week lookback · [MODE] mode
 
 ### New skills to write
-| # | Name | What it does | Evidence | Priority |
-|---|------|-------------|----------|----------|
+| # | Name | What it does | Evidence (verbatim quote + session) | Priority |
+|---|------|-------------|--------------------------------------|----------|
 
 ### Existing skills to update
-| # | Skill | Change needed | Evidence | Priority |
-|---|-------|--------------|----------|----------|
+| # | Skill | Change needed | Evidence (verbatim quote + session) | Priority |
+|---|-------|--------------|--------------------------------------|----------|
 
 ### Friction without a skill fix
-(Agent behavior or user habit patterns — not addressable by writing a skill)
+(Agent behavior or user habit patterns — not addressable by writing a skill; pull straight from
+`ranked_frictions` entries whose `candidate_fix.kind` is `habit` or `none`)
 ```
 
-**Priority rubric:** `high` = user was blocked or fell back to manual; `medium` = repeated corrections to agent; `low` = single occurrence or cosmetic.
+**Priority rubric, derived from the ranked score, not re-judged:** `high` = top third of
+`ranked_frictions` by score; `medium` = middle third; `low` = bottom third.
 
 After the report, offer: _"Want me to `/write-skill` any of these now?"_
 
