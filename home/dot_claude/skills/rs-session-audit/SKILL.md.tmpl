@@ -36,16 +36,30 @@ Examples: `1`, `2 heavy`, `light`, `4 heavy`
 
 ---
 
-## Step 1 — Find Sessions
+## Step 1 — Find and Rank Sessions
+
+File size selects tool-output *volume*, not human interaction — it mostly catches automated
+pipeline/minions dumps with almost no human turns. Rank by unique, non-JSON prose-turn count
+instead.
 
 ```bash
-find ~/.claude/projects -name "*.jsonl" -not -path "*/subagents/*" -mtime -$((N*7)) \
-  | xargs ls -lt 2>/dev/null \
-  | awk '$5 > 50000 {print $NF}' \
-  | head -25
+find ~/.claude/projects -name "*.jsonl" -not -path "*/subagents/*" -not -path "*worktrees*" -mtime -$((N*7)) \
+  | while read -r f; do
+      count=$(jq -r 'select(.type=="user") | select(.isMeta != true) | select(.message.content | type == "string") | .message.content' "$f" \
+        | grep -v "^<local-command\|^<system-reminder" \
+        | grep -vE '^\s*[\{\[]' \
+        | awk 'length > 5 && length < 3000' \
+        | sort -u | wc -l)
+      echo "$count $f"
+    done | sort -rn | head -25 | awk '{print $2}'
 ```
 
-Skips single-turn/ephemeral sessions. Cap at 25.
+`-not -path "*worktrees*"` excludes pipeline worktrees, which are pipeline-internal by
+construction and dilute the ranking with loop noise. If the project set is known to span
+multiple unrelated areas, scope `find` to the interactive project dirs only (e.g. pass explicit
+paths instead of `~/.claude/projects`) rather than relying on the exclusion alone.
+
+Cap at 25 highest-ranked sessions, not the 25 largest.
 
 ---
 
@@ -64,12 +78,17 @@ Keep this list — deduplicate against it in the output.
 ```bash
 jq -r 'select(.type=="user") | select(.isMeta != true) | select(.message.content | type == "string") | .message.content' FILE \
   | grep -v "^<local-command\|^<system-reminder" \
+  | grep -vE '^\s*[\{\[]' \
   | sed 's/<[^>]*>//g' \
-  | awk 'length > 5 && length < 400' \
+  | awk 'length > 5 && length < 3000' \
+  | sort -u \
   | head -25
 ```
 
-Run in a Bash loop across all files. Long strings (>400 chars) are system-loaded skill/context content injected at session start — not user turns.
+Run in a Bash loop across all files. Long strings (>3000 chars) are system-loaded skill/context
+content injected at session start — not user turns. `grep -vE '^\s*[\{\[]'` drops JSON-looking
+tool payloads that slip through as string content. `sort -u` collapses repeated pipeline-loop
+messages so one noisy retry loop doesn't dominate the sample.
 
 ---
 
