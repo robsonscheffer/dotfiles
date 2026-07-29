@@ -100,7 +100,7 @@ do not change with config. Only `base_dir` and `port` vary per user.
 
    ```html
    <link
-     href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Jost:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+     href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap"
      rel="stylesheet"
    />
    <link rel="stylesheet" href="http://localhost:<port>/style/main.css" />
@@ -549,7 +549,7 @@ Hide secondary table columns on mobile with a class:
 ### Theme switcher
 
 Use a plain `<select>` with inline styles — the DaisyUI `select` class breaks
-the compact look. The four valid theme options are exactly:
+the compact look. The two valid theme options are exactly:
 
 ```html
 <select
@@ -558,8 +558,6 @@ the compact look. The four valid theme options are exactly:
 >
   <option value="mate">mate</option>
   <option value="mate-light">mate-light</option>
-  <option value="gruvbox">gruvbox</option>
-  <option value="gruvbox-light">gruvbox-light</option>
 </select>
 ```
 

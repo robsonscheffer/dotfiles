@@ -1,54 +1,59 @@
 # mate design system — token reference
-# Default theme: mate (dark). Four themes available: mate, mate-light, gruvbox, gruvbox-light.
+# Default theme: mate (dark). Two themes available: mate, mate-light.
 # All values are CSS custom properties on [data-theme]. Reference as var(--mate-*) in inline styles.
+#
+# Dark theme second pass: neutral/frame chroma dropped from ~0.016-0.018 to
+# ~0.005-0.008 so surfaces read as clean graphite instead of muddy brown, and
+# accent lightness/chroma raised so colors pop against the dark background
+# instead of desaturating into it. See tokens.css for the full rationale.
 
 palette:
   primary:
     {
-      value: "oklch(57% 0.165 38)",
-      hex: "#c0613a",
+      value: "oklch(64% 0.19 38)",
+      hex: "#e75623",
       name: "Terracotta",
       usage: "Brand, CTAs, active states",
     }
   secondary:
     {
-      value: "oklch(46% 0.085 58)",
-      hex: "#8a6b3c",
+      value: "oklch(64% 0.12 58)",
+      hex: "#c2783a",
       name: "Warm Umber",
       usage: "Secondary actions, accents",
     }
   success:
     {
-      value: "oklch(62% 0.152 155)",
-      hex: "#4da870",
+      value: "oklch(68% 0.15 155)",
+      hex: "#32b36e",
       name: "Sage Green",
       usage: "Success states, done badges",
     }
   warning:
     {
-      value: "oklch(73% 0.162 82)",
-      hex: "#d4a827",
+      value: "oklch(78% 0.16 82)",
+      hex: "#eaab05",
       name: "Amber",
       usage: "Warning states, in-progress",
     }
   error:
     {
-      value: "oklch(59% 0.210 22)",
-      hex: "#d4412a",
+      value: "oklch(65% 0.21 22)",
+      hex: "#f54651",
       name: "Coral Red",
       usage: "Error states, destructive",
     }
   info:
     {
-      value: "oklch(62% 0.150 245)",
-      hex: "#4a82c7",
+      value: "oklch(68% 0.14 245)",
+      hex: "#3f9fe8",
       name: "Steel Blue",
       usage: "Info states, minor severity",
     }
   erva:
     {
-      value: "oklch(62% 0.152 155)",
-      hex: "#4da870",
+      value: "oklch(68% 0.15 155)",
+      hex: "#32b36e",
       name: "Chimarrão",
       usage: "Alternate success, erva mate",
     }
@@ -56,49 +61,49 @@ palette:
 frame:
   bg:
     {
-      value: "oklch(13% 0.013 55)",
-      hex: "#1a160f",
-      name: "Dark Parchment",
+      value: "oklch(15% 0.006 55)",
+      hex: "#0d0b09",
+      name: "Graphite",
       usage: "Page background",
     }
   sidebar:
     {
-      value: "oklch(18% 0.016 55)",
-      hex: "#241e14",
-      name: "Dark Oak",
+      value: "oklch(21% 0.006 55)",
+      hex: "#1b1816",
+      name: "Graphite Sidebar",
       usage: "Sidebar background",
     }
   nav:
     {
-      value: "oklch(11% 0.012 55)",
-      hex: "#150f08",
-      name: "Dark Bark",
+      value: "oklch(10% 0.005 55)",
+      hex: "#040302",
+      name: "Graphite Nav",
       usage: "Top nav background",
     }
   border:
     {
-      value: "oklch(100% 0 0 / 0.08)",
-      hex: "rgba(255,255,255,0.08)",
+      value: "oklch(100% 0 0 / 0.1)",
+      hex: "rgba(255,255,255,0.1)",
       usage: "Dividers on dark surfaces",
     }
   text:
     {
-      value: "oklch(92% 0.010 75)",
-      hex: "#ebe4d9",
+      value: "oklch(93% 0.008 75)",
+      hex: "#ebe7e2",
       name: "Warm White",
       usage: "Primary text on dark",
     }
   muted:
     {
-      value: "oklch(58% 0.020 65)",
-      hex: "#9c8a72",
+      value: "oklch(66% 0.014 65)",
+      hex: "#989189",
       name: "Warm Gray",
       usage: "Secondary text, labels",
     }
   dim:
     {
-      value: "oklch(42% 0.018 60)",
-      hex: "#6e5e4a",
+      value: "oklch(57% 0.013 60)",
+      hex: "#7d7670",
       name: "Dark Tan",
       usage: "Tertiary text, icons",
     }
@@ -134,16 +139,8 @@ themes:
   - id: mate
     label: "mate (dark)"
     color-scheme: dark
-    base-100: "oklch(13% 0.013 55)"
+    base-100: "oklch(15% 0.006 55)"
   - id: mate-light
     label: "mate-light"
     color-scheme: light
     base-100: "oklch(98% 0.008 75)"
-  - id: gruvbox
-    label: "gruvbox (dark)"
-    color-scheme: dark
-    base-100: "#282828"
-  - id: gruvbox-light
-    label: "gruvbox-light"
-    color-scheme: light
-    base-100: "#fbf1c7"

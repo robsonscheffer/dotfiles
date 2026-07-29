@@ -1,15 +1,62 @@
+/*
+ * Each class sets --badge-fg alongside --badge-color. Without it, daisyUI's
+ * base .badge rule defaults --badge-fg to --color-base-content — the page's
+ * main text color — which reads fine against one accent and unreadable
+ * against another (e.g. dark page text on a mid-lightness warning chip).
+ * The *-content tokens are already tuned per-theme for contrast against
+ * their paired color; wire them through instead of falling back to page text.
+ */
 .badge-open {
   --badge-color: var(--color-info);
+  --badge-fg: var(--color-info-content);
 }
 .badge-ready {
   --badge-color: var(--color-secondary);
+  --badge-fg: var(--color-secondary-content);
 }
 .badge-building {
   --badge-color: var(--color-warning);
+  --badge-fg: var(--color-warning-content);
 }
 .badge-done {
   --badge-color: var(--color-success);
+  --badge-fg: var(--color-success-content);
 }
+/*
+ * badge-dropped uses --color-neutral-content, not --color-neutral, as its
+ * --badge-color. --color-neutral is a surface tone (dark in the dark theme,
+ * light in the light theme) meant to sit *behind* content, not serve as
+ * foreground text/border in the badge-soft/badge-outline variants — used
+ * directly it barely contrasts against the page background in either theme
+ * (dark-on-near-black, or light-on-near-white). --color-neutral-content is
+ * tuned to contrast against that surface and, as it happens, also contrasts
+ * well against the page background in both themes.
+ */
 .badge-dropped {
-  --badge-color: var(--color-neutral);
+  --badge-color: var(--color-neutral-content);
+  --badge-fg: var(--color-neutral);
+}
+
+/*
+ * DaisyUI's badge-ghost/badge-soft lean on background lightness deltas as
+ * thin as 4 percentage points against the page in mate-light — the chip
+ * has no visible boundary and reads as fog. Give every badge a real
+ * border regardless of theme, and firm up ghost's fill so it reads as a
+ * distinct element rather than blending into the surface behind it.
+ */
+.badge {
+  border-width: 1px;
+  border-color: var(--mate-frame-border);
+}
+.badge-ghost {
+  background-color: var(--mate-frame-sidebar);
+  border-color: var(--mate-frame-border);
+  color: var(--mate-frame-muted);
+}
+.badge-soft {
+  border-color: color-mix(
+    in oklab,
+    var(--badge-color, var(--color-base-content)) 35%,
+    var(--mate-frame-border)
+  );
 }
