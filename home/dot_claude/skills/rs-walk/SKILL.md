@@ -25,12 +25,19 @@ Run the preflight script. It handles all checks and qmd setup in one call:
 
 ```bash
 SKILL_BIN=~/.claude/skills/rs-walk/bin
-CONTEXT_MODE=$(bash "${SKILL_BIN}/preflight.sh") || exit 1
-# CONTEXT_MODE is now "CONTEXT_MODE=qmd" or "CONTEXT_MODE=grep" — extract the value:
-CONTEXT_MODE="${CONTEXT_MODE#CONTEXT_MODE=}"
+PREFLIGHT_OUT=$(bash "${SKILL_BIN}/preflight.sh") || exit 1
+# PREFLIGHT_OUT has two lines: "CONTEXT_MODE=qmd|grep" and "ARTIFACT_MODE=json|standalone"
+CONTEXT_MODE=$(echo "${PREFLIGHT_OUT}" | grep CONTEXT_MODE | cut -d= -f2)
+ARTIFACT_MODE=$(echo "${PREFLIGHT_OUT}" | grep ARTIFACT_MODE | cut -d= -f2)
 ```
 
 If the script exits non-zero, surface the error message and stop.
+
+`ARTIFACT_MODE=json` means `~/brain/wiki/artifact/artifacts.json` exists — walks get
+appended there and show up in html-artifact's unified index for free.
+`ARTIFACT_MODE=standalone` means it doesn't — fall back to rs-walk's own
+`wiki/walks/index.html`. This is a documented file-format coupling, not a hard
+dependency: rs-walk works fully standalone if html-artifact isn't installed.
 
 Set constants used throughout:
 
@@ -39,9 +46,11 @@ REPORT_TEMPLATE=~/.claude/skills/html-artifact/dist/templates/report.html
 LINT_BIN=~/.claude/skills/html-artifact/bin/lint-artifact.mjs
 WALKS_DIR=~/brain/wiki/walks
 WALKS_INDEX="${WALKS_DIR}/index.html"
+ARTIFACTS_JSON=~/brain/wiki/artifact/artifacts.json
 ```
 
-If `${WALKS_INDEX}` does not exist after preflight, seed it using the **Index Seeding** procedure at the end of this skill.
+If `ARTIFACT_MODE=standalone` and `${WALKS_INDEX}` does not exist after preflight,
+seed it using the **Index Seeding** procedure at the end of this skill.
 
 ---
 
@@ -61,19 +70,19 @@ If no argument provided, ask: "Which PR? (paste the URL)"
 ## Step 2 — Fetch PR data
 
 ```bash
-PR_META=$(gh pr view ${PR_NUMBER} --repo "${REPO}" \
-  --json "number,title,body,author,headRefName,baseRefName,additions,deletions,changedFiles,url,commits")
-
-# Full diff — no truncation, saved to scratchpad
-gh pr diff ${PR_NUMBER} --repo "${REPO}" > /tmp/walk-${PR_NUMBER}.diff
-
-# File list only (for agents)
-gh pr diff ${PR_NUMBER} --repo "${REPO}" --name-only > /tmp/walk-${PR_NUMBER}-files.txt
+bash "${SKILL_BIN}/fetch-pr.sh" "${REPO}" "${PR_NUMBER}"
 ```
 
-If fetch fails, stop with gh error verbatim.
+Writes (and prints the paths to) `/tmp/walk-${PR_NUMBER}-meta.json`, `/tmp/walk-${PR_NUMBER}-body.txt`,
+`/tmp/walk-${PR_NUMBER}.diff`, `/tmp/walk-${PR_NUMBER}-files.txt`. `body` is fetched in a separate
+`gh` call from the rest of the metadata — PR bodies routinely contain control characters (pasted rich
+text, emoji, embedded HTML comments) that break `jq` when bundled into one `--json` blob with the
+other fields. Never re-combine them into a single call.
 
-Store: `PR_META` (JSON), diff at `/tmp/walk-${PR_NUMBER}.diff`, files at `/tmp/walk-${PR_NUMBER}-files.txt`.
+If fetch fails, stop with the script's error verbatim.
+
+Store: `PR_META` = contents of the meta.json path, `PR_BODY` = contents of the body.txt path, diff at
+`/tmp/walk-${PR_NUMBER}.diff`, files at `/tmp/walk-${PR_NUMBER}-files.txt`.
 
 ---
 
@@ -113,6 +122,12 @@ Dispatch all four simultaneously. Pass to every agent:
 - `PR_META` (full JSON)
 - `FILE_LIST` (contents of `/tmp/walk-${PR_NUMBER}-files.txt`)
 - First 400 lines of `/tmp/walk-${PR_NUMBER}.diff`
+
+**Supplementary question:** if the user's invocation included something beyond the PR URL (e.g.
+"also explain X" or "and what does Y mean here"), dispatch a 5th agent scoped to that question,
+reading whatever part of the diff or codebase it needs. This is explanatory, not reviewer-facing —
+it goes in its own content section right after "The story" (see Step 5), not folded into Questions
+or Risks. Return plain text (not JSON) capped at ~300 words.
 
 ### Agent 1 — Story + reading map
 
@@ -209,425 +224,112 @@ Do not soften. Do not inflate. "None identified" only if genuinely true.
 
 ## Step 5 — Assemble walk.html
 
-### Derive path
+### Save Step 4's agent outputs to disk
+
+Write each agent's returned JSON to its own file — `build-walk.py` reads them directly:
+
+```bash
+# story JSON  → /tmp/walk-${PR_NUMBER}-story.json      {story, groups:[...]}
+# questions   → /tmp/walk-${PR_NUMBER}-questions.json   [...]
+# risks       → /tmp/walk-${PR_NUMBER}-risks.json       [...]
+# judgment    → /tmp/walk-${PR_NUMBER}-judgment.json    {fit, risks_summary, gaps, overall}
+```
+
+Build the context JSON from Step 3's results:
+
+```bash
+# /tmp/walk-${PR_NUMBER}-context.json
+# {"mode": "qmd"|"grep", "items": [...]}
+#   qmd items:  [{path, score, snippet}, ...]
+#   grep items: ["path", ...]
+#   empty items -> script renders the standard "nothing found" fallback verbatim
+```
+
+If the user's invocation included a supplementary question alongside the PR URL (e.g. "also explain
+X"), dispatch one extra agent scoped to that question (see Step 4 note) and write its answer to
+`/tmp/walk-${PR_NUMBER}-extra.json` as `[{"title": "...", "body": "..."}]`. Omit `--extra-sections`
+entirely if there's nothing supplementary — don't pass an empty file.
+
+### Check for an existing walk
 
 ```bash
 SLUG=$(echo "${PR_META}" | jq -r '.title' | tr '[:upper:]' '[:lower:]' | \
   sed 's/[^a-z0-9 ]//g' | tr ' ' '-' | cut -c1-40 | sed 's/-$//')
 WALK_DIR=~/brain/wiki/walks/pr-$(echo "${PR_META}" | jq -r '.number')-${SLUG}
-mkdir -p "${WALK_DIR}"
-WALK_HTML="${WALK_DIR}/walk.html"
-META_JSON="${WALK_DIR}/meta.json"
 ```
 
-If `${WALK_DIR}` already exists, ask: "Overwrite existing walk at `${WALK_DIR}`? [y/N]"
+If `${WALK_DIR}` already exists, ask: "Overwrite existing walk at `${WALK_DIR}`? [y/N]" before
+passing `--force` below.
 
-### Parse diff per group
-
-For each file in each group returned by Agent 1, render the diff using the script:
+### Build the walk
 
 ```bash
-bash "${SKILL_BIN}/render-diff.sh" "/tmp/walk-${PR_NUMBER}.diff" "{filepath}"
+WALK_TODAY=$(date +%Y-%m-%d) python3 "${SKILL_BIN}/build-walk.py" \
+  --pr-meta /tmp/walk-${PR_NUMBER}-meta.json \
+  --diff /tmp/walk-${PR_NUMBER}.diff \
+  --story /tmp/walk-${PR_NUMBER}-story.json \
+  --questions /tmp/walk-${PR_NUMBER}-questions.json \
+  --risks /tmp/walk-${PR_NUMBER}-risks.json \
+  --judgment /tmp/walk-${PR_NUMBER}-judgment.json \
+  --context /tmp/walk-${PR_NUMBER}-context.json \
+  --repo "${REPO}" \
+  --tags "{2-3 topic words, comma separated}" \
+  [--extra-sections /tmp/walk-${PR_NUMBER}-extra.json] \
+  [--force]
 ```
 
-Wrap the output in a collapsible `<details>` block (open by default). Show the basename in the
-summary; show the directory path muted on the right. Chevron rotates on toggle via JS.
+This does everything that used to be manual in this step: derives the slug, renders each group's
+diffs via `render-diff.sh`, fills the report template, injects the sticky rail and toggle JS, strips
+template boilerplate (DS showcase nav, hardcoded stats block), opens all links in a new tab, writes
+`meta.json` (auto-extracting `PROJ-XXXX`-style ticket IDs from the title and merging them with
+`--tags`), and runs the lint binary — printing violations to stderr if any remain. It prints the walk
+directory path on success.
 
-```html
-<details open class="diff-block" style="margin-bottom:1.25rem;">
-  <summary
-    style="list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;"
-    title="{filepath}"
-  >
-    <div
-      class="diff-file-header"
-      style="flex:1;margin:0;border-radius:0;border-bottom:none;display:flex;align-items:center;gap:0.5rem;"
-    >
-      <span
-        class="diff-toggle-icon"
-        style="font-size:11px;color:var(--mate-frame-dim);display:inline-block;"
-        >&#x25BC;</span
-      >
-      <span style="font-family:var(--mate-font-mono);font-size:14px;"
-        >{basename}</span
-      >
-      <span
-        style="font-size:14px;color:var(--mate-frame-dim);font-family:var(--mate-font-mono);margin-left:auto;opacity:0.5;"
-        >{dirname}/</span
-      >
-    </div>
-  </summary>
-  {script output}
-</details>
-```
+The template has 2 pre-existing violations (`inlined-css`, `no-stylesheet`) plus 2 `small-font`
+violations in the nav/footer chrome — all at lines before the `<!-- CONTENT -->` insertion point.
+These are expected for a self-contained file; the script already warns about this. If the script
+reports _other_ violations, something in the agent-supplied JSON produced bad HTML — read the
+violation, fix the source JSON or the script, and re-run with `--force`.
 
-Add this JS once before the first group (via a `<script>` block injected into the content):
-
-```html
-<script>
-  (function () {
-    document.addEventListener("DOMContentLoaded", function () {
-      document.querySelectorAll("details.diff-block").forEach((d) => {
-        d.addEventListener("toggle", function () {
-          const icon = this.querySelector(".diff-toggle-icon");
-          if (icon)
-            icon.style.transform = this.open
-              ? "rotate(0deg)"
-              : "rotate(-90deg)";
-        });
-      });
-    });
-    window.__walkToggleAll = function (open) {
-      document.querySelectorAll("details.diff-block").forEach((d) => {
-        d.open = open;
-      });
-    };
-  })();
-</script>
-```
-
-Add expand/collapse controls above each group's diff blocks:
-
-```html
-<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
-  <button
-    onclick="__walkToggleAll(true)"
-    style="font-size:14px;font-family:var(--mate-font-body);color:var(--mate-frame-muted);background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;"
-  >
-    expand all
-  </button>
-  <button
-    onclick="__walkToggleAll(false)"
-    style="font-size:14px;font-family:var(--mate-font-body);color:var(--mate-frame-muted);background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;"
-  >
-    collapse all
-  </button>
-</div>
-```
-
-Risks from Agent 3 are collected and rendered in the sticky right rail (not inline before diffs).
-
-### Build the HTML document
-
-Read `${REPORT_TEMPLATE}`. Fill the slots:
-
-**`<!-- TITLE -->`** (all 3 occurrences):
-
-```
-Walk: #{number} · {title}
-```
-
-**`<!-- DATE -->`** (both occurrences): today's date `YYYY-MM-DD`
-
-**`<!-- ADDITIONAL META BADGES -->`**:
-
-```html
-<span class="badge badge-building">{headRefName}</span>
-<span
-  class="badge"
-  style="background:var(--mate-frame-sidebar);color:var(--mate-frame-muted);"
-  >{CONTEXT_MODE}</span
->
-```
-
-**`<!-- FOOTER LINK -->`**:
-
-```html
-<a href="{PR_URL}" style="color:var(--mate-primary);"
-  >Open PR #{number} on GitHub ↗</a
->
-```
-
-**`<!-- CONTENT -->`**: replace with the full walkthrough body below.
-
-### Walkthrough content structure
-
-**IMPORTANT — grid column order:**
-`.spec-layout` CSS is `grid-template-columns: minmax(0, 1fr) 220px`.
-First child → wide content column. Second child → narrow sticky rail.
-The `<div>` (main content) MUST come first; `<aside class="spec-rail">` MUST come second.
-Swapping them crushes the content into 220px.
-
-**IMPORTANT — grid overflow (recurring bug):**
-The content column is `1fr`, but a `1fr` grid track defaults to `min-width: auto`, so
-long non-wrapping diff lines (rendered `<pre>`/code with no soft wraps) blow the track
-past the viewport and crush the 220px rail. Two guards, apply BOTH:
-
-1. Grid track: use `minmax(0, 1fr)` (not bare `1fr`) so the track can shrink below content width.
-2. Content child: give the first `<div>` `style="min-width:0;overflow-x:auto;"` so long
-   diffs scroll inside the column instead of expanding it.
-
-The rail is sticky — it follows the user as they scroll. Apply this CSS override after injecting content:
-
-```html
-<style>
-  .spec-layout {
-    grid-template-columns: minmax(0, 1fr) 220px;
-  }
-  .spec-rail {
-    position: sticky;
-    top: 3.5rem;
-    max-height: calc(100vh - 4rem);
-    overflow-y: auto;
-  }
-</style>
-```
-
-```html
-<div class="spec-layout">
-  <div style="min-width:0;overflow-x:auto;">
-
-    <!-- CONTEXT SECTION -->
-    <section style="margin-bottom:2rem;">
-      <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">Context</h2>
-      <!-- If CONTEXT_RESULTS has entries, render as a list -->
-      <!-- If nothing found, render the "first walk" message in muted text -->
-      {CONTEXT_RESULTS rendered as <ul> or <p style="color:var(--mate-frame-muted);">}
-    </section>
-
-    <!-- STORY SECTION -->
-    <section style="margin-bottom:2.5rem;">
-      <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">The story</h2>
-      <p style="font-size:15px;line-height:1.7;color:var(--mate-frame-text);">{story}</p>
-    </section>
-
-    <!-- DIFF SECTIONS — one per group from Agent 1 -->
-    <!-- Section label: Inter bold uppercase (body font at small size reads better than display serif at uppercase) -->
-    <!-- Group title: Cormorant at 1.4rem/600 weight. Number rendered as a small Inter chip before the title text. -->
-    {for each group:}
-    <section style="margin-bottom:2.5rem;">
-      <h2 style="font-family:var(--mate-font-display);font-size:1.4rem;font-weight:600;margin-bottom:0.25rem;line-height:1.2;">
-        <span style="font-size:0.7rem;font-family:var(--mate-font-body);font-weight:700;color:var(--mate-frame-muted);letter-spacing:0.1em;vertical-align:middle;margin-right:0.5em;">{group_number}</span>{group.title}
-      </h2>
-      <p style="font-size:14px;color:var(--mate-frame-muted);margin-bottom:1rem;">{group.framing}</p>
-
-      {if group.note:}
-      <div class="spec-decision" style="margin-bottom:1rem;">
-        {group.note}
-      </div>
-
-      <!-- Collapsible diff block for each file in this group (open by default) -->
-      {for each file in group.files:}
-      <details open class="diff-block" style="margin-bottom:1.25rem;">
-        <summary style="list-style:none;cursor:pointer;..." title="{filepath}">
-          <div class="diff-file-header" style="flex:1;...">
-            <span class="diff-toggle-icon">&#x25BC;</span>
-            <span>{basename}</span>
-            <span style="margin-left:auto;opacity:0.5;">{dirname}/</span>
-          </div>
-        </summary>
-        {rendered diff lines}
-      </details>
-    </section>
-
-    <!-- QUESTIONS -->
-    <section style="margin-bottom:2.5rem;">
-      <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:1rem;">Bring your questions</h2>
-      {for each question:}
-      <div class="spec-decision" style="margin-bottom:1rem;">
-        <strong style="font-size:14px;">{question.title}</strong>
-        <p style="margin:0.5rem 0;font-size:14px;">{question.question}</p>
-        <code style="font-family:var(--mate-font-mono);font-size:14px;color:var(--mate-frame-muted);">{question.pointer}</code>
-      </div>
-    </section>
-
-    <!-- YOUR NOTES -->
-    <section style="margin-bottom:2.5rem;border-top:1px solid rgba(255,255,255,0.06);padding-top:2rem;">
-      <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">Your notes</h2>
-      <p style="color:var(--mate-frame-dim);font-size:14px;font-style:italic;">Fill in as you read. What you caught, what you approved, what surprised you.</p>
-      <div style="margin-top:0.75rem;min-height:4rem;border-bottom:1px solid rgba(255,255,255,0.08);"></div>
-    </section>
-
-    <!-- JUDGMENT — hidden until revealed -->
-    <details style="margin-bottom:2rem;">
-      <summary style="cursor:pointer;font-family:var(--mate-font-body);font-size:14px;color:var(--mate-frame-dim);padding:0.5rem 0;user-select:none;">
-        ▸ Reveal judgment — read your notes first
-      </summary>
-      <div style="margin-top:1.5rem;padding:1.5rem;background:rgba(255,255,255,0.02);border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
-        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;">
-          <span style="font-family:var(--mate-font-display);font-size:1.1rem;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.08em;">Judgment</span>
-          <span class="badge {badge-class-by-overall}">{overall}</span>
-        </div>
-        <p style="font-size:14px;margin-bottom:1rem;"><strong>Fit:</strong> {fit}</p>
-        {if gaps non-empty:}
-        <div style="margin-bottom:1rem;">
-          <strong style="font-size:14px;color:var(--mate-frame-muted);">Gaps</strong>
-          <ul style="margin-top:0.5rem;font-size:14px;">
-            {for each gap: <li>{gap}</li>}
-          </ul>
-        </div>
-      </div>
-    </details>
-
-  </div>
-
-  <!-- RAIL — second child gets the 220px column. Sticky: follows the user. -->
-  <aside class="spec-rail">
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">AUTHOR</span>
-      <span class="spec-rail-value">{author.login}</span>
-    </div>
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">PR</span>
-      <span class="spec-rail-value">
-        <a href="{url}" style="color:var(--mate-primary);">#{number}</a>
-      </span>
-    </div>
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">REPO</span>
-      <span class="spec-rail-value" style="font-size:14px;word-break:break-all;">{REPO}</span>
-    </div>
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">CHANGES</span>
-      <span class="spec-rail-value">
-        <span style="color:var(--mate-success);">+{additions}</span>
-        <span style="color:var(--mate-error);">−{deletions}</span>
-        <br><span style="color:var(--mate-frame-muted);font-size:14px;">{changedFiles} files</span>
-      </span>
-    </div>
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">BRANCH</span>
-      <span class="spec-rail-value" style="font-size:14px;word-break:break-all;">{headRefName}</span>
-    </div>
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">CONTEXT</span>
-      <span class="spec-rail-value">{CONTEXT_MODE}</span>
-    </div>
-    {if risks non-empty:}
-    <div class="spec-rail-row" style="border-top:1px solid var(--mate-frame-border);">
-      <span class="spec-rail-label">RISKS</span>
-    </div>
-    <div class="spec-rail-row">
-      {for each risk:}
-      <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:10px;">
-        <span style="color:var(--mate-warning);font-size:11px;flex-shrink:0;margin-top:1px;">⚠</span>
-        <span style="font-size:11px;color:var(--mate-frame-text);line-height:1.4;">{risk.title}</span>
-      </div>
-    </div>
-  </aside>
-
-</div>
-```
-
-Badge class by overall:
-
-- `strong` → `badge-done`
-- `solid` → `badge-building`
-- `cautious` → `badge-open` with warning color
-- `concern` → `badge-open` with error color (use inline style)
-
-### Write meta.json
-
-```json
-{
-  "pr": {number},
-  "url": "{PR_URL}",
-  "title": "{title}",
-  "author": "{author.login}",
-  "repo": "{REPO}",
-  "date": "{today}",
-  "tags": [],
-  "context_mode": "{CONTEXT_MODE}",
-  "verdict": null,
-  "your_notes": "",
-  "judgment_overall": "{overall}",
-  "judgment_risks": [{risks_summary}],
-  "delta": ""
-}
-```
-
-Tags: extract from PR title — any ticket IDs (RETIRE-XXXX), repo slug, and 2–3 topic words.
-
-### Strip template boilerplate
-
-The report template has a hardcoded stats block and example issue table that appear after
-`<!-- CONTENT -->` in the DOM, and a top nav header (`mate-ds` logo + Components / Reports /
-Specs / Prototypes / Blog links) meant for browsing the DS showcase — those links 404 from
-inside a walk directory and have nothing to do with a PR review. Strip all of it before linting:
-
-```python
-import re
-
-with open(WALK_HTML) as f: html = f.read()
-
-# 1. Replace the DS showcase nav header with a walk-specific one.
-# The template ships two header markups depending on report.html revision —
-# match whichever is present.
-variant_a = re.compile(
-    r'<div class="flex-1 flex items-center gap-6">.*?</div>\s*\n\s*</header>',
-    re.DOTALL,
-)
-variant_b = re.compile(
-    r'<div class="flex-1 flex items-center gap-6 min-w-0">.*?</div>\s*\n(\s*<select)',
-    re.DOTALL,
-)
-walk_link = f'#{PR_NUMBER} · {TITLE}'
-if variant_a.search(html):
-    html = variant_a.sub(
-        '<div class="flex-1 flex items-center gap-6">\n'
-        '        <a href="../index.html" style="font-family: var(--mate-font-display); '
-        'font-size: 18px; color: var(--mate-frame-text); text-decoration: none;">'
-        'walk-<em style="color: var(--mate-primary); font-weight: 400">review</em></a>\n'
-        f'        <span class="text-sm" style="color: var(--mate-frame-muted)">{walk_link}</span>\n'
-        '        <a class="text-sm" style="color: var(--mate-frame-muted); margin-left: auto" '
-        'href="../index.html">← All walks</a>\n'
-        '      </div>\n    </header>',
-        html, count=1,
-    )
-elif variant_b.search(html):
-    html = variant_b.sub(
-        '<div class="flex-1 flex items-center gap-6 min-w-0">\n'
-        '        <a href="../index.html" style="font-family: var(--mate-font-display); '
-        'font-size: 18px; color: var(--mate-frame-text); white-space: nowrap; text-decoration: none;">'
-        'walk-<em style="color: var(--mate-primary); font-weight: 400">review</em></a>\n'
-        f'        <span class="text-sm" style="color: var(--mate-frame-muted); min-width: 0; '
-        f'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{walk_link}</span>\n'
-        '        <a class="text-sm" style="color: var(--mate-frame-muted); margin-left: auto; '
-        'white-space: nowrap;" href="../index.html">← All walks</a>\n'
-        '      </div>\n      \\1',
-        html, count=1,
-    )
-
-# 2. Remove template's hardcoded stats block + example issue table
-html = re.sub(
-    r'\n\s*<div\s+class="stats shadow[^"]*".*?</div>\s*\n\s*(?=<footer)',
-    '\n      ', html, flags=re.DOTALL
-)
-
-# 3. Open all links in a new tab
-def add_target(m):
-    tag = m.group(0)
-    if 'target=' in tag:
-        return tag
-    return tag[:-1] + ' target="_blank" rel="noopener noreferrer">'
-html = re.sub(r'<a\s[^>]+>', add_target, html)
-
-with open(WALK_HTML, 'w') as f: f.write(html)
-```
-
-`PR_NUMBER` and `TITLE` are the same values already written into `meta.json` above.
-
-### Lint
+If lint passes (or only the 4 template-origin violations remain), open:
 
 ```bash
-node "${LINT_BIN}" "${WALK_HTML}"
-```
-
-The template itself has 2 pre-existing violations (`inlined-css`, `no-stylesheet`) — these
-are expected for a self-contained file. Fix any violations in your added content; skip
-template-origin violations at lines before the `<!-- CONTENT -->` insertion point.
-
-If lint passes (or only pre-existing template violations remain), open:
-
-```bash
-open "${WALK_HTML}"
+open "${WALK_DIR}/walk.html"
 ```
 
 ---
 
 ## Step 6 — Update walks index
 
-Read `~/brain/wiki/walks/index.html`. Find `<!-- walks: one <tr> per review -->`. Insert before it:
+Branch on `ARTIFACT_MODE` from Step 0.
+
+**`ARTIFACT_MODE=json`** — append one object to `${ARTIFACTS_JSON}`:
+
+```json
+{
+  "title": "#{number} — {title}",
+  "type": "walk",
+  "tier": "wiki",
+  "created": "{today}",
+  "url": null,
+  "file": "../walks/pr-{number}-{slug}/walk.html"
+}
+```
+
+The `file` path is browser-relative from `/artifacts/index.html`; html-artifact's
+server has a separate `/walks/` → `wiki/walks/` static route, so `../walks/...`
+resolves correctly. Use `jq` to append:
+
+```bash
+jq --arg title "#{number} — {title}" \
+   --arg created "{today}" \
+   --arg file "../walks/pr-{number}-{slug}/walk.html" \
+   '. += [{"title": $title, "type": "walk", "tier": "wiki", "created": $created, "url": null, "file": $file}]' \
+   "${ARTIFACTS_JSON}" > "${ARTIFACTS_JSON}.tmp" && mv "${ARTIFACTS_JSON}.tmp" "${ARTIFACTS_JSON}"
+```
+
+**`ARTIFACT_MODE=standalone`** — read `~/brain/wiki/walks/index.html`. Find
+`<!-- walks: one <tr> per review -->`. Insert before it:
 
 ```html
 <tr>
@@ -651,10 +353,10 @@ Read `~/brain/wiki/walks/index.html`. Find `<!-- walks: one <tr> per review -->`
 </tr>
 ```
 
-Commit:
+Commit (either mode):
 
 ```bash
-git -C ~/brain add wiki/walks/
+git -C ~/brain add wiki/walks/ wiki/artifact/artifacts.json 2>/dev/null
 git -C ~/brain commit -m "chore: walk pr-{number} {title truncated to 60 chars}"
 ```
 
@@ -753,7 +455,10 @@ git -C ~/brain commit -m "chore: walk pr-${PR_NUMBER} learning entry"
 
 ---
 
-## Index Seeding (first-run only)
+## Index Seeding (first-run only, `ARTIFACT_MODE=standalone` only)
+
+Skip this entirely when `ARTIFACT_MODE=json` — html-artifact's own
+`wiki/artifact/index.html` already exists and renders `type: "walk"` entries.
 
 When `~/brain/wiki/walks/index.html` does not exist:
 

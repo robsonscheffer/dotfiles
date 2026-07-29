@@ -47,15 +47,15 @@ while genuinely out of disk space.
 
 ## Reading the report
 
-| Section                          | Meaning                                                                                             | Action                                                                         |
-| -------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Worktrees — SAFE TO REMOVE       | Merged PR + clean tree, or orphaned (`.git` points at a deleted gitdir)                             | Run the printed command after a glance, no further check needed                |
-| Worktrees — JUDGMENT CALLS       | Closed-not-merged (abandoned?), no PR found, or a persistent `scratch` worktree whose branch merged | Read the reason, decide, then act                                              |
-| Worktrees — ACTIVE / LEAVE ALONE | Dirty tree, or committed today                                                                      | Do not touch                                                                   |
-| git gc candidates                | Large `.git` in a daily-driver checkout (not a worktree)                                            | `git gc --aggressive` reclaims real space without deleting anything you'd miss |
-| Downloads installers             | `.dmg`/`.pkg` files                                                                                 | Confirm the app is already in `/Applications`, then bulk-remove                |
-| Toolchain/app installs           | Android SDK, Xcode, colima, etc.                                                                    | Never auto-delete — ask the human first                                        |
-| Caches                           | Regenerate on next `npm`/`go`/`mise` run                                                            | Lowest-value win — only worth it as an emergency pressure valve                |
+| Section | Meaning | Action |
+|---|---|---|
+| Worktrees — SAFE TO REMOVE | Merged PR + clean tree, or orphaned (`.git` points at a deleted gitdir) | Run the printed command after a glance, no further check needed |
+| Worktrees — JUDGMENT CALLS | Closed-not-merged (abandoned?), no PR found, or a persistent `scratch` worktree whose branch merged | Read the reason, decide, then act |
+| Worktrees — ACTIVE / LEAVE ALONE | Dirty tree, or committed today | Do not touch |
+| git gc candidates | Large `.git` in a daily-driver checkout (not a worktree) | `git gc --aggressive` reclaims real space without deleting anything you'd miss |
+| Downloads installers | `.dmg`/`.pkg` files | Confirm the app is already in `/Applications`, then bulk-remove |
+| Toolchain/app installs | Android SDK, Xcode, colima, etc. | Never auto-delete — ask the human first |
+| Caches | Regenerate on next `npm`/`go`/`mise` run | Lowest-value win — only worth it as an emergency pressure valve |
 
 ## Worktree classification logic
 
