@@ -139,17 +139,20 @@ TOGGLE_JS = """
         });
       });
     });
-    window.__walkToggleAll = function (open) {
-      document.querySelectorAll("details.diff-block").forEach((d) => { d.open = open; });
+    window.__walkToggleAll = function () {
+      const blocks = document.querySelectorAll("details.diff-block");
+      const btn = document.getElementById("walk-toggle-all");
+      const anyOpen = Array.from(blocks).some((d) => d.open);
+      blocks.forEach((d) => { d.open = !anyOpen; });
+      if (btn) btn.textContent = anyOpen ? "expand all" : "collapse all";
     };
   })();
 </script>
 """
 
 EXPAND_CONTROLS = """
-<div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
-  <button onclick="__walkToggleAll(true)" style="font-size:14px;font-family:var(--mate-font-body);color:var(--mate-frame-muted);background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;">expand all</button>
-  <button onclick="__walkToggleAll(false)" style="font-size:14px;font-family:var(--mate-font-body);color:var(--mate-frame-muted);background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;">collapse all</button>
+<div style="margin-bottom:1rem;">
+  <button id="walk-toggle-all" onclick="__walkToggleAll()" style="font-size:14px;font-family:var(--mate-font-body);color:var(--mate-frame-muted);background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;">collapse all</button>
 </div>
 """
 
@@ -279,12 +282,16 @@ def main():
         )
         sections.append(f"""
 <section style="margin-bottom:2.5rem;">
-  <h2 style="font-family:var(--mate-font-display);font-size:1.4rem;font-weight:600;margin-bottom:0.25rem;line-height:1.2;">
+  <h2 style="position:sticky;top:3.25rem;z-index:5;background:var(--mate-frame-bg);padding:0.6rem 0;margin:0 0 0.25rem;border-bottom:1px solid var(--mate-frame-border);font-family:var(--mate-font-display);font-size:1.4rem;font-weight:600;line-height:1.2;">
     <span style="font-size:0.7rem;font-family:var(--mate-font-body);font-weight:700;color:var(--mate-frame-muted);letter-spacing:0.1em;vertical-align:middle;margin-right:0.5em;">{i:02d}</span>{esc(group['title'])}
   </h2>
-  <p style="font-size:14px;color:var(--mate-frame-text);margin-bottom:1rem;">{esc(group['framing'])}</p>
+  <p style="font-size:14px;color:var(--mate-frame-text);margin:1rem 0;">{esc(group['framing'])}</p>
   {note_html}
   {files_html}
+  <div class="walk-note" data-section="{i}" style="margin-top:1.25rem;">
+    <textarea placeholder="Note on this section…" style="width:100%;min-height:2.5rem;resize:vertical;background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;color:var(--mate-frame-text);font-family:var(--mate-font-body);font-size:13px;padding:0.5rem;box-sizing:border-box;"></textarea>
+    <span class="walk-note-status" style="font-size:11px;color:var(--mate-frame-dim);"></span>
+  </div>
 </section>
 """)
 
@@ -304,13 +311,25 @@ def main():
 </section>
 """)
 
-    sections.append("""
-<section style="margin-bottom:2.5rem;border-top:1px solid rgba(255,255,255,0.06);padding-top:2rem;">
-  <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">Your notes</h2>
-  <p style="color:var(--mate-frame-dim);font-size:14px;font-style:italic;">Fill in as you read. What you caught, what you approved, what surprised you.</p>
-  <div style="margin-top:0.75rem;min-height:4rem;border-bottom:1px solid rgba(255,255,255,0.08);"></div>
-</section>
-""")
+    notes_js = f"""
+<script>
+  (function () {{
+    var prNum = "{number}";
+    document.querySelectorAll(".walk-note textarea").forEach(function (ta) {{
+      var key = "walk-note-" + prNum + "-" + ta.closest(".walk-note").dataset.section;
+      ta.value = localStorage.getItem(key) || "";
+      var status = ta.nextElementSibling;
+      ta.addEventListener("input", function () {{
+        localStorage.setItem(key, ta.value);
+        status.textContent = "saved";
+        clearTimeout(ta._t);
+        ta._t = setTimeout(function () {{ status.textContent = ""; }}, 1200);
+      }});
+    }});
+  }})();
+</script>
+"""
+    sections.append(notes_js)
 
     overall = judgment_data["overall"]
     badge_class, extra_style = BADGE_CLASS_BY_OVERALL.get(overall, ("badge-open", ""))
@@ -335,19 +354,40 @@ def main():
   </div>
 """
 
+    verdict_buttons = "".join(
+        f'<button onclick="__walkRevealJudgment(\'{v}\')" style="font-size:13px;padding:0.3rem 0.7rem;border-radius:4px;border:1px solid var(--mate-frame-border);background:var(--mate-frame-sidebar);color:var(--mate-frame-text);cursor:pointer;">{v}</button>'
+        for v in ("strong", "solid", "cautious", "concern")
+    )
     sections.append(f"""
-<details style="margin-bottom:2rem;">
-  <summary style="cursor:pointer;font-family:var(--mate-font-body);font-size:14px;color:var(--mate-frame-dim);padding:0.5rem 0;user-select:none;">&#9656; Reveal judgment — read your notes first</summary>
-  <div style="margin-top:1.5rem;padding:1.5rem;background:rgba(255,255,255,0.02);border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
-    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;">
-      <span style="font-family:var(--mate-font-display);font-size:1.1rem;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.08em;">Judgment</span>
-      <span class="badge {badge_class}"{extra_style}>{esc(overall)}</span>
-    </div>
-    <p style="font-size:14px;margin-bottom:1rem;"><strong>Fit:</strong> {esc(judgment_data['fit'])}</p>
-    {risks_summary_html}
-    {gaps_html}
+<div id="walk-judgment-gate" style="margin-bottom:2rem;">
+  <p style="font-family:var(--mate-font-body);font-size:14px;color:var(--mate-frame-dim);margin-bottom:0.5rem;">Before you see the AI's judgment — what's yours?</p>
+  <div style="display:flex;gap:0.5rem;">
+    {verdict_buttons}
   </div>
-</details>
+</div>
+<div id="walk-judgment-body" style="display:none;margin-bottom:2rem;padding:1.5rem;background:rgba(255,255,255,0.02);border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+  <p id="walk-your-verdict" style="font-size:13px;color:var(--mate-frame-dim);margin-bottom:1rem;"></p>
+  <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;">
+    <span style="font-family:var(--mate-font-display);font-size:1.1rem;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.08em;">Judgment</span>
+    <span class="badge {badge_class}"{extra_style}>{esc(overall)}</span>
+  </div>
+  <p style="font-size:14px;margin-bottom:1rem;"><strong>Fit:</strong> {esc(judgment_data['fit'])}</p>
+  {risks_summary_html}
+  {gaps_html}
+</div>
+<script>
+  window.__walkRevealJudgment = function (yourVerdict) {{
+    var gate = document.getElementById("walk-judgment-gate");
+    var body = document.getElementById("walk-judgment-body");
+    var yours = document.getElementById("walk-your-verdict");
+    var aiVerdict = "{overall}";
+    yours.textContent = yourVerdict === aiVerdict
+      ? "You called it \\"" + yourVerdict + "\\" — matches."
+      : "You called it \\"" + yourVerdict + "\\" — the AI landed on \\"" + aiVerdict + "\\".";
+    gate.style.display = "none";
+    body.style.display = "block";
+  }};
+</script>
 """)
 
     content_main = "".join(sections)
@@ -407,7 +447,7 @@ def main():
   .spec-rail {{ position: sticky; top: 3.25rem; max-height: calc(100vh - 3.75rem); overflow-y: auto; }}
 </style>
 <div class="spec-layout">
-  <div style="min-width:0;overflow-x:auto;">
+  <div style="min-width:0;">
     {content_main}
   </div>
   {rail}

@@ -104,11 +104,13 @@ lines.forEach((line, i) => {
 });
 
 // 6. Missing theme switcher
-if (!sanitized.includes("setTheme")) {
+// setTheme = the dropdown <select> convention; toggleTheme = the icon-button
+// convention (e.g. rs-walk's walk-template.html). Either is a valid theme switch.
+if (!sanitized.includes("setTheme") && !sanitized.includes("toggleTheme")) {
   hit(
     1,
     "no-theme-switcher",
-    'Missing theme switcher — add <select id="theme-switcher" onchange="setTheme(this.value)"> and setTheme() JS',
+    'Missing theme switcher — add a <select id="theme-switcher"> + setTheme() JS, or an icon-button toggle + toggleTheme() JS',
   );
 }
 

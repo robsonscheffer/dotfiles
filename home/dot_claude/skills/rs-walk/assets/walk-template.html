@@ -31,54 +31,49 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 10px 24px;
+        padding: 10px 40px;
         background: var(--mate-frame-nav);
         border-bottom: 1px solid var(--mate-frame-border);
       "
     >
-      <span
+      <a
+        href="<!-- BACK_LINK -->"
+        title="Back to all walks"
         style="
           font-family: var(--mate-font-display);
           font-size: 17px;
           color: var(--mate-frame-text);
           white-space: nowrap;
           flex-shrink: 0;
+          text-decoration: none;
         "
         >walk-<em style="color: var(--mate-primary); font-weight: 400"
           >review</em
-        ></span
+        ></a
       >
       <span style="flex: 1"></span>
-      <select
-        id="theme-switcher"
-        onchange="setTheme(this.value)"
+      <button
+        id="theme-toggle"
+        onclick="toggleTheme()"
+        aria-label="Toggle light/dark theme"
         style="
-          font-family: var(--mate-font-body);
-          font-size: 12px;
-          color: var(--mate-frame-muted);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 28px;
+          height: 28px;
           background: var(--mate-frame-sidebar);
           border: 1px solid var(--mate-frame-border);
           border-radius: 6px;
-          padding: 3px 8px;
           cursor: pointer;
-          outline: none;
-          flex-shrink: 0;
-        "
-      >
-        <option value="mate">mate</option>
-        <option value="mate-light">mate-light</option>
-      </select>
-      <a
-        href="<!-- BACK_LINK -->"
-        style="
-          font-family: var(--mate-font-body);
-          font-size: 13px;
           color: var(--mate-frame-muted);
-          white-space: nowrap;
+          font-size: 14px;
+          line-height: 1;
           flex-shrink: 0;
         "
-        >&#8592; All walks</a
       >
+        <span id="theme-icon"></span>
+      </button>
     </header>
 
     <main style="padding: 32px 40px 80px">
@@ -101,16 +96,22 @@
     </main>
 
     <script>
-      function setTheme(v) {
-        document.documentElement.setAttribute("data-theme", v);
-        localStorage.setItem("mate-theme", v);
-        var s = document.getElementById("theme-switcher");
-        if (s) s.value = v;
-      }
-      var sel = document.getElementById("theme-switcher");
-      if (sel)
-        sel.value =
+      function updateThemeIcon() {
+        var current =
           document.documentElement.getAttribute("data-theme") || "mate";
+        var icon = document.getElementById("theme-icon");
+        // Icon shows the theme a click switches TO, not the active one.
+        if (icon) icon.textContent = current === "mate" ? "☀" : "☾";
+      }
+      function toggleTheme() {
+        var current =
+          document.documentElement.getAttribute("data-theme") || "mate";
+        var next = current === "mate" ? "mate-light" : "mate";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("mate-theme", next);
+        updateThemeIcon();
+      }
+      updateThemeIcon();
     </script>
   </body>
 </html>

@@ -17709,7 +17709,7 @@ body {
   font-family: var(--mate-font-mono);
   border-radius: 8px;
   font-size: 12px;
-  overflow: hidden;
+  overflow: auto hidden;
 }
 .diff-file-header {
   background: var(--mate-frame-text);

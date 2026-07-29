@@ -1,8 +1,19 @@
+/*
+ * overflow-x:auto lets long diff lines scroll within their own block instead
+ * of forcing the page (or a grid column) wider. overflow-y is set explicitly
+ * alongside it — leaving it unset makes the browser compute it as auto too,
+ * which silently turns this element into a scroll container for anything
+ * position:sticky inside a page that scrolls past it. Not an issue for
+ * .diff-block itself (nothing sticky lives inside), but the same mistake one
+ * level up (on a wrapping content column) breaks sticky section headers
+ * against the real page scroll.
+ */
 .diff-block {
   background: var(--mate-frame-sidebar);
   border: 1px solid var(--mate-frame-border);
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   font-family: var(--mate-font-mono);
   font-size: 12px;
 }
