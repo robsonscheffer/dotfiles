@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en" data-theme="mate">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><!-- TITLE --></title>
+    <script>
+      (function () {
+        var t = localStorage.getItem("mate-theme");
+        if (!t)
+          t = matchMedia("(prefers-color-scheme: dark)").matches
+            ? "mate"
+            : "mate-light";
+        document.documentElement.setAttribute("data-theme", t);
+      })();
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist:wght;500;600;700&family=Geist+Mono:wght;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- MAIN_CSS -->
+  </head>
+  <body>
+    <div class="grain"></div>
+
+    <header
+      style="
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 24px;
+        background: var(--mate-frame-nav);
+        border-bottom: 1px solid var(--mate-frame-border);
+      "
+    >
+      <span
+        style="
+          font-family: var(--mate-font-display);
+          font-size: 17px;
+          color: var(--mate-frame-text);
+          white-space: nowrap;
+          flex-shrink: 0;
+        "
+        >walk-<em style="color: var(--mate-primary); font-weight: 400"
+          >review</em
+        ></span
+      >
+      <span style="flex: 1"></span>
+      <select
+        id="theme-switcher"
+        onchange="setTheme(this.value)"
+        style="
+          font-family: var(--mate-font-body);
+          font-size: 12px;
+          color: var(--mate-frame-muted);
+          background: var(--mate-frame-sidebar);
+          border: 1px solid var(--mate-frame-border);
+          border-radius: 6px;
+          padding: 3px 8px;
+          cursor: pointer;
+          outline: none;
+          flex-shrink: 0;
+        "
+      >
+        <option value="mate">mate</option>
+        <option value="mate-light">mate-light</option>
+      </select>
+      <a
+        href="<!-- BACK_LINK -->"
+        style="
+          font-family: var(--mate-font-body);
+          font-size: 13px;
+          color: var(--mate-frame-muted);
+          white-space: nowrap;
+          flex-shrink: 0;
+        "
+        >&#8592; All walks</a
+      >
+    </header>
+
+    <main style="padding: 32px 40px 80px">
+      <!-- CONTENT -->
+
+      <footer
+        style="
+          margin-top: 80px;
+          border-top: 1px solid var(--mate-frame-border);
+          padding-top: 16px;
+          font-size: 13px;
+          color: var(--mate-frame-dim);
+          font-family: var(--mate-font-body);
+        "
+      >
+        Generated
+        <!-- DATE -->
+        · rs-walk skill
+      </footer>
+    </main>
+
+    <script>
+      function setTheme(v) {
+        document.documentElement.setAttribute("data-theme", v);
+        localStorage.setItem("mate-theme", v);
+        var s = document.getElementById("theme-switcher");
+        if (s) s.value = v;
+      }
+      var sel = document.getElementById("theme-switcher");
+      if (sel)
+        sel.value =
+          document.documentElement.getAttribute("data-theme") || "mate";
+    </script>
+  </body>
+</html>

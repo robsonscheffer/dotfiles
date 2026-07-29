@@ -14,7 +14,9 @@ version: 0.3.0
 Takes a PR URL. Builds a scrollable HTML walkthrough you read instead of the GitHub diff.
 No slides. The document is the review surface. GitHub is only for submitting.
 
-Requires: `gh` CLI. Depends on: html-artifact DS (report template + lint binary).
+Requires: `gh` CLI. Depends on: html-artifact DS (compiled mate-ds stylesheet + lint binary).
+rs-walk owns its own document template (`assets/walk-template.html`) — it does not
+borrow or patch html-artifact's report template.
 Optional: `qmd` for semantic brain search (falls back to grep).
 
 ---
@@ -37,13 +39,15 @@ If the script exits non-zero, surface the error message and stop.
 appended there and show up in html-artifact's unified index for free.
 `ARTIFACT_MODE=standalone` means it doesn't — fall back to rs-walk's own
 `wiki/walks/index.html`. This is a documented file-format coupling, not a hard
-dependency: rs-walk works fully standalone if html-artifact isn't installed.
+dependency. The only remaining runtime dependency on html-artifact at all is
+its compiled stylesheet (inlined into every walk.html at build time, same as
+html-artifact's own singlefile build does) and its lint binary — both have
+sane defaults baked into `build-walk.py` and can be overridden with
+`--main-css` / `--lint-bin` if html-artifact ever moves.
 
 Set constants used throughout:
 
 ```bash
-REPORT_TEMPLATE=~/.claude/skills/html-artifact/dist/templates/report.html
-LINT_BIN=~/.claude/skills/html-artifact/bin/lint-artifact.mjs
 WALKS_DIR=~/brain/wiki/walks
 WALKS_INDEX="${WALKS_DIR}/index.html"
 ARTIFACTS_JSON=~/brain/wiki/artifact/artifacts.json
@@ -279,17 +283,21 @@ WALK_TODAY=$(date +%Y-%m-%d) python3 "${SKILL_BIN}/build-walk.py" \
 ```
 
 This does everything that used to be manual in this step: derives the slug, renders each group's
-diffs via `render-diff.sh`, fills the report template, injects the sticky rail and toggle JS, strips
-template boilerplate (DS showcase nav, hardcoded stats block), opens all links in a new tab, writes
-`meta.json` (auto-extracting `PROJ-XXXX`-style ticket IDs from the title and merging them with
-`--tags`), and runs the lint binary — printing violations to stderr if any remain. It prints the walk
-directory path on success.
+diffs via `render-diff.sh`, inlines the compiled mate-ds stylesheet, builds the sticky top bar
+(wordmark, theme switcher, "all walks" link only — no title, no badges, kept deliberately quiet
+since it never leaves the viewport) and an in-content title block at the top of the wide column
+(repo eyebrow, PR title linked to GitHub, branch pill — sized as a document heading, not a hero),
+injects the sticky rail and toggle JS, opens all links in a new tab, writes `meta.json`
+(auto-extracting `PROJ-XXXX`-style ticket IDs from the title and merging them with `--tags`), and
+runs the lint binary — printing violations to stderr if any remain. It prints the walk directory
+path on success.
 
-The template has 2 pre-existing violations (`inlined-css`, `no-stylesheet`) plus 2 `small-font`
-violations in the nav/footer chrome — all at lines before the `<!-- CONTENT -->` insertion point.
-These are expected for a self-contained file; the script already warns about this. If the script
-reports _other_ violations, something in the agent-supplied JSON produced bad HTML — read the
-violation, fix the source JSON or the script, and re-run with `--force`.
+The template has 1 pre-existing violation (`inlined-css`) plus several `small-font` violations
+inside the inlined stylesheet and the header/footer chrome — all template-origin, not from agent
+content. These are expected for a self-contained file; the script already warns about this. If the
+script reports violations tied to a line inside the actual content (story, diffs, questions,
+judgment), something in the agent-supplied JSON produced bad HTML — read the violation, fix the
+source JSON or the script, and re-run with `--force`.
 
 If lint passes (or only the 4 template-origin violations remain), open:
 

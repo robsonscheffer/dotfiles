@@ -5,6 +5,13 @@ output (Step 4's four JSON schemas) plus a PR diff.
 This is a deterministic transcription of SKILL.md Step 5 into code, so every
 walk gets byte-identical structure regardless of which agent run built it.
 
+rs-walk owns its own template (assets/walk-template.html) — it does not
+borrow and patch html-artifact's report.html. It still depends on
+html-artifact for the compiled mate-ds stylesheet (inlined at build time
+below, same as html-artifact's own singlefile build does) and the lint
+binary, but the walk document's structure, header, and layout are rs-walk's
+own and can evolve independently.
+
 Usage:
   build-walk.py \
     --pr-meta /tmp/walk-N-meta.json \
@@ -17,10 +24,12 @@ Usage:
     --repo org/repo \
     --extra-sections /tmp/walk-N-extra.json \
     [--render-diff-bin path/to/render-diff.sh] \
-    [--template path/to/report.html] \
+    [--template path/to/walk-template.html] \
+    [--main-css path/to/main.css] \
     [--lint-bin path/to/lint-artifact.mjs] \
     [--tags "PROJ-1234,topic-a,topic-b"] \
     [--out-root ~/brain/wiki/walks] \
+    [--back-link ../index.html] \
     [--force]
 
 Inputs:
@@ -49,10 +58,13 @@ import re
 import subprocess
 import sys
 
-DEFAULT_RENDER_DIFF = os.path.join(os.path.dirname(os.path.abspath(__file__)), "render-diff.sh")
-DEFAULT_TEMPLATE = os.path.expanduser("~/.claude/skills/html-artifact/dist/templates/report.html")
+SKILL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_RENDER_DIFF = os.path.join(SKILL_DIR, "bin", "render-diff.sh")
+DEFAULT_TEMPLATE = os.path.join(SKILL_DIR, "assets", "walk-template.html")
+DEFAULT_MAIN_CSS = os.path.expanduser("~/.claude/skills/html-artifact/dist/style/main.css")
 DEFAULT_LINT_BIN = os.path.expanduser("~/.claude/skills/html-artifact/bin/lint-artifact.mjs")
 DEFAULT_OUT_ROOT = os.path.expanduser("~/brain/wiki/walks")
+DEFAULT_BACK_LINK = "../index.html"
 
 BADGE_CLASS_BY_OVERALL = {
     "strong": ("badge-done", ""),
@@ -177,9 +189,11 @@ def main():
     ap.add_argument("--extra-sections", default=None)
     ap.add_argument("--render-diff-bin", default=DEFAULT_RENDER_DIFF)
     ap.add_argument("--template", default=DEFAULT_TEMPLATE)
+    ap.add_argument("--main-css", default=DEFAULT_MAIN_CSS)
     ap.add_argument("--lint-bin", default=DEFAULT_LINT_BIN)
     ap.add_argument("--tags", default="")
     ap.add_argument("--out-root", default=DEFAULT_OUT_ROOT)
+    ap.add_argument("--back-link", default=DEFAULT_BACK_LINK)
     ap.add_argument("--force", action="store_true", help="overwrite an existing walk dir")
     args = ap.parse_args()
 
@@ -218,19 +232,25 @@ def main():
     html = read_text(args.template)
 
     full_title = f"Walk: #{number} · {title}"
-    html = html.replace("<!-- TITLE -->", full_title)
+    html = html.replace("<!-- TITLE -->", esc(full_title))
     html = html.replace("<!-- DATE -->", today)
 
-    badges = (
-        f'<span class="badge badge-building">{esc(head_ref)}</span>\n'
-        f'<span style="background:var(--mate-frame-sidebar);color:var(--mate-frame-muted);">{esc(context_mode)}</span>'
-    )
-    html = html.replace("<!-- ADDITIONAL META BADGES -->", badges)
+    main_css = read_text(args.main_css)
+    html = html.replace("<!-- MAIN_CSS -->", f"<style>{main_css}</style>")
 
-    footer_link = f'<a href="{url}" style="color:var(--mate-primary);">Open PR #{number} on GitHub &#8599;</a>'
-    html = html.replace("<!-- FOOTER LINK -->", footer_link)
+    html = html.replace("<!-- BACK_LINK -->", args.back_link)
 
-    sections = [render_context_section(context)]
+    title_block = f"""
+<div style="margin-bottom:20px;">
+  <div style="font-family:var(--mate-font-mono);font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--mate-frame-dim);margin-bottom:6px;">{esc(args.repo)}</div>
+  <h1 style="margin:0 0 8px;">
+    <a href="{url}" target="_blank" rel="noopener noreferrer" style="font-family:var(--mate-font-display);font-size:1.75rem;font-weight:600;line-height:1.3;color:var(--mate-frame-text);text-decoration:none;">{esc(title)}</a>
+  </h1>
+  <span class="badge badge-ghost" style="font-family:var(--mate-font-mono);font-size:11px;">{esc(head_ref)}</span>
+</div>
+"""
+
+    sections = [title_block, render_context_section(context)]
 
     sections.append(f"""
 <section style="margin-bottom:2.5rem;">
@@ -384,7 +404,7 @@ def main():
     full_content = f"""
 <style>
   .spec-layout {{ grid-template-columns: minmax(0, 1fr) 220px; }}
-  .spec-rail {{ position: sticky; top: 3.5rem; max-height: calc(100vh - 4rem); overflow-y: auto; }}
+  .spec-rail {{ position: sticky; top: 3.25rem; max-height: calc(100vh - 3.75rem); overflow-y: auto; }}
 </style>
 <div class="spec-layout">
   <div style="min-width:0;overflow-x:auto;">
@@ -395,49 +415,6 @@ def main():
 """
 
     html = html.replace("<!-- CONTENT -->", full_content, 1)
-
-    # Strip template's hardcoded stats block + example issue table
-    html = re.sub(
-        r'\n\s*<div\s+class="stats shadow[^"]*".*?</div>\s*\n\s*(?=<footer)',
-        '\n      ', html, flags=re.DOTALL,
-    )
-
-    walk_link = f"#{number} &middot; {esc(title)}"
-    variant_a = re.compile(
-        r'<div class="flex-1 flex items-center gap-6">.*?</div>\s*\n\s*</header>',
-        re.DOTALL,
-    )
-    variant_b = re.compile(
-        r'<div class="flex-1 flex items-center gap-6 min-w-0">.*?</div>\s*\n(\s*<select)',
-        re.DOTALL,
-    )
-    if variant_a.search(html):
-        html = variant_a.sub(
-            '<div class="flex-1 flex items-center gap-6">\n'
-            '        <a href="../index.html" style="font-family: var(--mate-font-display); '
-            'font-size: 18px; color: var(--mate-frame-text); text-decoration: none;">'
-            'walk-<em style="color: var(--mate-primary); font-weight: 400">review</em></a>\n'
-            f'        <span class="text-sm" style="color: var(--mate-frame-muted)">{walk_link}</span>\n'
-            '        <a class="text-sm" style="color: var(--mate-frame-muted); margin-left: auto" '
-            'href="../index.html">&#8592; All walks</a>\n'
-            '      </div>\n    </header>',
-            html, count=1,
-        )
-    elif variant_b.search(html):
-        html = variant_b.sub(
-            '<div class="flex-1 flex items-center gap-6 min-w-0">\n'
-            '        <a href="../index.html" style="font-family: var(--mate-font-display); '
-            'font-size: 18px; color: var(--mate-frame-text); white-space: nowrap; text-decoration: none;">'
-            'walk-<em style="color: var(--mate-primary); font-weight: 400">review</em></a>\n'
-            f'        <span class="text-sm" style="color: var(--mate-frame-muted); min-width: 0; '
-            f'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{walk_link}</span>\n'
-            '        <a class="text-sm" style="color: var(--mate-frame-muted); margin-left: auto; '
-            'white-space: nowrap;" href="../index.html">&#8592; All walks</a>\n'
-            '      </div>\n      \\1',
-            html, count=1,
-        )
-    else:
-        print("WARNING: nav header variant not found in template — not replaced", file=sys.stderr)
 
     def add_target(m):
         tag = m.group(0)
@@ -472,9 +449,9 @@ def main():
         print(lint.stdout, file=sys.stderr)
         print(lint.stderr, file=sys.stderr)
         print("WARNING: lint violations found — review before opening. "
-              "Violations at lines before the <!-- CONTENT --> insertion point "
-              "are template-origin and expected (inlined-css, no-stylesheet, "
-              "small-font in nav/footer).", file=sys.stderr)
+              "Violations inside the inlined <style> block or the header/footer "
+              "chrome are template-origin and expected (inlined-css, no-stylesheet, "
+              "small-font in nav/footer/rail-label).", file=sys.stderr)
 
     print(walk_dir)
 
