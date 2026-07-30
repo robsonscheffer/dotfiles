@@ -43,10 +43,14 @@ Inputs:
                  qmd items: [{path, score, snippet}]
                  grep items: ["path", ...]
                  empty items -> renders the standard "nothing found" fallback
-  --extra-sections  optional JSON: [{title, body}] — supplementary content
-                 sections (e.g. answering a side question the user asked
-                 alongside the PR URL) inserted after "The story" and before
-                 the diff groups. Omit if there's nothing supplementary.
+  --extra-sections  optional JSON: [{title, body}] or [{title, html}] —
+                 supplementary content sections (e.g. answering a side
+                 question the user asked alongside the PR URL) inserted
+                 after "The story" and before the diff groups. `body` is
+                 escaped plain text (white-space:pre-line). `html` is
+                 inserted raw — use for code comparisons/tables; caller is
+                 responsible for escaping any untrusted content within it.
+                 Omit the whole option if there's nothing supplementary.
 
 Writes <out-root>/pr-<number>-<slug>/walk.html and meta.json. Prints the
 walk directory path to stdout on success.
@@ -263,10 +267,11 @@ def main():
 """)
 
     for extra in extra_sections:
+        body_html = extra["html"] if extra.get("html") else f'<div class="spec-decision" style="font-size:14px;line-height:1.7;white-space:pre-line;">{esc(extra["body"])}</div>'
         sections.append(f"""
 <section style="margin-bottom:2.5rem;">
   <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">{esc(extra['title'])}</h2>
-  <div class="spec-decision" style="font-size:14px;line-height:1.7;white-space:pre-line;">{esc(extra['body'])}</div>
+  {body_html}
 </section>
 """)
 
