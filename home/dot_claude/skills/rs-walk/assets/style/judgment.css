@@ -6,10 +6,8 @@
 
 /* ── The gate ─────────────────────────────────────────────────────────────── */
 
-/* Left-aligned, not centred: everything above it in the walk hangs off the same
-   left edge, and a centred block reads as drifting rather than as a finale. */
+/* Full width like the rest of the walk, with the prompt centred inside it. */
 .judgment-gate {
-  max-width: 44rem;
   margin: 4rem 0;
   padding: 2rem 1.75rem;
   border: 1px dashed var(--mate-frame-border);
@@ -100,28 +98,27 @@
 
 /* ── The card ─────────────────────────────────────────────────────────────── */
 
+/* Full width, like every other block in the walk. Surface and radius come from
+   surfaces.css; the only thing that sets this card apart is the verdict
+   hairline and the scale of the type — it earns emphasis without a shadow
+   nothing else in the document has. Measure is controlled per-element inside. */
 .judgment-card {
-  max-width: 52rem;
   margin: 4rem 0;
   padding: 2rem 2.25rem 2.25rem;
-  border: 1px solid var(--mate-frame-border);
   border-top: 3px solid var(--verdict-tone, var(--mate-frame-border));
-  border-radius: var(--radius-box);
-  background: var(--mate-frame-sidebar);
-  /* Enough lift to out-weigh the question callouts above it. */
-  box-shadow:
-    0 1px 2px oklch(0% 0 0 / 0.05),
-    0 12px 32px oklch(0% 0 0 / 0.1);
 }
 
 /* ── Header: verdict left, agreement right, one row ───────────────────────── */
 
+/* Verdict and agreement share a row, but the pair stays at reading measure
+   rather than stretching the agreement pill to the far edge of a wide card. */
 .judgment-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1.5rem 2rem;
+  gap: 1.5rem 2.5rem;
   flex-wrap: wrap;
+  max-width: 52rem;
   margin-bottom: 1.75rem;
 }
 
@@ -190,7 +187,7 @@
 /* ── Fit — the lead statement ─────────────────────────────────────────────── */
 
 .judgment-fit {
-  max-width: 40rem;
+  max-width: 60ch;
   font-family: var(--mate-font-display);
   font-size: 1.2rem;
   font-weight: 400;
@@ -207,11 +204,9 @@
   gap: 1rem;
 }
 
+/* Surface and radius from surfaces.css — recessed inside the card. */
 .judgment-panel {
   padding: 1.1rem 1.25rem 1.25rem;
-  border: 1px solid var(--mate-frame-border);
-  border-radius: var(--radius-field);
-  background: var(--mate-frame-bg);
 }
 
 .judgment-panel-head {

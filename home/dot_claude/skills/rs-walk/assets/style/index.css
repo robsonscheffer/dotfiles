@@ -8,6 +8,10 @@
 /* INCLUDE: style/fonts.css */
 /* INCLUDE: style/tokens.css */
 /* INCLUDE: style/reset.css */
+/* surfaces.css is the base layer for every block's material — it comes before
+   the components so they can refine it (e.g. the judgment card's verdict
+   hairline overriding border-top). */
+/* INCLUDE: style/surfaces.css */
 /* INCLUDE: style/page-layout.css */
 /* INCLUDE: style/code-diff.css */
 /* INCLUDE: style/lifecycle-badge.css */

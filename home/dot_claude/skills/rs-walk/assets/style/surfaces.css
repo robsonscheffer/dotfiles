@@ -1,0 +1,68 @@
+/* One surface language for the whole walk.
+
+   Before this, every block invented its own: diff blocks at 8px radius, question
+   callouts at 6px, note fields at 4px, and the judgment card carried a shadow
+   nothing else had. A reading document should feel like one material.
+
+   Two roles only:
+     surface — a container you read *into* (diff block, note, judgment card)
+     callout — an aside tinted by role (question, section note)
+
+   Depth comes from nesting a recessed surface inside a raised one, not from
+   shadows. Shadows on a page with a dozen diff blocks read as noise. */
+
+.diff-block,
+.judgment-card,
+.walk-note textarea {
+  background: var(--mate-frame-sidebar);
+  border: 1px solid var(--mate-frame-border);
+  border-radius: var(--radius-box);
+}
+
+/* Recessed: a surface sitting inside another surface. */
+.judgment-panel {
+  background: var(--mate-frame-bg);
+  border: 1px solid var(--mate-frame-border);
+  border-radius: var(--radius-field);
+}
+
+/* Callouts keep their tinted left bar and set their own radius in
+   spec-decision.css — same scale, different shape. */
+
+/* ── Per-section notes ────────────────────────────────────────────────────── */
+/* Was a pile of inline style= in build-walk.py, at its own radius and padding. */
+
+.walk-note {
+  margin-top: 1.25rem;
+}
+
+.walk-note textarea {
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.75rem;
+  color: var(--mate-frame-text);
+  font-family: var(--mate-font-body);
+  font-size: 13px;
+  line-height: 1.55;
+  transition: border-color 0.14s;
+}
+
+.walk-note textarea::placeholder {
+  color: var(--mate-frame-dim);
+}
+
+.walk-note textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.walk-note-status {
+  display: inline-block;
+  margin-top: 0.3rem;
+  font-family: var(--mate-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mate-frame-dim);
+}

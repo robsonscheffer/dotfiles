@@ -8,10 +8,8 @@
  * level up (on a wrapping content column) breaks sticky section headers
  * against the real page scroll.
  */
+/* Surface, border and radius come from surfaces.css. */
 .diff-block {
-  background: var(--mate-frame-sidebar);
-  border: 1px solid var(--mate-frame-border);
-  border-radius: 8px;
   overflow-x: auto;
   overflow-y: hidden;
   font-family: var(--mate-font-mono);

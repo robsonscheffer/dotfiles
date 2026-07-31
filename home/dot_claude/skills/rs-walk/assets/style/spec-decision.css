@@ -1,7 +1,7 @@
 .spec-decision {
   background: color-mix(in oklab, var(--color-primary) 8%, transparent);
   border-left: 3px solid var(--mate-primary);
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 var(--radius-box) var(--radius-box) 0;
   padding: 12px 16px;
   margin: 12px 0;
   font-size: 14px;

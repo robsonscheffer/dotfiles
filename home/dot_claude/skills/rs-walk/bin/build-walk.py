@@ -325,9 +325,9 @@ def main():
   <p style="font-size:14px;color:var(--mate-frame-text);margin:1rem 0;">{esc(group['framing'])}</p>
   {note_html}
   {files_html}
-  <div class="walk-note" data-section="{i}" style="margin-top:1.25rem;">
-    <textarea placeholder="Note on this section…" style="width:100%;min-height:2.5rem;resize:vertical;background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;color:var(--mate-frame-text);font-family:var(--mate-font-body);font-size:13px;padding:0.5rem;box-sizing:border-box;"></textarea>
-    <span class="walk-note-status" style="font-size:11px;color:var(--mate-frame-dim);"></span>
+  <div class="walk-note" data-section="{i}">
+    <textarea placeholder="Note on this section&#8230;"></textarea>
+    <span class="walk-note-status"></span>
   </div>
 </section>
 """)
