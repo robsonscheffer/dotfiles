@@ -1,0 +1,281 @@
+/* The judgment reveal — the last thing a reviewer reads, and the only place the
+   document argues back. It gets composed layout rather than a bulleted dump. */
+
+/* ── The gate ─────────────────────────────────────────────────────────────── */
+
+.judgment-gate {
+  margin: 3rem 0;
+  padding: 1.75rem;
+  border: 1px dashed var(--mate-frame-border);
+  border-radius: var(--radius-box);
+  text-align: center;
+}
+
+.judgment-gate-eyebrow {
+  font-family: var(--mate-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mate-frame-dim);
+}
+
+.judgment-gate-ask {
+  font-family: var(--mate-font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--mate-frame-text);
+  margin: 0.5rem 0 0.35rem;
+}
+
+.judgment-gate-hint {
+  font-size: 13px;
+  color: var(--mate-frame-dim);
+  margin-bottom: 1.25rem;
+}
+
+.verdict-scale {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.verdict-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 9999px;
+  border: 1px solid var(--mate-frame-border);
+  background: var(--mate-frame-sidebar);
+  color: var(--mate-frame-muted);
+  font-family: var(--mate-font-body);
+  font-size: 13px;
+  font-weight: 500;
+  transition:
+    border-color 0.14s,
+    color 0.14s,
+    transform 0.14s;
+}
+
+.verdict-chip::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.verdict-chip:hover {
+  transform: translateY(-1px);
+  color: var(--mate-frame-text);
+  border-color: var(--chip-tone, var(--mate-frame-text));
+}
+
+.verdict-chip:hover::before {
+  opacity: 1;
+  background: var(--chip-tone, currentColor);
+}
+
+.verdict-chip[data-verdict="strong"] {
+  --chip-tone: var(--mate-success);
+}
+.verdict-chip[data-verdict="solid"] {
+  --chip-tone: var(--mate-info);
+}
+.verdict-chip[data-verdict="cautious"] {
+  --chip-tone: var(--mate-warning);
+}
+.verdict-chip[data-verdict="concern"] {
+  --chip-tone: var(--mate-error);
+}
+
+/* ── The reveal ───────────────────────────────────────────────────────────── */
+
+.judgment-card {
+  margin: 3rem 0;
+  border: 1px solid var(--mate-frame-border);
+  border-radius: var(--radius-box);
+  background: var(--mate-frame-sidebar);
+  overflow: hidden;
+}
+
+/* A hairline in the verdict's own colour — the card states its conclusion
+   before a word is read. */
+.judgment-card::before {
+  content: "";
+  display: block;
+  height: 3px;
+  background: var(--verdict-tone, var(--mate-frame-border));
+}
+
+.judgment-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  padding: 1.4rem 1.75rem 1.1rem;
+  border-bottom: 1px solid var(--mate-frame-border);
+}
+
+.judgment-head-label {
+  font-family: var(--mate-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mate-frame-dim);
+}
+
+.judgment-verdict {
+  font-family: var(--mate-font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--verdict-tone, var(--mate-frame-text));
+}
+
+/* ── Agreement strip — the actual beat of the reveal ──────────────────────── */
+
+.judgment-agreement {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.85rem 1.75rem;
+  font-size: 13px;
+  line-height: 1.5;
+  border-bottom: 1px solid var(--mate-frame-border);
+}
+
+.judgment-agreement-icon {
+  font-size: 14px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.judgment-agreement[data-state="match"] {
+  color: var(--mate-frame-muted);
+}
+.judgment-agreement[data-state="match"] .judgment-agreement-icon {
+  color: var(--mate-success);
+}
+
+/* Divergence is the interesting outcome, so it gets the weight. */
+.judgment-agreement[data-state="diverge"] {
+  color: var(--mate-frame-text);
+  background: color-mix(in oklab, var(--mate-warning) 9%, transparent);
+}
+.judgment-agreement[data-state="diverge"] .judgment-agreement-icon {
+  color: var(--mate-warning);
+}
+
+.judgment-agreement strong {
+  font-weight: 600;
+  color: var(--mate-frame-text);
+}
+
+/* ── Fit — the lead statement, not a bullet ───────────────────────────────── */
+
+.judgment-fit {
+  padding: 1.5rem 1.75rem;
+  font-family: var(--mate-font-display);
+  font-size: 1.05rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--mate-frame-text);
+  border-bottom: 1px solid var(--mate-frame-border);
+}
+
+/* ── Risks and gaps, side by side ─────────────────────────────────────────── */
+
+.judgment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
+.judgment-panel {
+  padding: 1.35rem 1.75rem 1.6rem;
+}
+
+.judgment-panel + .judgment-panel {
+  border-left: 1px solid var(--mate-frame-border);
+}
+
+.judgment-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.9rem;
+}
+
+.judgment-panel-title {
+  font-family: var(--mate-font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mate-frame-muted);
+}
+
+.judgment-panel-count {
+  font-family: var(--mate-font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: var(--mate-frame-bg);
+  border: 1px solid var(--mate-frame-border);
+  color: var(--mate-frame-dim);
+}
+
+.judgment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.judgment-list li {
+  position: relative;
+  padding-left: 1.1rem;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--mate-frame-text);
+}
+
+/* Marker doubles as the panel's colour key — risks warn, gaps are neutral. */
+.judgment-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
+  transform: rotate(45deg);
+  background: var(--marker-tone, var(--mate-frame-dim));
+}
+
+.judgment-panel[data-kind="risks"] .judgment-list {
+  --marker-tone: var(--mate-warning);
+}
+.judgment-panel[data-kind="gaps"] .judgment-list {
+  --marker-tone: var(--mate-info);
+}
+
+.judgment-empty {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--mate-frame-dim);
+}
+
+@media (max-width: 640px) {
+  .judgment-panel + .judgment-panel {
+    border-left: none;
+    border-top: 1px solid var(--mate-frame-border);
+  }
+}

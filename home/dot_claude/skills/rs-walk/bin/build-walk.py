@@ -79,6 +79,19 @@ BADGE_CLASS_BY_OVERALL = {
     "concern": ("badge-open", ' style="background:var(--mate-error);color:#fff;"'),
 }
 
+# Ordered worst-to-best matters: the reveal measures how far the reviewer's call
+# sat from the AI's, and a two-step gap reads differently from one.
+VERDICT_SCALE = ["strong", "solid", "cautious", "concern"]
+
+# Four distinct hues, or the scale reads as two. --mate-erva resolves to the
+# same green as --mate-success, so "solid" borrows info-blue instead.
+VERDICT_TONE = {
+    "strong": "var(--mate-success)",
+    "solid": "var(--mate-info)",
+    "cautious": "var(--mate-warning)",
+    "concern": "var(--mate-error)",
+}
+
 
 def esc(s):
     # Quotes included — esc() output lands in attributes (e.g. title="...").
@@ -377,58 +390,83 @@ def main():
     overall = judgment_data["overall"]
     badge_class, extra_style = BADGE_CLASS_BY_OVERALL.get(overall, ("badge-open", ""))
 
-    gaps_html = ""
-    if judgment_data.get("gaps"):
-        gaps_items = "".join(f"<li>{esc(g)}</li>" for g in judgment_data["gaps"])
-        gaps_html = f"""
-  <div style="margin-bottom:1rem;">
-    <strong style="font-size:14px;color:var(--mate-frame-muted);">Gaps</strong>
-    <ul style="margin-top:0.5rem;font-size:14px;">{gaps_items}</ul>
-  </div>
-"""
+    def judgment_panel(kind, label, items):
+        if items:
+            body = ('<ul class="judgment-list">'
+                    + "".join(f"<li>{esc(i)}</li>" for i in items)
+                    + "</ul>")
+            count = f'<span class="judgment-panel-count">{len(items)}</span>'
+        else:
+            body = f'<p class="judgment-empty">None called out.</p>'
+            count = ""
+        return f"""
+  <div class="judgment-panel" data-kind="{kind}">
+    <div class="judgment-panel-head">
+      <span class="judgment-panel-title">{label}</span>{count}
+    </div>
+    {body}
+  </div>"""
 
-    risks_summary_html = ""
-    if judgment_data.get("risks_summary"):
-        rs_items = "".join(f"<li>{esc(r)}</li>" for r in judgment_data["risks_summary"])
-        risks_summary_html = f"""
-  <div style="margin-bottom:1rem;">
-    <strong style="font-size:14px;color:var(--mate-frame-muted);">Risks</strong>
-    <ul style="margin-top:0.5rem;font-size:14px;">{rs_items}</ul>
-  </div>
-"""
+    panels = (judgment_panel("risks", "Risks", judgment_data.get("risks_summary", []))
+              + judgment_panel("gaps", "Gaps", judgment_data.get("gaps", [])))
 
-    verdict_buttons = "".join(
-        f'<button onclick="__walkRevealJudgment(\'{v}\')" style="font-size:13px;padding:0.3rem 0.7rem;border-radius:4px;border:1px solid var(--mate-frame-border);background:var(--mate-frame-sidebar);color:var(--mate-frame-text);cursor:pointer;">{v}</button>'
-        for v in ("strong", "solid", "cautious", "concern")
+    verdict_chips = "".join(
+        f'<button class="verdict-chip" data-verdict="{v}" '
+        f"onclick=\"__walkRevealJudgment('{v}')\">{v}</button>"
+        for v in VERDICT_SCALE
     )
+    tone = VERDICT_TONE.get(overall, "var(--mate-frame-dim)")
+
     sections.append(f"""
-<div id="walk-judgment-gate" style="margin-bottom:2rem;">
-  <p style="font-family:var(--mate-font-body);font-size:14px;color:var(--mate-frame-dim);margin-bottom:0.5rem;">Before you see the AI's judgment — what's yours?</p>
-  <div style="display:flex;gap:0.5rem;">
-    {verdict_buttons}
-  </div>
+<div class="judgment-gate" id="walk-judgment-gate">
+  <div class="judgment-gate-eyebrow">Sealed until you commit</div>
+  <p class="judgment-gate-ask">What's your read?</p>
+  <p class="judgment-gate-hint">
+    Pick one and the AI's judgment unseals. Yours first — that's the point.
+  </p>
+  <div class="verdict-scale">{verdict_chips}</div>
 </div>
-<div id="walk-judgment-body" style="display:none;margin-bottom:2rem;padding:1.5rem;background:rgba(255,255,255,0.02);border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
-  <p id="walk-your-verdict" style="font-size:13px;color:var(--mate-frame-dim);margin-bottom:1rem;"></p>
-  <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem;">
-    <span style="font-family:var(--mate-font-display);font-size:1.1rem;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.08em;">Judgment</span>
-    <span class="badge {badge_class}"{extra_style}>{esc(overall)}</span>
+
+<div class="judgment-card" id="walk-judgment-body" hidden style="--verdict-tone:{tone};">
+  <div class="judgment-head">
+    <span class="judgment-head-label">AI judgment</span>
+    <span class="judgment-verdict">{esc(overall)}</span>
   </div>
-  <p style="font-size:14px;margin-bottom:1rem;"><strong>Fit:</strong> {esc(judgment_data['fit'])}</p>
-  {risks_summary_html}
-  {gaps_html}
+  <div class="judgment-agreement" id="walk-your-verdict">
+    <span class="judgment-agreement-icon" id="walk-verdict-icon"></span>
+    <span id="walk-verdict-text"></span>
+  </div>
+  <p class="judgment-fit">{esc(judgment_data['fit'])}</p>
+  <div class="judgment-grid">{panels}
+  </div>
 </div>
 <script>
   window.__walkRevealJudgment = function (yourVerdict) {{
-    var gate = document.getElementById("walk-judgment-gate");
+    var SCALE = {json.dumps(VERDICT_SCALE)};
+    var ai = {json.dumps(overall)};
+    var gap = Math.abs(SCALE.indexOf(yourVerdict) - SCALE.indexOf(ai));
+    var strip = document.getElementById("walk-your-verdict");
+    var icon = document.getElementById("walk-verdict-icon");
+    var text = document.getElementById("walk-verdict-text");
+
+    if (gap === 0) {{
+      strip.dataset.state = "match";
+      icon.innerHTML = "&#10003;";
+      text.innerHTML = "You called it <strong>" + yourVerdict +
+        "</strong> too. Same read.";
+    }} else {{
+      strip.dataset.state = "diverge";
+      icon.innerHTML = "&#8646;";
+      text.innerHTML = "You said <strong>" + yourVerdict +
+        "</strong>, the AI said <strong>" + ai + "</strong>" +
+        (gap > 1 ? " — two steps apart, worth reconciling before you submit."
+                 : " — one step apart.");
+    }}
+
+    document.getElementById("walk-judgment-gate").hidden = true;
     var body = document.getElementById("walk-judgment-body");
-    var yours = document.getElementById("walk-your-verdict");
-    var aiVerdict = "{overall}";
-    yours.textContent = yourVerdict === aiVerdict
-      ? "You called it \\"" + yourVerdict + "\\" — matches."
-      : "You called it \\"" + yourVerdict + "\\" — the AI landed on \\"" + aiVerdict + "\\".";
-    gate.style.display = "none";
-    body.style.display = "block";
+    body.hidden = false;
+    body.scrollIntoView({{ behavior: "smooth", block: "nearest" }});
   }};
 </script>
 """)
