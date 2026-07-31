@@ -160,20 +160,22 @@ TOGGLE_JS = """
         });
       });
     });
-    window.__walkToggleAll = function () {
-      const blocks = document.querySelectorAll("details.diff-block");
-      const btn = document.getElementById("walk-toggle-all");
+    // Scoped to one section: that is the unit you actually read in, and a
+    // section with six files is where folding earns its place.
+    window.__walkToggleSection = function (section) {
+      const head = document.querySelector(
+        '.walk-fold-toggle[data-section="' + section + '"]');
+      if (!head) return;
+      const blocks = head.closest(".walk-section")
+        .querySelectorAll("details.diff-block");
       const anyOpen = Array.from(blocks).some((d) => d.open);
       blocks.forEach((d) => { d.open = !anyOpen; });
-      if (btn) btn.textContent = anyOpen ? "expand all" : "collapse all";
+      head.dataset.folded = anyOpen ? "true" : "false";
     };
   })();
 </script>
 """
 
-# The collapse control now lives in the template's sticky top bar — a
-# mid-document button scrolls away exactly when you start needing it.
-EXPAND_CONTROLS = ""
 
 
 def render_context_section(context):
@@ -306,7 +308,6 @@ def main():
 """)
 
     sections.append(TOGGLE_JS)
-    sections.append(EXPAND_CONTROLS)
 
     for i, group in enumerate(story_data["groups"], start=1):
         note_html = ""
@@ -321,11 +322,18 @@ def main():
     <h2 class="walk-section-title">
       <span class="walk-section-num">{i:02d}</span>{esc(group['title'])}
     </h2>
-    <button class="walk-note-toggle" data-section="{i}"
-            onclick="__walkToggleNote({i})"
-            aria-label="Note on this section">
-      <span class="walk-note-mark"></span><span>note</span>
-    </button>
+    <div class="walk-section-tools">
+      <button class="walk-note-toggle" data-section="{i}"
+              onclick="__walkToggleNote({i})"
+              aria-label="Note on this section">
+        <span class="walk-note-mark"></span><span>note</span>
+      </button>
+      <button class="walk-fold-toggle" data-section="{i}"
+              onclick="__walkToggleSection({i})"
+              aria-label="Collapse the diffs in this section">
+        <span class="walk-fold-icon">&#9662;</span>
+      </button>
+    </div>
   </div>
   <div class="walk-note" data-section="{i}" hidden>
     <textarea placeholder="What did you make of this section&#8230;"></textarea>

@@ -339,26 +339,6 @@ summary::-webkit-details-marker {
 /* Callouts keep their tinted left bar and set their own radius in
    spec-decision.css — same scale, different shape. */
 
-/* ── Top-bar controls ─────────────────────────────────────────────────────── */
-
-.walk-chrome-btn {
-  padding: 0.25rem 0.65rem;
-  border: 1px solid var(--mate-frame-border);
-  border-radius: var(--radius-field);
-  background: var(--mate-frame-sidebar);
-  color: var(--mate-frame-muted);
-  font-family: var(--mate-font-body);
-  font-size: 13px;
-  transition:
-    color 0.14s,
-    border-color 0.14s;
-}
-
-.walk-chrome-btn:hover {
-  color: var(--mate-frame-text);
-  border-color: var(--mate-frame-muted);
-}
-
 /* ── Section header ───────────────────────────────────────────────────────── */
 /* Sticky, so it is the one piece of the section on screen the whole time you
    are reading its diffs. That makes it the right home for the note control. */
@@ -409,11 +389,21 @@ summary::-webkit-details-marker {
 /* Was a pile of inline style= in build-walk.py, at its own radius and padding,
    parked below the diff where you could not see it while reading. */
 
-.walk-note-toggle {
-  display: inline-flex;
+/* Section controls cluster together and act only on their own section — they
+   are content controls, so they do not belong in the document chrome. */
+.walk-section-tools {
+  display: flex;
   align-items: center;
   gap: 0.4rem;
   flex-shrink: 0;
+}
+
+.walk-note-toggle,
+.walk-fold-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
   padding: 0.25rem 0.6rem;
   border: 1px solid var(--mate-frame-border);
   border-radius: 9999px;
@@ -425,9 +415,26 @@ summary::-webkit-details-marker {
     border-color 0.14s;
 }
 
-.walk-note-toggle:hover {
+.walk-note-toggle:hover,
+.walk-fold-toggle:hover {
   color: var(--mate-frame-text);
   border-color: var(--mate-frame-muted);
+}
+
+.walk-fold-toggle {
+  width: 26px;
+  padding: 0.25rem 0;
+}
+
+.walk-fold-icon {
+  display: inline-block;
+  font-size: 10px;
+  line-height: 1;
+  transition: transform 0.16s;
+}
+
+.walk-fold-toggle[data-folded="true"] .walk-fold-icon {
+  transform: rotate(-90deg);
 }
 
 .walk-note-mark {
