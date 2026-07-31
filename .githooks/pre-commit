@@ -79,3 +79,18 @@ if [[ ${#staged_prettier_files[@]} -gt 0 ]] && command -v npx &>/dev/null; then
 elif [[ ${#staged_prettier_files[@]} -gt 0 ]]; then
   echo "prettier: skipping (npx not found — install Node.js to enable prettier autoformat)"
 fi
+
+# ── rs-walk: rebuild the bundled stylesheet ──────────────────────────────────
+# assets/walk.css is generated from assets/style/. Prettier formats the sources
+# above and then re-stages them, which would leave a bundle built beforehand one
+# reformat behind. Rebuild after, and re-stage.
+rs_walk_style_staged=$(git diff --cached --name-only --diff-filter=ACM |
+  grep -c '^home/dot_claude/skills/rs-walk/assets/style/' || true)
+if [[ "${rs_walk_style_staged}" -gt 0 ]]; then
+  rs_walk_build="home/dot_claude/skills/rs-walk/bin/build-assets.sh"
+  if [[ -f "${rs_walk_build}" ]]; then
+    echo "rs-walk: rebuilding assets/walk.css from assets/style/..."
+    bash "${rs_walk_build}" >/dev/null
+    git add home/dot_claude/skills/rs-walk/assets/walk.css
+  fi
+fi

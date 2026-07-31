@@ -1,11 +1,17 @@
 /* The judgment reveal — the last thing a reviewer reads, and the only place the
-   document argues back. It gets composed layout rather than a bulleted dump. */
+   document argues back. It should be the heaviest object on the page.
+
+   Composed as one padded card, not a stack of full-bleed stripes: at walk width
+   a horizontal divider every 60px turns short content into a table of bars. */
 
 /* ── The gate ─────────────────────────────────────────────────────────────── */
 
+/* Left-aligned, not centred: everything above it in the walk hangs off the same
+   left edge, and a centred block reads as drifting rather than as a finale. */
 .judgment-gate {
-  margin: 3rem 0;
-  padding: 1.75rem;
+  max-width: 44rem;
+  margin: 4rem 0;
+  padding: 2rem 1.75rem;
   border: 1px dashed var(--mate-frame-border);
   border-radius: var(--radius-box);
   text-align: center;
@@ -22,16 +28,17 @@
 
 .judgment-gate-ask {
   font-family: var(--mate-font-display);
-  font-size: 1.15rem;
+  font-size: 1.35rem;
   font-weight: 600;
   color: var(--mate-frame-text);
-  margin: 0.5rem 0 0.35rem;
+  margin: 0.6rem 0 0.4rem;
 }
 
 .judgment-gate-hint {
   font-size: 13px;
+  line-height: 1.5;
   color: var(--mate-frame-dim);
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 .verdict-scale {
@@ -64,8 +71,8 @@
   width: 7px;
   height: 7px;
   border-radius: 9999px;
-  background: currentColor;
-  opacity: 0.55;
+  background: var(--chip-tone, currentColor);
+  opacity: 0.5;
 }
 
 .verdict-chip:hover {
@@ -76,7 +83,6 @@
 
 .verdict-chip:hover::before {
   opacity: 1;
-  background: var(--chip-tone, currentColor);
 }
 
 .verdict-chip[data-verdict="strong"] {
@@ -92,71 +98,76 @@
   --chip-tone: var(--mate-error);
 }
 
-/* ── The reveal ───────────────────────────────────────────────────────────── */
+/* ── The card ─────────────────────────────────────────────────────────────── */
 
 .judgment-card {
-  margin: 3rem 0;
+  max-width: 52rem;
+  margin: 4rem 0;
+  padding: 2rem 2.25rem 2.25rem;
   border: 1px solid var(--mate-frame-border);
+  border-top: 3px solid var(--verdict-tone, var(--mate-frame-border));
   border-radius: var(--radius-box);
   background: var(--mate-frame-sidebar);
-  overflow: hidden;
+  /* Enough lift to out-weigh the question callouts above it. */
+  box-shadow:
+    0 1px 2px oklch(0% 0 0 / 0.05),
+    0 12px 32px oklch(0% 0 0 / 0.1);
 }
 
-/* A hairline in the verdict's own colour — the card states its conclusion
-   before a word is read. */
-.judgment-card::before {
-  content: "";
-  display: block;
-  height: 3px;
-  background: var(--verdict-tone, var(--mate-frame-border));
-}
+/* ── Header: verdict left, agreement right, one row ───────────────────────── */
 
 .judgment-head {
   display: flex;
-  align-items: baseline;
-  gap: 0.9rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem 2rem;
   flex-wrap: wrap;
-  padding: 1.4rem 1.75rem 1.1rem;
-  border-bottom: 1px solid var(--mate-frame-border);
+  margin-bottom: 1.75rem;
 }
 
 .judgment-head-label {
+  display: block;
   font-family: var(--mate-font-mono);
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--mate-frame-dim);
+  margin-bottom: 0.3rem;
 }
 
 .judgment-verdict {
   font-family: var(--mate-font-display);
-  font-size: 1.6rem;
+  font-size: 2.25rem;
   font-weight: 600;
   line-height: 1;
+  letter-spacing: -0.02em;
   color: var(--verdict-tone, var(--mate-frame-text));
 }
 
-/* ── Agreement strip — the actual beat of the reveal ──────────────────────── */
-
+/* Agreement is the beat of the reveal — a pill beside the verdict, not a
+   full-width stripe under it. */
 .judgment-agreement {
   display: flex;
   align-items: flex-start;
-  gap: 0.7rem;
-  padding: 0.85rem 1.75rem;
+  gap: 0.5rem;
+  max-width: 22rem;
+  margin-top: 0.15rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--radius-field);
   font-size: 13px;
   line-height: 1.5;
-  border-bottom: 1px solid var(--mate-frame-border);
 }
 
 .judgment-agreement-icon {
-  font-size: 14px;
-  line-height: 1.4;
   flex-shrink: 0;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .judgment-agreement[data-state="match"] {
   color: var(--mate-frame-muted);
+  background: color-mix(in oklab, var(--mate-success) 8%, transparent);
 }
 .judgment-agreement[data-state="match"] .judgment-agreement-icon {
   color: var(--mate-success);
@@ -165,7 +176,7 @@
 /* Divergence is the interesting outcome, so it gets the weight. */
 .judgment-agreement[data-state="diverge"] {
   color: var(--mate-frame-text);
-  background: color-mix(in oklab, var(--mate-warning) 9%, transparent);
+  background: color-mix(in oklab, var(--mate-warning) 14%, transparent);
 }
 .judgment-agreement[data-state="diverge"] .judgment-agreement-icon {
   color: var(--mate-warning);
@@ -176,38 +187,38 @@
   color: var(--mate-frame-text);
 }
 
-/* ── Fit — the lead statement, not a bullet ───────────────────────────────── */
+/* ── Fit — the lead statement ─────────────────────────────────────────────── */
 
 .judgment-fit {
-  padding: 1.5rem 1.75rem;
+  max-width: 40rem;
   font-family: var(--mate-font-display);
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 400;
-  line-height: 1.6;
+  line-height: 1.55;
   color: var(--mate-frame-text);
-  border-bottom: 1px solid var(--mate-frame-border);
+  margin-bottom: 2rem;
 }
 
-/* ── Risks and gaps, side by side ─────────────────────────────────────────── */
+/* ── Risks and gaps — inset panels, not full-bleed columns ────────────────── */
 
 .judgment-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1rem;
 }
 
 .judgment-panel {
-  padding: 1.35rem 1.75rem 1.6rem;
-}
-
-.judgment-panel + .judgment-panel {
-  border-left: 1px solid var(--mate-frame-border);
+  padding: 1.1rem 1.25rem 1.25rem;
+  border: 1px solid var(--mate-frame-border);
+  border-radius: var(--radius-field);
+  background: var(--mate-frame-bg);
 }
 
 .judgment-panel-head {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.8rem;
 }
 
 .judgment-panel-title {
@@ -223,11 +234,11 @@
   font-family: var(--mate-font-mono);
   font-size: 10px;
   font-weight: 600;
-  padding: 1px 6px;
+  line-height: 1.5;
+  padding: 0 6px;
   border-radius: 9999px;
-  background: var(--mate-frame-bg);
-  border: 1px solid var(--mate-frame-border);
-  color: var(--mate-frame-dim);
+  background: color-mix(in oklab, var(--marker-tone) 18%, transparent);
+  color: var(--mate-frame-text);
 }
 
 .judgment-list {
@@ -236,23 +247,23 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.55rem;
 }
 
 .judgment-list li {
   position: relative;
-  padding-left: 1.1rem;
+  padding-left: 1rem;
   font-size: 14px;
   line-height: 1.55;
   color: var(--mate-frame-text);
 }
 
-/* Marker doubles as the panel's colour key — risks warn, gaps are neutral. */
+/* Marker doubles as the panel's colour key — risks warn, gaps inform. */
 .judgment-list li::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 0.55em;
+  top: 0.58em;
   width: 5px;
   height: 5px;
   border-radius: 1px;
@@ -260,10 +271,10 @@
   background: var(--marker-tone, var(--mate-frame-dim));
 }
 
-.judgment-panel[data-kind="risks"] .judgment-list {
+.judgment-panel[data-kind="risks"] {
   --marker-tone: var(--mate-warning);
 }
-.judgment-panel[data-kind="gaps"] .judgment-list {
+.judgment-panel[data-kind="gaps"] {
   --marker-tone: var(--mate-info);
 }
 
@@ -274,8 +285,13 @@
 }
 
 @media (max-width: 640px) {
-  .judgment-panel + .judgment-panel {
-    border-left: none;
-    border-top: 1px solid var(--mate-frame-border);
+  .judgment-card {
+    padding: 1.5rem 1.25rem 1.75rem;
+  }
+  .judgment-verdict {
+    font-size: 1.75rem;
+  }
+  .judgment-agreement {
+    max-width: none;
   }
 }

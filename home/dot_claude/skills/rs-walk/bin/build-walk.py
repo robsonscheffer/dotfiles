@@ -429,12 +429,14 @@ def main():
 
 <div class="judgment-card" id="walk-judgment-body" hidden style="--verdict-tone:{tone};">
   <div class="judgment-head">
-    <span class="judgment-head-label">AI judgment</span>
-    <span class="judgment-verdict">{esc(overall)}</span>
-  </div>
-  <div class="judgment-agreement" id="walk-your-verdict">
-    <span class="judgment-agreement-icon" id="walk-verdict-icon"></span>
-    <span id="walk-verdict-text"></span>
+    <div>
+      <span class="judgment-head-label">AI judgment</span>
+      <span class="judgment-verdict">{esc(overall)}</span>
+    </div>
+    <div class="judgment-agreement" id="walk-your-verdict">
+      <span class="judgment-agreement-icon" id="walk-verdict-icon"></span>
+      <span id="walk-verdict-text"></span>
+    </div>
   </div>
   <p class="judgment-fit">{esc(judgment_data['fit'])}</p>
   <div class="judgment-grid">{panels}
