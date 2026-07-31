@@ -12,6 +12,8 @@
 # Auto-generated
 .claude/settings.local.json
 .ruby-lsp/
+__pycache__/
+*.pyc
 
 # Private/work catalog (never commit)
 **/library.local.yaml

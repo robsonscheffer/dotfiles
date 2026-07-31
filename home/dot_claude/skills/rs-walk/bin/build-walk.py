@@ -56,6 +56,7 @@ Writes <out-root>/pr-<number>-<slug>/walk.html and meta.json. Prints the
 walk directory path to stdout on success.
 """
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -65,8 +66,9 @@ import sys
 SKILL_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_RENDER_DIFF = os.path.join(SKILL_DIR, "bin", "render-diff.sh")
 DEFAULT_TEMPLATE = os.path.join(SKILL_DIR, "assets", "walk-template.html")
-DEFAULT_MAIN_CSS = os.path.expanduser("~/.claude/skills/html-artifact/dist/style/main.css")
-DEFAULT_LINT_BIN = os.path.expanduser("~/.claude/skills/html-artifact/bin/lint-artifact.mjs")
+DEFAULT_MAIN_CSS = os.path.join(SKILL_DIR, "assets", "walk.css")
+DEFAULT_LINT_BIN = os.path.join(SKILL_DIR, "bin", "lint-walk.mjs")
+VERSION = "2.0.0"
 DEFAULT_OUT_ROOT = os.path.expanduser("~/brain/wiki/walks")
 DEFAULT_BACK_LINK = "../index.html"
 
@@ -79,7 +81,9 @@ BADGE_CLASS_BY_OVERALL = {
 
 
 def esc(s):
-    return str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    # Quotes included — esc() output lands in attributes (e.g. title="...").
+    return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            .replace('"', "&quot;").replace("'", "&#39;"))
 
 
 def read_json(path):
@@ -245,7 +249,22 @@ def main():
     main_css = read_text(args.main_css)
     html = html.replace("<!-- MAIN_CSS -->", f"<style>{main_css}</style>")
 
-    html = html.replace("<!-- BACK_LINK -->", args.back_link)
+    # Stamp what built this and which stylesheet went in, so drift is greppable
+    # instead of an archaeology session.
+    css_hash = hashlib.sha256(main_css.encode()).hexdigest()[:8]
+    html = html.replace(
+        "<!-- GENERATOR -->",
+        f'<meta name="generator" content="rs-walk@{VERSION} walk-css@{css_hash}" />',
+    )
+
+    # Must stay relative: a walk is read over file:// as often as over the
+    # artifact server, and a root-absolute href resolves to file:///... there.
+    back_link = args.back_link
+    if back_link.startswith("/"):
+        print(f"WARNING: --back-link {back_link!r} is root-absolute and breaks "
+              "over file:// — falling back to the relative default.", file=sys.stderr)
+        back_link = DEFAULT_BACK_LINK
+    html = html.replace("<!-- BACK_LINK -->", back_link)
 
     title_block = f"""
 <div style="margin-bottom:20px;">
@@ -331,6 +350,25 @@ def main():
         ta._t = setTimeout(function () {{ status.textContent = ""; }}, 1200);
       }});
     }});
+
+    // Notes live in localStorage, which is origin-scoped — a walk read over
+    // file:// and the same walk read over http://localhost are separate
+    // buckets. Claude normally lifts them straight out of the open page at
+    // close time; this button is the fallback when it cannot reach the browser.
+    window.exportWalkNotes = function () {{
+      var out = {{ pr: prNum, notes: {{}} }};
+      document.querySelectorAll(".walk-note").forEach(function (n) {{
+        var v = n.querySelector("textarea").value.trim();
+        if (v) out.notes[n.dataset.section] = v;
+      }});
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(
+        new Blob([JSON.stringify(out, null, 2)], {{ type: "application/json" }})
+      );
+      a.download = "walk-notes-" + prNum + ".json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }};
   }})();
 </script>
 """
@@ -493,10 +531,9 @@ def main():
     if lint.returncode != 0:
         print(lint.stdout, file=sys.stderr)
         print(lint.stderr, file=sys.stderr)
-        print("WARNING: lint violations found — review before opening. "
-              "Violations inside the inlined <style> block or the header/footer "
-              "chrome are template-origin and expected (inlined-css, no-stylesheet, "
-              "small-font in nav/footer/rail-label).", file=sys.stderr)
+        print(f"ERROR: {walk_html_path} failed lint — not a valid standalone walk.",
+              file=sys.stderr)
+        sys.exit(1)
 
     print(walk_dir)
 

@@ -1,0 +1,83 @@
+/*
+ * overflow-x:auto lets long diff lines scroll within their own block instead
+ * of forcing the page (or a grid column) wider. overflow-y is set explicitly
+ * alongside it — leaving it unset makes the browser compute it as auto too,
+ * which silently turns this element into a scroll container for anything
+ * position:sticky inside a page that scrolls past it. Not an issue for
+ * .diff-block itself (nothing sticky lives inside), but the same mistake one
+ * level up (on a wrapping content column) breaks sticky section headers
+ * against the real page scroll.
+ */
+.diff-block {
+  background: var(--mate-frame-sidebar);
+  border: 1px solid var(--mate-frame-border);
+  border-radius: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  font-family: var(--mate-font-mono);
+  font-size: 12px;
+}
+.diff-file-header {
+  background: color-mix(in oklab, var(--mate-frame-text) 4%, transparent);
+  padding: 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--mate-frame-border);
+  font-size: 13px;
+  color: var(--mate-frame-muted);
+}
+.diff-hunk-header {
+  background: color-mix(in oklab, var(--color-info) 10%, transparent);
+  color: var(--mate-info);
+  padding: 4px 16px;
+  font-size: 11px;
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--color-info) 25%, transparent);
+}
+.diff-line {
+  display: flex;
+}
+.diff-line-num {
+  width: 48px;
+  text-align: right;
+  padding: 2px 8px;
+  color: var(--mate-frame-dim);
+  user-select: none;
+  border-right: 1px solid
+    color-mix(in oklab, var(--mate-frame-text) 6%, transparent);
+  flex-shrink: 0;
+}
+.diff-prefix {
+  width: 20px;
+  text-align: center;
+  padding: 2px 0;
+  flex-shrink: 0;
+}
+.diff-line-code {
+  padding: 2px 8px;
+  flex: 1;
+  white-space: pre;
+  color: var(--mate-frame-text);
+}
+.diff-line.added {
+  background: color-mix(in oklab, var(--color-success) 8%, transparent);
+}
+.diff-line.added .diff-prefix {
+  color: var(--mate-success);
+}
+.diff-line.added .diff-line-code {
+  color: var(--mate-success);
+}
+.diff-line.removed {
+  background: color-mix(in oklab, var(--color-error) 8%, transparent);
+}
+.diff-line.removed .diff-prefix {
+  color: var(--mate-error);
+}
+.diff-line.removed .diff-line-code {
+  color: var(--mate-error);
+}
+.diff-line.context {
+  background: transparent;
+}

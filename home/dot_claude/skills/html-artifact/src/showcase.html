@@ -6,8 +6,9 @@
     <title>mate-ds — Component Library</title>
     <script>
       (function () {
+        var THEMES = ["mate", "mate-light"];
         var t = localStorage.getItem("mate-theme");
-        if (!t)
+        if (THEMES.indexOf(t) === -1)
           t = matchMedia("(prefers-color-scheme: dark)").matches
             ? "mate"
             : "mate-light";
@@ -15,7 +16,7 @@
       })();
     </script>
     <link
-      href="https://fonts.googleapis.com/css2?family=Geist:wght;500;600;700&family=Geist+Mono:wght;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./style/main.css" />

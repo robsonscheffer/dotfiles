@@ -14,9 +14,9 @@ version: 0.3.0
 Takes a PR URL. Builds a scrollable HTML walkthrough you read instead of the GitHub diff.
 No slides. The document is the review surface. GitHub is only for submitting.
 
-Requires: `gh` CLI. Depends on: html-artifact DS (compiled mate-ds stylesheet + lint binary).
-rs-walk owns its own document template (`assets/walk-template.html`) — it does not
-borrow or patch html-artifact's report template.
+Requires: `gh` CLI, `node`, `python3`. **No dependency on any other skill.**
+rs-walk ships its own template, stylesheet, fonts, index template, and linter
+under `assets/` and `bin/`. A walk opens as a file — no server, no network.
 Optional: `qmd` for semantic brain search (falls back to grep).
 
 ---
@@ -36,14 +36,14 @@ ARTIFACT_MODE=$(echo "${PREFLIGHT_OUT}" | grep ARTIFACT_MODE | cut -d= -f2)
 If the script exits non-zero, surface the error message and stop.
 
 `ARTIFACT_MODE=json` means `~/brain/wiki/artifact/artifacts.json` exists — walks get
-appended there and show up in html-artifact's unified index for free.
+appended there and show up in the unified artifact index for free.
 `ARTIFACT_MODE=standalone` means it doesn't — fall back to rs-walk's own
-`wiki/walks/index.html`. This is a documented file-format coupling, not a hard
-dependency. The only remaining runtime dependency on html-artifact at all is
-its compiled stylesheet (inlined into every walk.html at build time, same as
-html-artifact's own singlefile build does) and its lint binary — both have
-sane defaults baked into `build-walk.py` and can be overridden with
-`--main-css` / `--lint-bin` if html-artifact ever moves.
+`wiki/walks/index.html`. This is a file-format coupling, not a dependency: the
+file's presence is the whole contract, and its absence is not an error.
+
+Back-links stay **relative** in both modes. A walk is read over `file://` at
+least as often as through a server, and a root-absolute `href` resolves to
+`file:///…` there. `build-walk.py` rejects one and falls back to the default.
 
 Set constants used throughout:
 
@@ -388,10 +388,34 @@ If **Approve**:
 gh pr review ${PR_NUMBER} --repo "${REPO}" --approve
 ```
 
+**First, recover the notes written while reading.** The per-section textareas
+persist to `localStorage` under `walk-note-{PR_NUMBER}-{section}`. Do not ask
+for them again — read them out of the open page:
+
+```
+mcp__chrome-devtools__evaluate_script on the walk page:
+  () => Object.fromEntries(
+    Object.entries(localStorage)
+      .filter(([k]) => k.startsWith("walk-note-<PR_NUMBER>-"))
+      .map(([k, v]) => [k.split("-").pop(), v])
+  )
+```
+
+`localStorage` is origin-scoped, so read from a page on the same origin the
+walk was read on — `file://` pages all share one bucket. If the tab is closed,
+reopen the walk first.
+
+If chrome-devtools is unavailable, ask the reader to click **Export notes** in
+the walk (calls `exportWalkNotes()`, downloads `walk-notes-{PR}.json` to
+`~/Downloads`) and pass that file as argument 5 to `close-walk.sh`.
+
+Write the recovered notes to `.scratch/walk-notes-${PR_NUMBER}.json` and show
+them back for confirmation rather than asking cold.
+
 If **Request changes** or **Comment only**:
 
 ```
-AskUserQuestion: "Your review comment?" (free text)
+AskUserQuestion: "Anything to add beyond the section notes?" (free text)
 ```
 
 Then:
@@ -436,7 +460,8 @@ updated: { today }
 2. Run close-walk script — handles meta.json, index badge, log.md, qmd re-index, commit:
 
 ```bash
-bash "${SKILL_BIN}/close-walk.sh" "${WALK_DIR}" "${PR_NUMBER}" "{verdict}" "{notes}"
+bash "${SKILL_BIN}/close-walk.sh" "${WALK_DIR}" "${PR_NUMBER}" "{verdict}" "{notes}" \
+  "${HOME}/brain/.scratch/walk-notes-${PR_NUMBER}.json"
 ```
 
 3. Stage and commit the learning entry:
@@ -465,65 +490,34 @@ git -C ~/brain commit -m "chore: walk pr-${PR_NUMBER} learning entry"
 
 ## Index Seeding (first-run only, `ARTIFACT_MODE=standalone` only)
 
-Skip this entirely when `ARTIFACT_MODE=json` — html-artifact's own
+Skip this entirely when `ARTIFACT_MODE=json` — the unified
 `wiki/artifact/index.html` already exists and renders `type: "walk"` entries.
 
 When `~/brain/wiki/walks/index.html` does not exist:
 
-1. Read `~/.claude/skills/html-artifact/dist/templates/dashboard.html`
+1. Read `${SKILL_ROOT}/assets/index-template.html` — rs-walk's own, already
+   carrying the table shell, theme toggle, and `<!-- MAIN_CSS -->` slot
 2. Replace `<!-- TITLE -->` (all occurrences) with `PR Walk Index`
 3. Replace `<!-- DATE -->` occurrences with today's date
-4. Replace the CONTENT comment with the walks table:
+4. Replace `<!-- MAIN_CSS -->` with `<style>` + the contents of
+   `${SKILL_ROOT}/assets/walk.css`, and `<!-- GENERATOR -->` with the same
+   `<meta name="generator">` stamp `build-walk.py` emits
+5. Leave `<!-- CONTENT -->` in place — it is where each run inserts its `<tr>`
+
+Row shape, one per walk (`close-walk.sh` patches the verdict cell by
+`id="walk-pr-{number}"`):
 
 ```html
-<div style="margin-bottom:2rem;">
-  <p
-    style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);font-size:14px;"
-  >
-    Every PR walk you run appears here. Open a walk to review inline — GitHub
-    only for submitting.
-  </p>
-</div>
-<table class="table w-full" id="walks-table">
-  <thead>
-    <tr>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        PR
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Title
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Author
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Date
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Tags
-      </th>
-      <th
-        style="color:var(--mate-frame-muted);font-family:var(--mate-font-body);"
-      >
-        Verdict
-      </th>
-    </tr>
-  </thead>
-  <tbody id="walks-tbody">
-    <!-- walks: one <tr> per review, added by rs-walk on each run -->
-  </tbody>
-</table>
+<tr id="walk-pr-{number}">
+  <td class="pr"><a href="pr-{number}-{slug}/walk.html">#{number}</a></td>
+  <td><a href="pr-{number}-{slug}/walk.html">{title}</a></td>
+  <td>{author}</td>
+  <td class="date">{date}</td>
+  <td>{tags}</td>
+  <td class="walk-verdict"><span class="badge badge-ghost">pending</span></td>
+</tr>
 ```
 
-5. Write to `~/brain/wiki/walks/index.html`
-6. Commit: `git -C ~/brain add wiki/walks/ && git -C ~/brain commit -m "chore: init walks index"`
+6. Write to `~/brain/wiki/walks/index.html`
+7. Lint it: `node "${SKILL_BIN}/lint-walk.mjs" ~/brain/wiki/walks/index.html`
+8. Commit: `git -C ~/brain add wiki/walks/ && git -C ~/brain commit -m "chore: init walks index"`

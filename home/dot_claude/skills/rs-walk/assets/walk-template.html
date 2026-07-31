@@ -6,18 +6,18 @@
     <title><!-- TITLE --></title>
     <script>
       (function () {
+        var THEMES = ["mate", "mate-light"];
         var t = localStorage.getItem("mate-theme");
-        if (!t)
+        if (THEMES.indexOf(t) === -1)
           t = matchMedia("(prefers-color-scheme: dark)").matches
             ? "mate"
             : "mate-light";
         document.documentElement.setAttribute("data-theme", t);
       })();
     </script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Geist:wght;500;600;700&family=Geist+Mono:wght;500;600&display=swap"
-      rel="stylesheet"
-    />
+    <!-- GENERATOR -->
+    <!-- Fonts are inlined as base64 in the stylesheet below — a walk must
+         render identically offline. See bin/fetch-fonts.py. -->
     <!-- MAIN_CSS -->
   </head>
   <body>
