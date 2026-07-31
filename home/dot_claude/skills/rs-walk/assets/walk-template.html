@@ -52,6 +52,15 @@
         ></a
       >
       <span style="flex: 1"></span>
+      <!-- Lives in the sticky bar, not mid-document: you want it while you are
+           deep in a diff, which is exactly when a scrolled-away button is gone. -->
+      <button
+        id="walk-toggle-all"
+        class="walk-chrome-btn"
+        onclick="__walkToggleAll()"
+      >
+        collapse all
+      </button>
       <button
         id="theme-toggle"
         onclick="toggleTheme()"

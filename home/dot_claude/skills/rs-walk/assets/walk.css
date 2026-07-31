@@ -339,11 +339,117 @@ summary::-webkit-details-marker {
 /* Callouts keep their tinted left bar and set their own radius in
    spec-decision.css — same scale, different shape. */
 
+/* ── Top-bar controls ─────────────────────────────────────────────────────── */
+
+.walk-chrome-btn {
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--mate-frame-border);
+  border-radius: var(--radius-field);
+  background: var(--mate-frame-sidebar);
+  color: var(--mate-frame-muted);
+  font-family: var(--mate-font-body);
+  font-size: 13px;
+  transition:
+    color 0.14s,
+    border-color 0.14s;
+}
+
+.walk-chrome-btn:hover {
+  color: var(--mate-frame-text);
+  border-color: var(--mate-frame-muted);
+}
+
+/* ── Section header ───────────────────────────────────────────────────────── */
+/* Sticky, so it is the one piece of the section on screen the whole time you
+   are reading its diffs. That makes it the right home for the note control. */
+
+.walk-section {
+  margin-bottom: 2.5rem;
+}
+
+.walk-section-head {
+  position: sticky;
+  top: 3.25rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  margin-bottom: 0.25rem;
+  background: var(--mate-frame-bg);
+  border-bottom: 1px solid var(--mate-frame-border);
+}
+
+.walk-section-title {
+  font-family: var(--mate-font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.walk-section-num {
+  font-family: var(--mate-font-body);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--mate-frame-muted);
+  vertical-align: middle;
+  margin-right: 0.5em;
+}
+
+.walk-section-framing {
+  font-size: 14px;
+  color: var(--mate-frame-text);
+  margin: 1rem 0;
+}
+
 /* ── Per-section notes ────────────────────────────────────────────────────── */
-/* Was a pile of inline style= in build-walk.py, at its own radius and padding. */
+/* Was a pile of inline style= in build-walk.py, at its own radius and padding,
+   parked below the diff where you could not see it while reading. */
+
+.walk-note-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--mate-frame-border);
+  border-radius: 9999px;
+  color: var(--mate-frame-dim);
+  font-family: var(--mate-font-body);
+  font-size: 12px;
+  transition:
+    color 0.14s,
+    border-color 0.14s;
+}
+
+.walk-note-toggle:hover {
+  color: var(--mate-frame-text);
+  border-color: var(--mate-frame-muted);
+}
+
+.walk-note-mark {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  border: 1px solid currentColor;
+}
+
+/* Filled state travels with the sticky header, so scrolling past a section
+   tells you whether you already wrote it up. */
+.walk-note-toggle[data-filled="true"] {
+  color: var(--color-accent);
+  border-color: color-mix(in oklab, var(--color-accent) 40%, transparent);
+}
+
+.walk-note-toggle[data-filled="true"] .walk-note-mark {
+  background: currentColor;
+}
 
 .walk-note {
-  margin-top: 1.25rem;
+  margin: 0.75rem 0 0;
 }
 
 .walk-note textarea {

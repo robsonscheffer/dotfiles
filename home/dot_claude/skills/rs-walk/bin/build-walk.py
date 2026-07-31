@@ -171,11 +171,9 @@ TOGGLE_JS = """
 </script>
 """
 
-EXPAND_CONTROLS = """
-<div style="margin-bottom:1rem;">
-  <button id="walk-toggle-all" onclick="__walkToggleAll()" style="font-size:14px;font-family:var(--mate-font-body);color:var(--mate-frame-muted);background:var(--mate-frame-sidebar);border:1px solid var(--mate-frame-border);border-radius:4px;padding:0.2rem 0.6rem;cursor:pointer;">collapse all</button>
-</div>
-"""
+# The collapse control now lives in the template's sticky top bar — a
+# mid-document button scrolls away exactly when you start needing it.
+EXPAND_CONTROLS = ""
 
 
 def render_context_section(context):
@@ -318,17 +316,24 @@ def main():
             render_diff_block(f, args.diff, args.render_diff_bin) for f in group["files"]
         )
         sections.append(f"""
-<section style="margin-bottom:2.5rem;">
-  <h2 style="position:sticky;top:3.25rem;z-index:5;background:var(--mate-frame-bg);padding:0.6rem 0;margin:0 0 0.25rem;border-bottom:1px solid var(--mate-frame-border);font-family:var(--mate-font-display);font-size:1.4rem;font-weight:600;line-height:1.2;">
-    <span style="font-size:0.7rem;font-family:var(--mate-font-body);font-weight:700;color:var(--mate-frame-muted);letter-spacing:0.1em;vertical-align:middle;margin-right:0.5em;">{i:02d}</span>{esc(group['title'])}
-  </h2>
-  <p style="font-size:14px;color:var(--mate-frame-text);margin:1rem 0;">{esc(group['framing'])}</p>
-  {note_html}
-  {files_html}
-  <div class="walk-note" data-section="{i}">
-    <textarea placeholder="Note on this section&#8230;"></textarea>
+<section class="walk-section">
+  <div class="walk-section-head">
+    <h2 class="walk-section-title">
+      <span class="walk-section-num">{i:02d}</span>{esc(group['title'])}
+    </h2>
+    <button class="walk-note-toggle" data-section="{i}"
+            onclick="__walkToggleNote({i})"
+            aria-label="Note on this section">
+      <span class="walk-note-mark"></span><span>note</span>
+    </button>
+  </div>
+  <div class="walk-note" data-section="{i}" hidden>
+    <textarea placeholder="What did you make of this section&#8230;"></textarea>
     <span class="walk-note-status"></span>
   </div>
+  <p class="walk-section-framing">{esc(group['framing'])}</p>
+  {note_html}
+  {files_html}
 </section>
 """)
 
@@ -352,12 +357,43 @@ def main():
 <script>
   (function () {{
     var prNum = "{number}";
+
+    function noteBox(section) {{
+      return document.querySelector('.walk-note[data-section="' + section + '"]');
+    }}
+    function noteToggle(section) {{
+      return document.querySelector('.walk-note-toggle[data-section="' + section + '"]');
+    }}
+
+    // The toggle carries the section's state into the sticky header, so you can
+    // see which sections you have already written up while scrolling past them.
+    function markToggle(section, filled) {{
+      var btn = noteToggle(section);
+      if (btn) btn.dataset.filled = filled ? "true" : "false";
+    }}
+
+    window.__walkToggleNote = function (section) {{
+      var box = noteBox(section);
+      if (!box) return;
+      box.hidden = !box.hidden;
+      if (!box.hidden) box.querySelector("textarea").focus();
+    }};
+
     document.querySelectorAll(".walk-note textarea").forEach(function (ta) {{
-      var key = "walk-note-" + prNum + "-" + ta.closest(".walk-note").dataset.section;
-      ta.value = localStorage.getItem(key) || "";
+      var box = ta.closest(".walk-note");
+      var section = box.dataset.section;
+      var key = "walk-note-" + prNum + "-" + section;
+      var saved = localStorage.getItem(key) || "";
+      ta.value = saved;
+      // Only claim vertical space where there is something to read.
+      if (saved.trim()) {{
+        box.hidden = false;
+        markToggle(section, true);
+      }}
       var status = ta.nextElementSibling;
       ta.addEventListener("input", function () {{
         localStorage.setItem(key, ta.value);
+        markToggle(section, ta.value.trim().length > 0);
         status.textContent = "saved";
         clearTimeout(ta._t);
         ta._t = setTimeout(function () {{ status.textContent = ""; }}, 1200);
