@@ -1,0 +1,4 @@
+# Generated artifacts — formatting these puts them permanently out of sync with
+# their build script, which makes any drift check useless.
+home/dot_claude/skills/rs-walk/assets/walk.css
+home/dot_claude/skills/rs-walk/assets/style/fonts.css
