@@ -93,6 +93,31 @@ VERDICT_TONE = {
 }
 
 
+def estimate_read_time(prose_parts, diff_text):
+    """Minutes to read a walk, as a range.
+
+    Prose at 220 wpm. Diff lines are the slow part and the rate depends on what
+    they are: a changed line wants reading, a context line is scanned. Counted
+    separately at 45 and 140 lines/min, from timing real walks rather than from
+    a general reading-speed figure — code review is not prose.
+    """
+    words = sum(len(str(p).split()) for p in prose_parts if p)
+
+    changed = context = 0
+    for line in diff_text.splitlines():
+        if line.startswith(("+++", "---", "diff ", "index ", "@@")):
+            continue
+        if line.startswith(("+", "-")):
+            changed += 1
+        elif line:
+            context += 1
+
+    minutes = words / 220 + changed / 45 + context / 140
+    low = max(1, round(minutes * 0.8))
+    high = max(low + 1, round(minutes * 1.3))
+    return f"{low}–{high} min"
+
+
 def esc(s):
     # Quotes included — esc() output lands in attributes (e.g. title="...").
     return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -262,6 +287,18 @@ def main():
         "<!-- DESCRIPTION -->",
         esc(f"PR walkthrough for {args.repo}#{number} — {title}"),
     )
+
+    read_time = estimate_read_time(
+        [story_data.get("story", "")]
+        + [g.get("framing", "") for g in story_data["groups"]]
+        + [g.get("note", "") for g in story_data["groups"]]
+        + [q.get("question", "") for q in questions_data]
+        + [judgment_data.get("fit", "")]
+        + judgment_data.get("risks_summary", [])
+        + judgment_data.get("gaps", []),
+        read_text(args.diff),
+    )
+    html = html.replace("<!-- READ_TIME -->", esc(read_time))
     html = html.replace("<!-- DATE -->", today)
 
     main_css = read_text(args.main_css)
@@ -582,7 +619,7 @@ def main():
     full_content = f"""
 <style>
   .spec-layout {{ grid-template-columns: minmax(0, 1fr) 220px; }}
-  .spec-rail {{ position: sticky; top: 3.25rem; max-height: calc(100vh - 3.75rem); overflow-y: auto; }}
+  .spec-rail {{ position: sticky; top: calc(var(--walk-header-h) + 1rem); max-height: calc(100vh - var(--walk-header-h) - 2rem); overflow-y: auto; }}
 </style>
 <div class="spec-layout">
   <div style="min-width:0;">
@@ -618,6 +655,7 @@ def main():
         "judgment_overall": overall,
         "judgment_risks": judgment_data.get("risks_summary", []),
         "delta": "",
+        "read_time": read_time,
     }
     with open(meta_json_path, "w") as f:
         json.dump(meta, f, indent=2)

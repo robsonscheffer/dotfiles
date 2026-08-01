@@ -120,6 +120,11 @@
 }
 
 :root {
+  /* Single source for the sticky top bar's height. The section headers and the
+     rail stick to it, and hardcoding 3.25rem against a 49px bar left a 3px band
+     for content to scroll through. */
+  --walk-header-h: 3rem;
+
   --mate-font-display: "Geist", system-ui, sans-serif;
   --mate-font-body: "Geist", system-ui, sans-serif;
   --mate-font-mono: "Geist Mono", "JetBrains Mono", monospace;

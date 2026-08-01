@@ -29,6 +29,74 @@
 /* Callouts keep their tinted left bar and set their own radius in
    spec-decision.css — same scale, different shape. */
 
+/* ── Top bar ──────────────────────────────────────────────────────────────── */
+/* Fixed height, because the section headers and the rail stick to it. */
+
+.walk-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: var(--walk-header-h);
+  padding: 0 40px;
+  background: var(--mate-frame-nav);
+  border-bottom: 1px solid var(--mate-frame-border);
+}
+
+.walk-header-spacer {
+  flex: 1;
+}
+
+.walk-brand {
+  font-family: var(--mate-font-display);
+  font-size: 17px;
+  color: var(--mate-frame-text);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.walk-brand em {
+  color: var(--mate-primary);
+  font-weight: 400;
+}
+
+.walk-readtime {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  font-family: var(--mate-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--mate-frame-dim);
+}
+
+/* Straddles the header's bottom border, so it doubles as the seal between the
+   bar and whatever sticks beneath it. */
+.walk-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: transparent;
+}
+
+.walk-progress-fill {
+  height: 100%;
+  width: 0;
+  background: var(--color-accent);
+  transition: width 0.08s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .walk-progress-fill {
+    transition: none;
+  }
+}
+
 /* ── Section header ───────────────────────────────────────────────────────── */
 /* Sticky, so it is the one piece of the section on screen the whole time you
    are reading its diffs. That makes it the right home for the note control. */
@@ -39,7 +107,7 @@
 
 .walk-section-head {
   position: sticky;
-  top: 3.25rem;
+  top: var(--walk-header-h);
   z-index: 5;
   display: flex;
   align-items: center;
