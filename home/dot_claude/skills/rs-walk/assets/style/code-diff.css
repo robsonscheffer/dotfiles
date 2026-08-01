@@ -8,6 +8,16 @@
  * level up (on a wrapping content column) breaks sticky section headers
  * against the real page scroll.
  */
+/* The directory half of a file path. Was --mate-frame-dim at opacity 0.5, which
+   measured 1.88:1 — the worst contrast in the document. The token alone is quiet
+   enough; the opacity was doing nothing but breaking it. */
+.diff-file-dir {
+  margin-left: auto;
+  font-family: var(--mate-font-mono);
+  font-size: 14px;
+  color: var(--mate-frame-dim);
+}
+
 /* Surface, border and radius come from surfaces.css. */
 .diff-block {
   overflow-x: auto;

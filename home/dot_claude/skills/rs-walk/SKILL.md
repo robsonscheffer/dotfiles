@@ -15,6 +15,25 @@ Takes a PR URL. Builds a scrollable HTML walkthrough you read instead of the Git
 No slides. The document is the review surface. GitHub is only for submitting.
 
 Requires: `gh` CLI, `node`, `python3`. **No dependency on any other skill.**
+
+Changing the template, the stylesheet or any token? Build the reference walk and
+re-run the audit — it is 33 files across 4 sections, which is the density that
+actually exposes layout and contrast problems:
+
+```bash
+python3 "${SKILL_BIN}/make-test-walk.py" /tmp/rs-walk-fx
+WALK_TODAY=$(date +%F) python3 "${SKILL_BIN}/build-walk.py" \
+  --pr-meta /tmp/rs-walk-fx/meta.json --diff /tmp/rs-walk-fx/walk.diff \
+  --story /tmp/rs-walk-fx/story.json --questions /tmp/rs-walk-fx/questions.json \
+  --risks /tmp/rs-walk-fx/risks.json --judgment /tmp/rs-walk-fx/judgment.json \
+  --context /tmp/rs-walk-fx/context.json --repo acme/console \
+  --out-root ~/brain/.scratch/artifact --force
+```
+
+Then Lighthouse it over `http://localhost:52010/scratch/pr-4242-*/walk.html`
+**in both themes** — a snapshot audit only tests whichever theme is live. The
+target is 100 on accessibility, and it was 94 before the contrast pass, so treat
+a drop as a real regression.
 rs-walk ships its own template, stylesheet, fonts, index template, and linter
 under `assets/` and `bin/`. A walk opens as a file — no server, no network.
 Optional: `qmd` for semantic brain search (falls back to grep).

@@ -50,7 +50,12 @@
   --mate-frame-border: oklch(100% 0 0 / 0.1);
   --mate-frame-text: oklch(93% 0.008 75);
   --mate-frame-muted: oklch(66% 0.014 65);
-  --mate-frame-dim: oklch(57% 0.013 60);
+  /* 57% measured 4.39:1 on --mate-frame-bg and 3.95:1 on --mate-frame-sidebar,
+     so every eyebrow, hint and footer in the document failed WCAG AA. Three
+     backgrounds have to clear 4.5:1, and the tinted .diff-file-header (#23201e)
+     is the tightest — 63% gives 4.59 there. Re-measure against all three, not
+     just the page, before lowering it. */
+  --mate-frame-dim: oklch(63% 0.013 60);
 
   --mate-primary: oklch(64% 0.19 38);
   --mate-secondary: oklch(64% 0.12 58);
@@ -100,7 +105,10 @@
   --mate-frame-border: oklch(0% 0 0 / 0.09);
   --mate-frame-text: oklch(18% 0.013 55);
   --mate-frame-muted: oklch(42% 0.018 60);
-  --mate-frame-dim: oklch(58% 0.02 65);
+  /* Same fix as dark, measured against the same three backgrounds — page,
+     surface, and the tinted .diff-file-header (#e7e1da). 58% gave 4.07;
+     50% clears all three at 4.64. */
+  --mate-frame-dim: oklch(50% 0.02 65);
 
   --mate-primary: oklch(46% 0.165 38);
   --mate-secondary: oklch(38% 0.085 58);

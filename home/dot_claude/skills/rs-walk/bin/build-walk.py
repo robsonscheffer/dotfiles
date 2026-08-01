@@ -141,7 +141,7 @@ def render_diff_block(filepath, diff_file, render_diff_bin, max_lines=80):
     <div class="diff-file-header" style="flex:1;margin:0;border-radius:0;border-bottom:none;display:flex;align-items:center;gap:0.5rem;">
       <span class="diff-toggle-icon" style="font-size:11px;color:var(--mate-frame-dim);display:inline-block;">&#x25BC;</span>
       <span style="font-family:var(--mate-font-mono);font-size:14px;">{esc(basename)}</span>
-      <span style="font-size:14px;color:var(--mate-frame-dim);font-family:var(--mate-font-mono);margin-left:auto;opacity:0.5;">{esc(dirname)}/</span>
+      <span class="diff-file-dir">{esc(dirname)}/</span>
     </div>
   </summary>
   {inner}
@@ -171,6 +171,7 @@ TOGGLE_JS = """
       const anyOpen = Array.from(blocks).some((d) => d.open);
       blocks.forEach((d) => { d.open = !anyOpen; });
       head.dataset.folded = anyOpen ? "true" : "false";
+      head.setAttribute("aria-expanded", String(!anyOpen));
     };
   })();
 </script>
@@ -257,6 +258,10 @@ def main():
 
     full_title = f"Walk: #{number} · {title}"
     html = html.replace("<!-- TITLE -->", esc(full_title))
+    html = html.replace(
+        "<!-- DESCRIPTION -->",
+        esc(f"PR walkthrough for {args.repo}#{number} — {title}"),
+    )
     html = html.replace("<!-- DATE -->", today)
 
     main_css = read_text(args.main_css)
@@ -325,17 +330,19 @@ def main():
     <div class="walk-section-tools">
       <button class="walk-note-toggle" data-section="{i}"
               onclick="__walkToggleNote({i})"
-              aria-label="Note on this section">
-        <span class="walk-note-mark"></span><span>note</span>
+              aria-expanded="false" aria-controls="walk-note-{i}"
+              aria-label="Your note on section {i}, {esc(group['title'])}">
+        <span class="walk-note-mark" aria-hidden="true"></span><span>note</span>
       </button>
       <button class="walk-fold-toggle" data-section="{i}"
               onclick="__walkToggleSection({i})"
-              aria-label="Collapse the diffs in this section">
-        <span class="walk-fold-icon">&#9662;</span>
+              aria-expanded="true"
+              aria-label="Collapse the diffs in section {i}, {esc(group['title'])}">
+        <span class="walk-fold-icon" aria-hidden="true">&#9662;</span>
       </button>
     </div>
   </div>
-  <div class="walk-note" data-section="{i}" hidden>
+  <div class="walk-note" id="walk-note-{i}" data-section="{i}" hidden>
     <textarea placeholder="What did you make of this section&#8230;"></textarea>
     <span class="walk-note-status"></span>
   </div>
@@ -384,6 +391,8 @@ def main():
       var box = noteBox(section);
       if (!box) return;
       box.hidden = !box.hidden;
+      var btn = noteToggle(section);
+      if (btn) btn.setAttribute("aria-expanded", String(!box.hidden));
       if (!box.hidden) box.querySelector("textarea").focus();
     }};
 
@@ -397,6 +406,8 @@ def main():
       if (saved.trim()) {{
         box.hidden = false;
         markToggle(section, true);
+        var t = noteToggle(section);
+        if (t) t.setAttribute("aria-expanded", "true");
       }}
       var status = ta.nextElementSibling;
       ta.addEventListener("input", function () {{
