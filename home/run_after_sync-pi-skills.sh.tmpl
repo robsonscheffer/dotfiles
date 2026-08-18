@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# chezmoi run_after — sync managed Claude skills into Pi shared skills directory
+set -euo pipefail
+
+# Resolve sourceDir and point to managed skills in this dotfiles repo.
+SOURCE_DIR="$(readlink -f "{{ .chezmoi.sourceDir }}" 2>/dev/null || echo "{{ .chezmoi.sourceDir }}")"
+CLAUDE_SKILLS_SRC="$SOURCE_DIR/dot_claude/skills"
+PI_SKILLS_DST="$HOME/.agents/skills"
+
+if [[ ! -d "$CLAUDE_SKILLS_SRC" ]]; then
+  echo "pi skills sync: skipping — $CLAUDE_SKILLS_SRC not found"
+  exit 0
+fi
+
+mkdir -p "$PI_SKILLS_DST"
+
+# Copy/refresh managed skills without deleting user-local Pi skills.
+rsync -a "$CLAUDE_SKILLS_SRC"/ "$PI_SKILLS_DST"/
+
+echo "pi skills sync: copied managed skills to $PI_SKILLS_DST"

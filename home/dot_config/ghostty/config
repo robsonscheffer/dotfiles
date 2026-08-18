@@ -44,7 +44,7 @@ palette = 13=#fb94ff
 palette = 14=#80fcff
 palette = 15=#ffffff
 
-background-opacity = 0.80
+background-opacity = 1.0
 
 # tmux keybinds (\x01 = ctrl+a prefix)
 keybind = clear

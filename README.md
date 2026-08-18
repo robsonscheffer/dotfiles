@@ -1,6 +1,6 @@
 # dotfiles
 
-Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/). Focused on Claude Code agent setup (skills, hooks, settings) and core dev configs.
+Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/). Focused on Claude Code + Pi agent setup (skills, hooks, settings) and core dev configs.
 
 ## What's Managed
 
@@ -15,6 +15,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/). Focused on Cl
 | `~/.claude/CLAUDE.local.md`    | Claude Code personal instructions                       |
 | `~/.claude/settings.json`      | Claude Code settings, hooks, permissions                |
 | `~/.claude/skills/*`           | 30 Claude Code skills                                   |
+| `~/.agents/skills/*`           | Pi-compatible copy of managed skills                    |
 | `~/.claude/hooks/*`            | 5 Claude Code hooks                                     |
 
 ## What's NOT Tracked
@@ -79,6 +80,8 @@ dotfiles/
 ```
 
 ## Safety
+
+Pi compatibility note: Pi auto-discovers global skills from `~/.agents/skills/`. This repo syncs managed skills there during `chezmoi apply`.
 
 A pre-commit hook runs two checks on every commit:
 
