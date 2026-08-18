@@ -14,6 +14,11 @@ library:
     - name: grill-me
       description: Socratic flashcard drill for any topic — questions, wrong answers, hints, and progress tracking
       source: https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md
+      requires: [skill:grilling]
+
+    - name: grilling
+      description: Relentless interview to sharpen a plan, decision, or idea until every branch of the decision tree is resolved
+      source: https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md
 
     - name: handoff
       description: Generate a detailed handoff document so another agent or human can pick up where you left off

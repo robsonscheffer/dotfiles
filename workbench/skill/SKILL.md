@@ -1,3 +1,8 @@
+---
+name: workbench
+description: Use when dispatching single-command workbench flows like /wb, /work-start, /work-focus, /work-archive, /work-status, or /briefing.
+---
+
 # Workbench Orchestrator
 
 Trigger: /wb, /work, /work-start, /work-archive, /work-focus, /work-status, /briefing

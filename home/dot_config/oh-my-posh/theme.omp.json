@@ -3,16 +3,13 @@
   "version": 4,
   "final_space": true,
   "palette": {
-    "bg": "#1e1e2e",
-    "blue": "#89B4FA",
-    "pink": "#F5C2E7",
-    "lavender": "#B4BEFE",
-    "green": "#A6E3A1",
-    "red": "#F38BA8",
-    "peach": "#FAB387",
-    "yellow": "#F9E2AF",
-    "surface": "#313244",
-    "subtext": "#6C7086"
+    "blue": "blue",
+    "lavender": "cyan",
+    "green": "green",
+    "red": "red",
+    "peach": "bright-yellow",
+    "yellow": "yellow",
+    "subtext": "bright-black"
   },
   "blocks": [
     {
