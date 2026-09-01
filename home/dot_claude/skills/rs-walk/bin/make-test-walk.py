@@ -28,6 +28,7 @@ def w(name, obj):
 
 GROUPS = [
     ("Making the shared layer store-optional",
+     "Read this one first",
      "The shared layer assumed a global store existed. Every consumer here learns "
      "to work without one, which is what lets the app boot storeless at all.", [
          "src/shared/analytics/routeTracking.ts",
@@ -44,6 +45,7 @@ GROUPS = [
          "src/shared/taps/auth/hooks.ts",
      ], "Read this one first — everything after depends on it."),
     ("The redirectTo/navigate rabbit hole",
+     None,
      "Redirect handling was reading straight from the store. Untangling it turned "
      "out to be the widest part of the change.", [
          "src/shared/services/ajaxHeadersService.ts",
@@ -55,6 +57,7 @@ GROUPS = [
          "src/shared/lib/router/navigate.ts",
      ], None),
     ("The app drops the store and boots",
+     "The payoff commit",
      "The payoff commit. Six files, and the app comes up without a store.", [
          "src/apps/portal/components/App/App.tsx",
          "src/apps/portal/index.tsx",
@@ -64,6 +67,7 @@ GROUPS = [
          "src/apps/portal/taps/resources/index.ts",
      ], None),
     ("The last store readers move to useSession",
+     None,
      "Leaf components that still read user state. Mechanical, but worth a skim for "
      "the ones that changed behaviour rather than just imports.", [
          "src/apps/portal/components/App/ImpersonationBanner.tsx",
@@ -88,14 +92,19 @@ w("meta.json", {
 })
 
 w("story.json", {
-    "story": "The portal has carried a global store since before hooks existed, and "
-             "almost nothing reads from it any more. This removes it. The shared "
-             "layer goes store-optional first, redirect handling gets untangled from "
-             "it, then the app boots without one and the last few readers move to "
-             "useSession.",
+    "lead": "Removes a global store almost nothing still reads from.",
+    "story": [
+        "The portal has carried a global store since before hooks existed, and "
+        "**almost nothing reads from it any more**.",
+        "The shared layer goes store-optional first, then redirect handling gets "
+        "untangled from it, since that turned out to be the widest part of the change.",
+        "Only then does the app boot without one, and the last few readers move to "
+        "useSession.",
+    ],
     "groups": [
-        {"title": t, "framing": f, "files": files, **({"note": n} if n else {})}
-        for t, f, files, n in GROUPS
+        {"title": t, "framing": f, "files": files,
+         **({"lead": l} if l else {}), **({"note": n} if n else {})}
+        for t, l, f, files, n in GROUPS
     ],
 })
 
@@ -128,8 +137,9 @@ w("risks.json", [
 
 w("judgment.json", {
     "fit": "This is the right shape for the change — shared layer first, app second, "
-           "leaves last — and it deletes far more than it adds. The care shows in the "
-           "test coverage moving alongside each provider rather than in a lump at the end.",
+           "leaves last — and **it deletes far more than it adds**. The care shows in "
+           "the test coverage moving alongside each provider rather than in a lump at "
+           "the end.",
     "risks_summary": [
         "navigate.ts loses the store's pending-route slot with no obvious replacement.",
         "Shared-layer changes reach three apps this PR does not test.",
@@ -184,7 +194,7 @@ w("context.json", {"mode": "qmd", "items": [
 # Realistic churn: several hunks per file, and test files that read differently
 # from source files so the diff colouring gets exercised both ways.
 lines = []
-for _, _, files, _ in GROUPS:
+for _, _, _, files, _ in GROUPS:
     for f in files:
         lines += [f"diff --git a/{f} b/{f}", "index 8f2a1c4..b93e017 100644",
                   f"--- a/{f}", f"+++ b/{f}"]
@@ -214,4 +224,4 @@ for _, _, files, _ in GROUPS:
                 ]
 (D / "walk.diff").write_text("\n".join(lines) + "\n")
 
-print(f"{D}  ({sum(len(g[2]) for g in GROUPS)} files across {len(GROUPS)} groups)")
+print(f"{D}  ({sum(len(g[3]) for g in GROUPS)} files across {len(GROUPS)} groups)")

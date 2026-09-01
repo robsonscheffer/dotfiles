@@ -138,9 +138,48 @@
 }
 
 .walk-section-framing {
+  max-width: 68ch;
   font-size: 14px;
   color: var(--mate-frame-text);
   margin: 1rem 0;
+}
+
+/* ── Story prose — capped measure, bolded lead ────────────────────────────── */
+/* Was rendered at whatever width the page gave it — 90-120ch in practice,
+   well past the ~65ch line where the eye's return sweep starts failing.
+   Matches .judgment-fit's cap so the two longest-form sections read the same. */
+
+.walk-story-lead {
+  max-width: 68ch;
+  font-family: var(--mate-font-body);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mate-frame-text);
+  margin-bottom: 0.5rem;
+}
+
+.walk-story p,
+.walk-section-lead + .walk-section-framing {
+  max-width: 68ch;
+}
+
+.walk-story p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--mate-frame-text);
+  margin: 0 0 0.75rem;
+}
+
+.walk-story p:last-child {
+  margin-bottom: 0;
+}
+
+.walk-section-lead {
+  font-family: var(--mate-font-body);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--mate-frame-text);
+  margin-bottom: 0.4rem;
 }
 
 /* ── Per-section notes ────────────────────────────────────────────────────── */

@@ -30,10 +30,16 @@ Return a **JSON object** with this schema:
 
 ```json
 {
-  "story": "3 sentences. Causal. Author's voice. What existed, what forced the change, what they decided.",
+  "lead": "One bold headline, 12 words max. The single takeaway before anyone reads a sentence of prose.",
+  "story": [
+    "Beat 1, 30 words max. What existed and what forced the change.",
+    "Beat 2, 30 words max. What they decided and why (the alternative-weighing beat lives here or in beat 3).",
+    "Beat 3, 30 words max. What was hard, or where this sits relative to what's coming next."
+  ],
   "groups": [
     {
       "title": "Short name for this reading stop",
+      "lead": "Optional. One bold sub-headline, 8 words max, for this group specifically.",
       "framing": "One sentence: why you're reading this now, not what it contains.",
       "files": ["path/to/file.ts"],
       "note": "Optional: the one non-obvious thing to notice in this group. Omit if nothing surprising."
@@ -41,6 +47,19 @@ Return a **JSON object** with this schema:
   ]
 }
 ```
+
+`story` is now an **array of beats**, not one paragraph — each renders as its own line with visible
+space around it, so cap the _word count per beat_, not the sentence count. Three 43-word run-on
+sentences crammed into one block is exactly the failure mode this schema exists to prevent; three
+beats at 30 words each, each on its own line, is the target.
+
+Anywhere in `lead`, `story`, `framing`, or `note` you may wrap **one or two key phrases per field**
+in `**double asterisks**` and they render bold — an anchor for someone skimming, not decoration.
+Text is HTML-escaped before the `**...**` conversion runs, so this is the only markup that survives;
+anything else you write (raw `<tags>`, other markdown) renders as literal text. Bold the phrase that
+carries the actual decision or consequence, not a random noun — "the crash fires **one call
+earlier** than the ticket named" earns its bold. Don't bold more than one or two phrases per field;
+if everything is bold nothing is.
 
 Rules:
 
@@ -115,6 +134,10 @@ _generally_, _somewhat_, _could potentially_. If the honest read is genuinely
 uncertain, say what's uncertain and why, in one sentence — that's still a
 stance ("I can't tell whether X without seeing Y") — don't launder the
 uncertainty into soft language that reads as an opinion but isn't one.
+
+You may wrap the one phrase that carries the actual verdict in `**double
+asterisks**` in `fit` (and, sparingly, in a `risks_summary`/`gaps` item) to
+render it bold — same rule as Agent 1: one anchor per field, not decoration.
 
 Return a **JSON object**:
 

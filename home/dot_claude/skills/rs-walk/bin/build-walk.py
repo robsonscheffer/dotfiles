@@ -37,7 +37,10 @@ Usage:
 Inputs:
   --pr-meta     JSON: {number, title, author:{login}, headRefName, baseRefName,
                        additions, deletions, changedFiles, url}
-  --story       JSON: {story, groups:[{title, framing, files:[...], note?}]}
+  --story       JSON: {lead?, story:[beat, ...], groups:[{title, lead?, framing,
+                       files:[...], note?}]}. `story` is an array of beats, not
+                       one paragraph. `lead`/`story`/`framing`/`note` may contain
+                       **bold** spans, converted to <strong> (see render_prose).
   --questions   JSON: [{title, question, pointer}]
   --risks       JSON: [{title, description, blast_radius, file}]
   --judgment    JSON: {fit, risks_summary:[...], gaps:[...], overall}
@@ -136,6 +139,21 @@ def esc(s):
     # Quotes included — esc() output lands in attributes (e.g. title="...").
     return (str(s).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
             .replace('"', "&quot;").replace("'", "&#39;"))
+
+
+BOLD_RE = re.compile(r"\*\*(.+?)\*\*")
+
+
+def render_prose(s):
+    """Escape first, then let **word** survive as <strong> — the only markup
+    an agent can produce. Escaping runs before the conversion, so anything
+    hostile in the source text (a literal `<script>`, another `**` pair
+    fighting for the closing pair) is already inert by the time this looks
+    for bold markers; it can only ever produce <strong> tags, nothing else.
+    Never use this on attribute values — only on text that lands in a text
+    node, where a real HTML element is what "bold" is supposed to mean.
+    """
+    return BOLD_RE.sub(r"<strong>\1</strong>", esc(s))
 
 
 def read_json(path):
@@ -277,19 +295,22 @@ def render_ticket_fit_section(ticket_fit):
     scope_html = (
         f'<div style="display:flex;align-items:flex-start;gap:0.5rem;margin-top:0.6rem;">'
         f'<span class="badge" style="background:var(--mate-warning);color:{badge_fg("var(--mate-warning)")};flex-shrink:0;">scope delta</span>'
-        f'<span style="font-size:13px;color:var(--mate-frame-text);">{esc(scope_delta)}</span>'
+        f'<span style="font-size:13px;color:var(--mate-frame-text);">{render_prose(scope_delta)}</span>'
         f'</div>'
         if scope_delta else ""
     )
+    # Badges first, then the notes prose — a reviewer scans Met/Not-Met before
+    # reading why the ticket itself was thin. Notes used to lead, which meant
+    # 40-60 words of prose stood between the header and the one scannable row.
     return f"""
 <section style="margin-bottom:2rem;">
   <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.6rem;">
     Ticket fit &mdash; {esc(ticket_fit['ticket_key'])}
     <span class="badge" style="background:{q_tone};color:{badge_fg(q_tone)};margin-left:0.4rem;text-transform:none;letter-spacing:normal;">{esc(q_score)}</span>
   </h2>
-  <p style="font-size:13px;color:var(--mate-frame-muted);margin-bottom:0.75rem;line-height:1.5;">{esc(quality.get("notes", ""))}</p>
   {ac_rows}
   {scope_html}
+  <p style="font-size:13px;color:var(--mate-frame-muted);margin-top:0.75rem;line-height:1.5;">{render_prose(quality.get("notes", ""))}</p>
 </section>
 """
 
@@ -476,7 +497,9 @@ def main():
     )
 
     read_time = estimate_read_time(
-        [story_data.get("story", "")]
+        [story_data.get("lead", "")]
+        + story_data.get("story", [])
+        + [g.get("lead", "") for g in story_data["groups"]]
         + [g.get("framing", "") for g in story_data["groups"]]
         + [g.get("note", "") for g in story_data["groups"]]
         + [q.get("question", "") for q in questions_data]
@@ -523,10 +546,20 @@ def main():
 
     sections = [title_block]
 
+    story_lead_html = (
+        f'<p class="walk-story-lead">{render_prose(story_data["lead"])}</p>'
+        if story_data.get("lead") else ""
+    )
+    story_beats_html = "".join(
+        f"<p>{render_prose(beat)}</p>" for beat in story_data.get("story", [])
+    )
     sections.append(f"""
 <section style="margin-bottom:2.5rem;">
   <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">The story</h2>
-  <p style="font-size:15px;line-height:1.7;color:var(--mate-frame-text);">{esc(story_data['story'])}</p>
+  {story_lead_html}
+  <div class="walk-story">
+    {story_beats_html}
+  </div>
 </section>
 """)
 
@@ -544,7 +577,11 @@ def main():
     for i, group in enumerate(story_data["groups"], start=1):
         note_html = ""
         if group.get("note"):
-            note_html = f'<div class="spec-decision" style="margin-bottom:1rem;">{esc(group["note"])}</div>'
+            note_html = f'<div class="spec-decision" style="margin-bottom:1rem;">{render_prose(group["note"])}</div>'
+        lead_html = (
+            f'<p class="walk-section-lead">{render_prose(group["lead"])}</p>'
+            if group.get("lead") else ""
+        )
         files_html = "".join(
             render_diff_block(f, args.diff, args.render_diff_bin) for f in group["files"]
         )
@@ -573,7 +610,8 @@ def main():
     <textarea placeholder="What did you make of this section&#8230;"></textarea>
     <span class="walk-note-status"></span>
   </div>
-  <p class="walk-section-framing">{esc(group['framing'])}</p>
+  {lead_html}
+  <p class="walk-section-framing">{render_prose(group['framing'])}</p>
   {note_html}
   {files_html}
 </section>
@@ -682,7 +720,7 @@ def main():
     def judgment_panel(kind, label, items):
         if items:
             body = ('<ul class="judgment-list">'
-                    + "".join(f"<li>{esc(i)}</li>" for i in items)
+                    + "".join(f"<li>{render_prose(i)}</li>" for i in items)
                     + "</ul>")
             count = f'<span class="judgment-panel-count">{len(items)}</span>'
         else:
@@ -727,7 +765,7 @@ def main():
       <span id="walk-verdict-text"></span>
     </div>
   </div>
-  <p class="judgment-fit">{esc(judgment_data['fit'])}</p>
+  <p class="judgment-fit">{render_prose(judgment_data['fit'])}</p>
   <div class="judgment-grid">{panels}
   </div>
 </div>
