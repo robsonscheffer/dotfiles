@@ -578,8 +578,8 @@ def main():
         note_html = ""
         if group.get("note"):
             note_html = f'<div class="spec-decision" style="margin-bottom:1rem;">{render_prose(group["note"])}</div>'
-        lead_html = (
-            f'<p class="walk-section-lead">{render_prose(group["lead"])}</p>'
+        subtitle_html = (
+            f'<p class="walk-section-subtitle">{render_prose(group["lead"])}</p>'
             if group.get("lead") else ""
         )
         files_html = "".join(
@@ -588,9 +588,12 @@ def main():
         sections.append(f"""
 <section class="walk-section">
   <div class="walk-section-head">
-    <h2 class="walk-section-title">
-      <span class="walk-section-num">{i:02d}</span>{esc(group['title'])}
-    </h2>
+    <div class="walk-section-heading">
+      <h2 class="walk-section-title">
+        <span class="walk-section-num">{i:02d}</span>{esc(group['title'])}
+      </h2>
+      {subtitle_html}
+    </div>
     <div class="walk-section-tools">
       <button class="walk-note-toggle" data-section="{i}"
               onclick="__walkToggleNote({i})"
@@ -610,7 +613,6 @@ def main():
     <textarea placeholder="What did you make of this section&#8230;"></textarea>
     <span class="walk-note-status"></span>
   </div>
-  {lead_html}
   <p class="walk-section-framing">{render_prose(group['framing'])}</p>
   {note_html}
   {files_html}

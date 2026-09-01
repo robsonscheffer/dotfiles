@@ -144,26 +144,36 @@
   margin: 1rem 0;
 }
 
-/* ── Story prose — capped measure, bolded lead ────────────────────────────── */
+/* ── Story prose — capped measure, three-tier emphasis ────────────────────── */
 /* Was rendered at whatever width the page gave it — 90-120ch in practice,
    well past the ~65ch line where the eye's return sweep starts failing.
-   Matches .judgment-fit's cap so the two longest-form sections read the same. */
+   Matches .judgment-fit's cap so the two longest-form sections read the same.
+
+   The first readability pass gave the page lead, the per-section lead, and
+   an inline **bold** anchor inside a paragraph the exact same treatment —
+   body font, same size, same weight. Three different levels of "this
+   matters" rendered as one repeated signal, so the page read as a stack of
+   identical bold sentences instead of a hierarchy. Each tier now gets its
+   own signifier instead of a louder version of the same one:
+     - page lead:    display font, larger, no color change — a real headline
+     - section lead:  small, colored, lives in the sticky header as a
+                       subtitle of "01 Title" — not a floating statement
+     - inline anchor: color only, no size/family change — a highlight
+                       inside a sentence you're already reading, not a
+                       second headline competing with the first */
 
 .walk-story-lead {
   max-width: 68ch;
-  font-family: var(--mate-font-body);
-  font-size: 15px;
-  font-weight: 700;
+  font-family: var(--mate-font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.45;
   color: var(--mate-frame-text);
-  margin-bottom: 0.5rem;
-}
-
-.walk-story p,
-.walk-section-lead + .walk-section-framing {
-  max-width: 68ch;
+  margin-bottom: 0.85rem;
 }
 
 .walk-story p {
+  max-width: 68ch;
   font-size: 15px;
   line-height: 1.7;
   color: var(--mate-frame-text);
@@ -174,12 +184,28 @@
   margin-bottom: 0;
 }
 
-.walk-section-lead {
+.walk-story p strong,
+.walk-section-framing strong,
+.judgment-fit strong,
+.judgment-list strong,
+.spec-decision strong {
+  font-weight: 600;
+  color: var(--mate-primary);
+}
+
+.walk-section-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.walk-section-subtitle {
   font-family: var(--mate-font-body);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--mate-frame-text);
-  margin-bottom: 0.4rem;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--mate-primary);
+  line-height: 1.3;
 }
 
 /* ── Per-section notes ────────────────────────────────────────────────────── */
