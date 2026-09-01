@@ -530,8 +530,6 @@ def main():
 </section>
 """)
 
-    sections.append(render_ticket_fit_section(ticket_fit))
-
     for extra in extra_sections:
         body_html = extra["html"] if extra.get("html") else f'<div class="spec-decision" style="font-size:14px;line-height:1.7;white-space:pre-line;">{esc(extra["body"])}</div>'
         sections.append(f"""
@@ -580,6 +578,11 @@ def main():
   {files_html}
 </section>
 """)
+
+    # Ticket fit lands here, not up top — it's a post-read checklist ("did
+    # this match what was asked") rather than context to prime the diff with,
+    # so it sits next to questions/judgment, the other reflection sections.
+    sections.append(render_ticket_fit_section(ticket_fit))
 
     q_html = ""
     for q in questions_data:
