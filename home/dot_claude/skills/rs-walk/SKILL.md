@@ -127,9 +127,14 @@ feeds Agent 6 only (Step 4) — never pass it to Agents 1-4.
 
 ### Step 2b — Resolve the linked Jira ticket (for ticket fit)
 
-Extract a ticket key (`[A-Z]+-\d+`) from `PR_META.title` first, then from `PR_BODY` (look for a
-`**jira:**` line or a bare `PROJ-1234` token) if the title has none. If no key is found, skip this
-step entirely — `TICKET_FIT` stays unset and Step 4 skips Agent 5.
+Extract a ticket key (`[A-Z]+-\d+`) from `PR_META.title` first. If the title has none, look in
+`PR_BODY` for an explicitly labeled field (`**jira:**`, `**ticket:**`, `**Ticket:**`) before
+falling back to a bare regex scan of the prose. A labeled field beats a bare match every time,
+including when the field is present but empty (that's a real "no ticket" signal, not a cue to keep
+scanning). If falling back to a bare scan, exclude any key that appears inside a clause pointing at
+a _different_ PR or ticket as background (tells: "unrelated PR", "found via", "discovered in",
+"a prior ticket") — that key belongs to the PR being described, not this one. If no key survives,
+skip this step entirely — `TICKET_FIT` stays unset and Step 4 skips Agent 5.
 
 If a key is found, fetch it with whichever Jira MCP tool is available in this session (e.g. a
 `get issue`-shaped tool) directly — this is an MCP call, not a shell script. Store the issue's
@@ -316,6 +321,10 @@ Rules:
   good ticket.
 - If the ticket has no acceptance criteria at all, that alone caps `ticket_quality.score` at `thin`
   and `acceptance_criteria` is `[]` — don't invent AC to fill the table.
+- A ticket with no bulleted AC but an unambiguous "expected behavior" / "ask" statement is a middle
+  case, not the zero-signal case above: derive one or two AC from that statement, but say so in
+  `ticket_quality.notes` (e.g. "AC derived from the expected-behavior paragraph, not a checklist")
+  and still cap the score at `thin` — a testable-but-informal ask is not the same as a written one.
 - `status: "Unplanned Deviation"` is for scope the PR added that the ticket never mentioned (not
   necessarily bad — flag it, don't judge it here; that's Agent 4's job on the diff, not this one).
 - If Step 2b found no ticket, skip this agent — Step 5 renders "no ticket linked" without calling it.
@@ -330,8 +339,8 @@ diff, which is exactly what the isolation rule above exists to prevent.
 Input: `RAW_COMMENTS` only. No diff, no file list, no `PR_BODY` beyond what's needed to recognize
 who's who (e.g. matching a login to the PR author).
 
-Return a **JSON array**, one entry per comment or review body (skip empty/dismissed review shells
-with no body text):
+Return a **JSON array**, one entry per comment or per review (see the empty-body rule below for
+when a review counts):
 
 ```json
 [
@@ -345,18 +354,31 @@ with no body text):
 ]
 ```
 
+`human_authenticity` is a human-only field — omit the key entirely on `author_kind: "bot"` rows.
+Do not fill it with a placeholder (`null`, `"n/a"`); the schema above shows it because most rows
+in a real PR are human, not because every row needs it.
+
 Rules:
 
 - `author_kind: "bot"` for accounts that are structurally bots regardless of what they wrote:
   `github-actions`, org review bots (e.g. `groot-production`, `dependabot`), any login with
-  `authorAssociation: "NONE"` plus a machine-generated footer/signature.
+  `authorAssociation: "NONE"` plus a machine-generated footer/signature. If a login 404s against
+  `gh api users/<login>`, that alone confirms it's a GitHub App, not a user account — a stronger
+  bot signal than the footer heuristic, and enough on its own.
+- A review's `body` can be empty while its `state` still carries the entire signal — GitHub puts an
+  "Approve" or "Request changes" click there with no text. Only skip a review as an empty shell
+  when it is genuinely uninformative: `state: "COMMENTED"` with an empty body. Never skip
+  `APPROVED`, `CHANGES_REQUESTED`, or `DISMISSED`, even with an empty body — summarize the state
+  itself (e.g. "Approved, no comment left") and let it set `resolved`.
 - `human_authenticity` only applies when `author_kind: "human"`. Default to `"genuine"`. Mark
   `"bot-posing-as-human"` when a real person's account posted content that is clearly tool-authored
   — the tell is a generation footer or signature (e.g. "🤖 Generated with Claude Code") under a human
   login, not the writing style alone. Mark `"uncertain"` rather than guessing either way.
 - `resolved: true` only when the thread's own content makes that clear (an "Approve" review, a
   reply confirming a fix, a later commit referenced as addressing it) — never infer resolution from
-  the diff, since you're not looking at it here.
+  the diff, since you're not looking at it here. A review that raised zero findings and approved is
+  `resolved: true` on its own merits — don't require it to reference a prior finding first. A review
+  that raised findings and simply hasn't been followed up on yet is `resolved: false`, not omitted.
 - If Step 2a found zero comments, skip this agent — Step 5 renders "no comments yet" without
   calling it.
 
