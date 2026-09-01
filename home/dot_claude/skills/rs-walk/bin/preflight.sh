@@ -49,15 +49,21 @@ fi
 CONTEXT_MODE="grep"
 
 if command -v qmd &>/dev/null; then
+  # `qmd collection list --json` does not actually emit JSON (plain text
+  # regardless of the flag) — parse the real output instead of trusting the
+  # flag name. A collection line looks like "brain (qmd://brain/)" at the
+  # start of a line, indented sub-fields follow.
+  QMD_COLLECTIONS="$(qmd collection list 2>/dev/null || true)"
+
   # Brain collection
-  if ! qmd collection list --json 2>/dev/null | jq -e '.[] | select(.name=="brain")' >/dev/null 2>&1; then
+  if ! grep -qE '^brain \(' <<<"${QMD_COLLECTIONS}"; then
     echo "INFO: Adding brain collection to qmd (first run — may take ~60s)..." >&2
     qmd collection add "${HOME}/brain/wiki" brain >&2
     qmd update brain >&2
   fi
 
   # Walks collection — only if directory has content
-  if ! qmd collection list --json 2>/dev/null | jq -e '.[] | select(.name=="walks")' >/dev/null 2>&1; then
+  if ! grep -qE '^walks \(' <<<"${QMD_COLLECTIONS}"; then
     echo "INFO: Adding walks collection to qmd..." >&2
     qmd collection add "${WALKS_DIR}" walks >&2
     qmd update walks 2>/dev/null >&2 || true

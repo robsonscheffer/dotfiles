@@ -89,8 +89,8 @@ DEFAULT_BACK_LINK = "../index.html"
 BADGE_CLASS_BY_OVERALL = {
     "strong": ("badge-done", ""),
     "solid": ("badge-building", ""),
-    "cautious": ("badge-open", ' style="background:var(--mate-warning);color:#000;"'),
-    "concern": ("badge-open", ' style="background:var(--mate-error);color:#fff;"'),
+    "cautious": ("badge-open", ' style="background:var(--mate-warning);color:var(--color-warning-content);"'),
+    "concern": ("badge-open", ' style="background:var(--mate-error);color:var(--color-error-content);"'),
 }
 
 # Ordered worst-to-best matters: the reveal measures how far the reviewer's call
@@ -232,13 +232,30 @@ AC_STATUS_TONE = {
     "Unplanned Deviation": "var(--mate-error)",
 }
 
+# --mate-success/warning/error/info flip lightness between themes (dark theme
+# uses a light, saturated chip; light theme uses a darker one) so a literal
+# `color:#fff` passes contrast in one theme and fails it in the other. The
+# --color-*-content tokens are pre-tuned per theme for exactly this pairing —
+# use them instead of a hardcoded foreground on any --mate-<tone> background.
+TONE_CONTENT = {
+    "var(--mate-success)": "var(--color-success-content)",
+    "var(--mate-warning)": "var(--color-warning-content)",
+    "var(--mate-error)": "var(--color-error-content)",
+    "var(--mate-info)": "var(--color-info-content)",
+}
+
+
+def badge_fg(tone):
+    return TONE_CONTENT.get(tone, "var(--mate-frame-text)")
+
+
 AUTHOR_KIND_LABEL = {"bot": "BOT", "human": "HUMAN"}
 
 
 def render_ticket_fit_section(ticket_fit):
     if not ticket_fit or not ticket_fit.get("ticket_key"):
         return """
-<section style="margin-bottom:2.5rem;">
+<section style="margin-bottom:2rem;">
   <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">Ticket fit</h2>
   <p style="color:var(--mate-frame-text);font-size:14px;">No ticket linked to this PR — nothing to compare against.</p>
 </section>
@@ -246,26 +263,31 @@ def render_ticket_fit_section(ticket_fit):
     quality = ticket_fit.get("ticket_quality", {})
     q_score = quality.get("score", "adequate")
     q_tone = TICKET_QUALITY_TONE.get(q_score, "var(--mate-frame-dim)")
+    # One line per AC: status tag + criterion. Evidence moves to a hover
+    # tooltip instead of its own block — the point of this section is a
+    # scannable tag row, not a restatement of the ticket.
     ac_rows = "".join(
-        f'<div class="spec-decision" style="margin-bottom:0.75rem;">'
-        f'<span class="badge" style="background:{AC_STATUS_TONE.get(ac.get("status", ""), "var(--mate-frame-dim)")};color:#fff;font-size:11px;margin-right:0.5rem;">{esc(ac.get("status", ""))}</span>'
-        f'<strong style="font-size:14px;">{esc(ac.get("criterion", ""))}</strong>'
-        f'<div style="margin-top:0.35rem;"><code style="font-family:var(--mate-font-mono);font-size:13px;color:var(--mate-frame-muted);">{esc(ac.get("evidence", ""))}</code></div>'
+        f'<div style="display:flex;align-items:flex-start;gap:0.5rem;margin-bottom:0.4rem;">'
+        f'<span class="badge" style="background:{AC_STATUS_TONE.get(ac.get("status", ""), "var(--mate-frame-dim)")};color:{badge_fg(AC_STATUS_TONE.get(ac.get("status", ""), ""))};flex-shrink:0;" title="{esc(ac.get("evidence", ""))}">{esc(ac.get("status", ""))}</span>'
+        f'<span style="font-size:13px;line-height:1.5;color:var(--mate-frame-text);">{esc(ac.get("criterion", ""))}</span>'
         f'</div>'
         for ac in ticket_fit.get("acceptance_criteria", [])
     )
     scope_delta = ticket_fit.get("scope_delta", "")
     scope_html = (
-        f'<p style="font-size:14px;color:var(--mate-frame-text);margin-top:1rem;"><strong>Scope delta:</strong> {esc(scope_delta)}</p>'
+        f'<div style="display:flex;align-items:flex-start;gap:0.5rem;margin-top:0.6rem;">'
+        f'<span class="badge" style="background:var(--mate-warning);color:{badge_fg("var(--mate-warning)")};flex-shrink:0;">scope delta</span>'
+        f'<span style="font-size:13px;color:var(--mate-frame-text);">{esc(scope_delta)}</span>'
+        f'</div>'
         if scope_delta else ""
     )
     return f"""
-<section style="margin-bottom:2.5rem;">
-  <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">Ticket fit &mdash; {esc(ticket_fit['ticket_key'])}</h2>
-  <div style="margin-bottom:1rem;">
-    <span class="badge" style="background:{q_tone};color:#fff;font-size:11px;">ticket quality: {esc(q_score)}</span>
-  </div>
-  <p style="font-size:14px;color:var(--mate-frame-text);margin-bottom:1rem;">{esc(quality.get("notes", ""))}</p>
+<section style="margin-bottom:2rem;">
+  <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.6rem;">
+    Ticket fit &mdash; {esc(ticket_fit['ticket_key'])}
+    <span class="badge" style="background:{q_tone};color:{badge_fg(q_tone)};margin-left:0.4rem;text-transform:none;letter-spacing:normal;">{esc(q_score)}</span>
+  </h2>
+  <p style="font-size:13px;color:var(--mate-frame-muted);margin-bottom:0.75rem;line-height:1.5;">{esc(quality.get("notes", ""))}</p>
   {ac_rows}
   {scope_html}
 </section>
@@ -293,11 +315,11 @@ def render_comment_triage_section(comment_triage):
         )
         auth_note = ""
         if kind == "human" and e.get("human_authenticity") and e["human_authenticity"] != "genuine":
-            auth_note = f' <span class="badge" style="background:var(--mate-warning);color:#000;font-size:10px;">{esc(e["human_authenticity"])}</span>'
+            auth_note = f' <span class="badge" style="background:var(--mate-warning);color:{badge_fg("var(--mate-warning)")};font-size:10px;">{esc(e["human_authenticity"])}</span>'
         resolved = " &#10003; resolved" if e.get("resolved") else ""
         rows += f"""
     <div class="spec-decision" style="margin-bottom:0.6rem;display:flex;gap:0.5rem;align-items:flex-start;">
-      <span class="badge" style="background:{badge_tone};color:#fff;font-size:10px;flex-shrink:0;">{esc(AUTHOR_KIND_LABEL.get(kind, "?"))}</span>
+      <span class="badge" style="background:{badge_tone};color:{badge_fg(badge_tone)};font-size:10px;flex-shrink:0;">{esc(AUTHOR_KIND_LABEL.get(kind, "?"))}</span>
       <div style="min-width:0;">
         <strong style="font-size:13px;">{esc(e.get("author", ""))}</strong>{auth_note}
         <span style="font-size:12px;color:var(--mate-frame-muted);">{resolved}</span>
@@ -317,25 +339,73 @@ def render_comment_triage_section(comment_triage):
 """
 
 
-def render_context_section(context):
+def render_context_rail(context, max_items=5):
+    """Related-notes list for the sidebar, not the first fold.
+
+    Was a full section at the top of the page, ahead of "The story" — on a
+    PR with a handful of hits that pushed the actual narrative below the
+    fold before a reader saw a word of it. A `<details>` in the rail costs
+    nothing until opened and doesn't compete with the story for first look.
+    """
     mode = context.get("mode", "grep")
-    items = context.get("items", [])
+    items = context.get("items", [])[:max_items]
     if not items:
-        body = '<p style="color:var(--mate-frame-text);font-size:14px;">Nothing found in brain for this area — first walk in this territory.</p>'
-    elif mode == "qmd":
+        return """
+    <div class="spec-rail-row" style="border-top:1px solid var(--mate-frame-border);">
+      <span class="spec-rail-label">CONTEXT</span>
+      <span class="spec-rail-value" style="font-size:12px;color:var(--mate-frame-muted);">Nothing found — first walk here.</span>
+    </div>
+"""
+    if mode == "qmd":
         lis = "".join(
-            f'<li style="font-size:14px;margin-bottom:0.4rem;">[{esc(it.get("score", ""))}%] {esc(it.get("path", ""))}: {esc(it.get("snippet", ""))}</li>'
+            f'<li style="margin-bottom:0.5rem;line-height:1.4;">'
+            f'<span style="color:var(--mate-frame-muted);">[{esc(it.get("score", ""))}%]</span> '
+            f'{esc(it.get("path", ""))}</li>'
             for it in items
         )
-        body = f'<ul style="padding-left:1.2rem;">{lis}</ul>'
     else:
-        lis = "".join(f'<li style="font-size:14px;margin-bottom:0.4rem;">{esc(it)}</li>' for it in items)
-        body = f'<ul style="padding-left:1.2rem;">{lis}</ul>'
+        lis = "".join(f'<li style="margin-bottom:0.5rem;line-height:1.4;">{esc(it)}</li>' for it in items)
     return f"""
-<section style="margin-bottom:2rem;">
-  <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">Context</h2>
-  {body}
-</section>
+    <div class="spec-rail-row" style="border-top:1px solid var(--mate-frame-border);">
+      <span class="spec-rail-label">CONTEXT</span>
+      <span class="spec-rail-value" style="font-size:12px;">{esc(mode)}</span>
+    </div>
+    <div class="spec-rail-row">
+      <details>
+        <summary style="cursor:pointer;font-size:11px;color:var(--mate-primary);">{len(items)} related note{"s" if len(items) != 1 else ""}</summary>
+        <ul style="padding-left:1rem;margin-top:0.5rem;font-size:11px;color:var(--mate-frame-text);">{lis}</ul>
+      </details>
+    </div>
+"""
+
+
+def render_ticket_rail(ticket_fit):
+    """Compact ticket tags for the sidebar — the quality score and an
+    AC met/not-met tally, so a later pass over many walks can scan the rail
+    instead of re-reading each ticket-fit section."""
+    if not ticket_fit or not ticket_fit.get("ticket_key"):
+        return ""
+    quality = ticket_fit.get("ticket_quality", {})
+    q_score = quality.get("score", "adequate")
+    q_tone = TICKET_QUALITY_TONE.get(q_score, "var(--mate-frame-dim)")
+    ac_list = ticket_fit.get("acceptance_criteria", [])
+    counts = {}
+    for ac in ac_list:
+        status = ac.get("status", "")
+        counts[status] = counts.get(status, 0) + 1
+    count_chips = "".join(
+        f'<span class="badge" style="background:{AC_STATUS_TONE.get(status, "var(--mate-frame-dim)")};color:{badge_fg(AC_STATUS_TONE.get(status, ""))};margin-right:0.3rem;margin-bottom:0.3rem;">{count} {esc(status)}</span>'
+        for status, count in counts.items()
+    )
+    return f"""
+    <div class="spec-rail-row" style="border-top:1px solid var(--mate-frame-border);">
+      <span class="spec-rail-label">TICKET</span>
+      <span class="spec-rail-value" style="font-size:13px;">{esc(ticket_fit['ticket_key'])}</span>
+    </div>
+    <div class="spec-rail-row">
+      <span class="badge" style="background:{q_tone};color:{badge_fg(q_tone)};margin-bottom:0.4rem;">{esc(q_score)}</span>
+      <div>{count_chips}</div>
+    </div>
 """
 
 
@@ -451,7 +521,7 @@ def main():
 </div>
 """
 
-    sections = [title_block, render_context_section(context)]
+    sections = [title_block]
 
     sections.append(f"""
 <section style="margin-bottom:2.5rem;">
@@ -706,6 +776,26 @@ def main():
     </div>
 """
 
+    ticket_rail = render_ticket_rail(ticket_fit)
+    context_rail = render_context_rail(context)
+
+    discussion_rail = ""
+    if comment_triage is not None:
+        entries = comment_triage if isinstance(comment_triage, list) else comment_triage.get("entries", [])
+        bot_n = sum(1 for e in entries if e.get("author_kind") == "bot")
+        human_n = sum(1 for e in entries if e.get("author_kind") == "human")
+        open_n = sum(1 for e in entries if not e.get("resolved"))
+        discussion_tone = "var(--mate-warning)" if open_n else "var(--mate-success)"
+        discussion_rail = f"""
+    <div class="spec-rail-row" style="border-top:1px solid var(--mate-frame-border);">
+      <span class="spec-rail-label">DISCUSSION</span>
+      <span class="spec-rail-value" style="font-size:12px;">{len(entries)} entries &mdash; {human_n} human, {bot_n} bot</span>
+    </div>
+    <div class="spec-rail-row">
+      <span class="badge" style="background:{discussion_tone};color:{badge_fg(discussion_tone)};">{open_n} open</span>
+    </div>
+"""
+
     rail = f"""
   <aside class="spec-rail">
     <div class="spec-rail-row">
@@ -732,10 +822,9 @@ def main():
       <span class="spec-rail-label">BRANCH</span>
       <span class="spec-rail-value" style="font-size:14px;word-break:break-all;">{esc(head_ref)}</span>
     </div>
-    <div class="spec-rail-row">
-      <span class="spec-rail-label">CONTEXT</span>
-      <span class="spec-rail-value">{esc(context_mode)}</span>
-    </div>
+    {ticket_rail}
+    {discussion_rail}
+    {context_rail}
     {risks_rail}
   </aside>
 """
@@ -782,6 +871,14 @@ def main():
         "read_time": read_time,
         "ticket_key": ticket_fit.get("ticket_key") if ticket_fit else None,
         "ticket_quality": ticket_fit.get("ticket_quality", {}).get("score") if ticket_fit else None,
+        # Per-AC status tags plus a rollup count, so a later pass across many
+        # walks can answer "how often do tickets actually get Met" without
+        # re-opening each walk.html.
+        "ticket_ac_tags": [ac.get("status") for ac in ticket_fit.get("acceptance_criteria", [])] if ticket_fit else None,
+        "ticket_ac_summary": (lambda acs: {
+            status: sum(1 for a in acs if a.get("status") == status)
+            for status in {a.get("status") for a in acs}
+        })(ticket_fit.get("acceptance_criteria", [])) if ticket_fit and ticket_fit.get("acceptance_criteria") else None,
         "comment_counts": (lambda entries: {
             "bot": sum(1 for e in entries if e.get("author_kind") == "bot"),
             "human": sum(1 for e in entries if e.get("author_kind") == "human"),

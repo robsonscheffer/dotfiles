@@ -999,8 +999,18 @@ body {
  * distinct element rather than blending into the surface behind it.
  */
 .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
   border-width: 1px;
   border-color: var(--mate-frame-border);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  background-color: var(--badge-color, var(--mate-frame-sidebar));
+  color: var(--badge-fg, var(--mate-frame-text));
 }
 .badge-ghost {
   background-color: var(--mate-frame-sidebar);
