@@ -23,6 +23,8 @@ Usage:
     --context /tmp/walk-N-context.json \
     --repo org/repo \
     --extra-sections /tmp/walk-N-extra.json \
+    --ticket-fit /tmp/walk-N-ticket-fit.json \
+    --comment-triage /tmp/walk-N-comment-triage.json \
     [--render-diff-bin path/to/render-diff.sh] \
     [--template path/to/walk-template.html] \
     [--main-css path/to/main.css] \
@@ -51,6 +53,18 @@ Inputs:
                  inserted raw — use for code comparisons/tables; caller is
                  responsible for escaping any untrusted content within it.
                  Omit the whole option if there's nothing supplementary.
+  --ticket-fit  optional JSON: {ticket_key, ticket_quality:{score, notes},
+                 acceptance_criteria:[{criterion, status, evidence}],
+                 scope_delta} — rendered right after "The story". Omit
+                 (or pass a file with ticket_key: null) when no ticket is
+                 linked; renders a "no ticket linked" note instead of
+                 failing.
+  --comment-triage  optional JSON: [{author, author_kind:"bot"|"human",
+                 human_authenticity?:"genuine"|"bot-posing-as-human"|"uncertain",
+                 summary, resolved?}] — rendered as a collapsed "Prior
+                 discussion" section near the end, after the questions
+                 section. This data must never reach Agents 1-4 (story,
+                 questions, risks, judgment) — see Step 4's isolation rule.
 
 Writes <out-root>/pr-<number>-<slug>/walk.html and meta.json. Prints the
 walk directory path to stdout on success.
@@ -204,6 +218,105 @@ TOGGLE_JS = """
 
 
 
+TICKET_QUALITY_TONE = {
+    "good": "var(--mate-success)",
+    "adequate": "var(--mate-info)",
+    "thin": "var(--mate-warning)",
+    "missing": "var(--mate-error)",
+}
+
+AC_STATUS_TONE = {
+    "Met": "var(--mate-success)",
+    "Partially Met": "var(--mate-warning)",
+    "Not Met": "var(--mate-error)",
+    "Unplanned Deviation": "var(--mate-error)",
+}
+
+AUTHOR_KIND_LABEL = {"bot": "BOT", "human": "HUMAN"}
+
+
+def render_ticket_fit_section(ticket_fit):
+    if not ticket_fit or not ticket_fit.get("ticket_key"):
+        return """
+<section style="margin-bottom:2.5rem;">
+  <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">Ticket fit</h2>
+  <p style="color:var(--mate-frame-text);font-size:14px;">No ticket linked to this PR — nothing to compare against.</p>
+</section>
+"""
+    quality = ticket_fit.get("ticket_quality", {})
+    q_score = quality.get("score", "adequate")
+    q_tone = TICKET_QUALITY_TONE.get(q_score, "var(--mate-frame-dim)")
+    ac_rows = "".join(
+        f'<div class="spec-decision" style="margin-bottom:0.75rem;">'
+        f'<span class="badge" style="background:{AC_STATUS_TONE.get(ac.get("status", ""), "var(--mate-frame-dim)")};color:#fff;font-size:11px;margin-right:0.5rem;">{esc(ac.get("status", ""))}</span>'
+        f'<strong style="font-size:14px;">{esc(ac.get("criterion", ""))}</strong>'
+        f'<div style="margin-top:0.35rem;"><code style="font-family:var(--mate-font-mono);font-size:13px;color:var(--mate-frame-muted);">{esc(ac.get("evidence", ""))}</code></div>'
+        f'</div>'
+        for ac in ticket_fit.get("acceptance_criteria", [])
+    )
+    scope_delta = ticket_fit.get("scope_delta", "")
+    scope_html = (
+        f'<p style="font-size:14px;color:var(--mate-frame-text);margin-top:1rem;"><strong>Scope delta:</strong> {esc(scope_delta)}</p>'
+        if scope_delta else ""
+    )
+    return f"""
+<section style="margin-bottom:2.5rem;">
+  <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">Ticket fit &mdash; {esc(ticket_fit['ticket_key'])}</h2>
+  <div style="margin-bottom:1rem;">
+    <span class="badge" style="background:{q_tone};color:#fff;font-size:11px;">ticket quality: {esc(q_score)}</span>
+  </div>
+  <p style="font-size:14px;color:var(--mate-frame-text);margin-bottom:1rem;">{esc(quality.get("notes", ""))}</p>
+  {ac_rows}
+  {scope_html}
+</section>
+"""
+
+
+def render_comment_triage_section(comment_triage):
+    if comment_triage is None:
+        return ""
+    entries = comment_triage if isinstance(comment_triage, list) else comment_triage.get("entries", [])
+    if not entries:
+        return """
+<section style="margin-bottom:2.5rem;">
+  <h2 style="font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:0.75rem;">Prior discussion</h2>
+  <p style="color:var(--mate-frame-text);font-size:14px;">No comments or reviews yet.</p>
+</section>
+"""
+    rows = ""
+    for e in entries:
+        kind = e.get("author_kind", "uncertain")
+        badge_tone = (
+            "var(--mate-info)" if kind == "human"
+            else "var(--mate-frame-dim)" if kind == "bot"
+            else "var(--mate-warning)"
+        )
+        auth_note = ""
+        if kind == "human" and e.get("human_authenticity") and e["human_authenticity"] != "genuine":
+            auth_note = f' <span class="badge" style="background:var(--mate-warning);color:#000;font-size:10px;">{esc(e["human_authenticity"])}</span>'
+        resolved = " &#10003; resolved" if e.get("resolved") else ""
+        rows += f"""
+    <div class="spec-decision" style="margin-bottom:0.6rem;display:flex;gap:0.5rem;align-items:flex-start;">
+      <span class="badge" style="background:{badge_tone};color:#fff;font-size:10px;flex-shrink:0;">{esc(AUTHOR_KIND_LABEL.get(kind, "?"))}</span>
+      <div style="min-width:0;">
+        <strong style="font-size:13px;">{esc(e.get("author", ""))}</strong>{auth_note}
+        <span style="font-size:12px;color:var(--mate-frame-muted);">{resolved}</span>
+        <p style="margin:0.3rem 0 0;font-size:13px;color:var(--mate-frame-text);">{esc(e.get("summary", ""))}</p>
+      </div>
+    </div>
+"""
+    return f"""
+<section style="margin-bottom:2.5rem;">
+  <details>
+    <summary style="cursor:pointer;list-style:none;"><h2 style="display:inline;font-family:var(--mate-font-body);font-size:0.7rem;font-weight:700;color:var(--mate-frame-muted);text-transform:uppercase;letter-spacing:0.12em;">Prior discussion ({len(entries)})</h2></summary>
+    <div style="margin-top:1rem;">
+      {rows}
+    </div>
+  </details>
+</section>
+"""
+
+
 def render_context_section(context):
     mode = context.get("mode", "grep")
     items = context.get("items", [])
@@ -237,6 +350,8 @@ def main():
     ap.add_argument("--context", required=True)
     ap.add_argument("--repo", required=True)
     ap.add_argument("--extra-sections", default=None)
+    ap.add_argument("--ticket-fit", default=None)
+    ap.add_argument("--comment-triage", default=None)
     ap.add_argument("--render-diff-bin", default=DEFAULT_RENDER_DIFF)
     ap.add_argument("--template", default=DEFAULT_TEMPLATE)
     ap.add_argument("--main-css", default=DEFAULT_MAIN_CSS)
@@ -254,6 +369,8 @@ def main():
     judgment_data = read_json(args.judgment)
     context = read_json(args.context)
     extra_sections = read_json(args.extra_sections) if args.extra_sections else []
+    ticket_fit = read_json(args.ticket_fit) if args.ticket_fit else None
+    comment_triage = read_json(args.comment_triage) if args.comment_triage else None
 
     number = pr_meta["number"]
     title = pr_meta["title"]
@@ -295,7 +412,10 @@ def main():
         + [q.get("question", "") for q in questions_data]
         + [judgment_data.get("fit", "")]
         + judgment_data.get("risks_summary", [])
-        + judgment_data.get("gaps", []),
+        + judgment_data.get("gaps", [])
+        + ([ticket_fit.get("ticket_quality", {}).get("notes", "")]
+           + [ac.get("criterion", "") for ac in ticket_fit.get("acceptance_criteria", [])]
+           if ticket_fit else []),
         read_text(args.diff),
     )
     html = html.replace("<!-- READ_TIME -->", esc(read_time))
@@ -339,6 +459,8 @@ def main():
   <p style="font-size:15px;line-height:1.7;color:var(--mate-frame-text);">{esc(story_data['story'])}</p>
 </section>
 """)
+
+    sections.append(render_ticket_fit_section(ticket_fit))
 
     for extra in extra_sections:
         body_html = extra["html"] if extra.get("html") else f'<div class="spec-decision" style="font-size:14px;line-height:1.7;white-space:pre-line;">{esc(extra["body"])}</div>'
@@ -404,6 +526,8 @@ def main():
   {q_html}
 </section>
 """)
+
+    sections.append(render_comment_triage_section(comment_triage))
 
     notes_js = f"""
 <script>
@@ -656,6 +780,14 @@ def main():
         "judgment_risks": judgment_data.get("risks_summary", []),
         "delta": "",
         "read_time": read_time,
+        "ticket_key": ticket_fit.get("ticket_key") if ticket_fit else None,
+        "ticket_quality": ticket_fit.get("ticket_quality", {}).get("score") if ticket_fit else None,
+        "comment_counts": (lambda entries: {
+            "bot": sum(1 for e in entries if e.get("author_kind") == "bot"),
+            "human": sum(1 for e in entries if e.get("author_kind") == "human"),
+            "uncertain": sum(1 for e in entries if e.get("author_kind") not in ("bot", "human")),
+        })(comment_triage if isinstance(comment_triage, list) else (comment_triage or {}).get("entries", []))
+        if comment_triage is not None else None,
     }
     with open(meta_json_path, "w") as f:
         json.dump(meta, f, indent=2)

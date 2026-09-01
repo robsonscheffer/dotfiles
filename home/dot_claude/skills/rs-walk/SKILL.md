@@ -3,10 +3,12 @@ name: rs-walk
 description: >-
   PR walkthrough — generates a scrollable review document you read instead of the GitHub diff.
   The document IS the review: context from brain, the author's story, curated diff in reading order,
-  sticky-rail risks, questions to bring, your notes, and a hidden judgment revealed at the end.
+  a ticket-fit check against the linked Jira ticket (including how well the ticket itself was
+  written), sticky-rail risks, questions to bring, a collapsed prior-discussion log classifying
+  bot vs human comments, your notes, and a hidden judgment revealed at the end.
   Submits the review to GitHub as the final step.
   Triggers on: "walk this PR", "review deck", "walk PR", "/rs-walk <url>".
-version: 0.3.0
+version: 0.4.0
 ---
 
 # rs-walk — PR walkthrough
@@ -27,8 +29,14 @@ WALK_TODAY=$(date +%F) python3 "${SKILL_BIN}/build-walk.py" \
   --story /tmp/rs-walk-fx/story.json --questions /tmp/rs-walk-fx/questions.json \
   --risks /tmp/rs-walk-fx/risks.json --judgment /tmp/rs-walk-fx/judgment.json \
   --context /tmp/rs-walk-fx/context.json --repo acme/console \
+  --ticket-fit /tmp/rs-walk-fx/ticket-fit.json \
+  --comment-triage /tmp/rs-walk-fx/comment-triage.json \
   --out-root ~/brain/.scratch/artifact --force
 ```
+
+The fixture includes both new sections precisely so the audit exercises them — a fixture missing
+the sections you're about to change is the same trap as the two-file diff fixture this file warns
+about below.
 
 Then Lighthouse it over `http://localhost:52010/scratch/pr-4242-*/walk.html`
 **in both themes** — a snapshot audit only tests whichever theme is live. The
@@ -107,6 +115,27 @@ If fetch fails, stop with the script's error verbatim.
 Store: `PR_META` = contents of the meta.json path, `PR_BODY` = contents of the body.txt path, diff at
 `/tmp/walk-${PR_NUMBER}.diff`, files at `/tmp/walk-${PR_NUMBER}-files.txt`.
 
+### Step 2a — Fetch PR comments and reviews (for comment triage)
+
+```bash
+bash "${SKILL_BIN}/fetch-pr-comments.sh" "${REPO}" "${PR_NUMBER}"
+```
+
+Writes `/tmp/walk-${PR_NUMBER}-raw-comments.json` (`{"comments":[...],"reviews":[...]}`). Non-fatal —
+on a gh failure it writes an empty structure and still exits 0. Store as `RAW_COMMENTS`. This data
+feeds Agent 6 only (Step 4) — never pass it to Agents 1-4.
+
+### Step 2b — Resolve the linked Jira ticket (for ticket fit)
+
+Extract a ticket key (`[A-Z]+-\d+`) from `PR_META.title` first, then from `PR_BODY` (look for a
+`**jira:**` line or a bare `PROJ-1234` token) if the title has none. If no key is found, skip this
+step entirely — `TICKET_FIT` stays unset and Step 4 skips Agent 5.
+
+If a key is found, fetch it with whichever Jira MCP tool is available in this session (e.g. a
+`get issue`-shaped tool) directly — this is an MCP call, not a shell script. Store the issue's
+summary, description, and acceptance criteria as `TICKET_DATA`. If the fetch fails (no access,
+ticket deleted), skip the step the same way a missing key does — don't fail the whole walk.
+
 ---
 
 ## Step 3 — Context search
@@ -140,14 +169,23 @@ If nothing found in either mode: `CONTEXT_RESULTS="Nothing found in brain for th
 
 ## Step 4 — Parallel agents
 
-Dispatch all four simultaneously. Pass to every agent:
+Dispatch the applicable agents simultaneously (Agents 1-4 always; Agent 5 only if Step 2b found a
+ticket; Agent 6 only if Step 2a found comments). Pass to Agents 1-4:
 
 - `PR_META` (full JSON)
 - `FILE_LIST` (contents of `/tmp/walk-${PR_NUMBER}-files.txt`)
 - First 400 lines of `/tmp/walk-${PR_NUMBER}.diff`
 
+**Isolation rule — read this before wiring any new input into these prompts.** Agents 1-4 (story,
+questions, risks, judgment) never see `RAW_COMMENTS` or `TICKET_DATA`. This is deliberate: the
+judgment call (Agent 4) has to be the AI's independent read of the diff, not one already primed by
+what reviewers argued about or what the ticket promised. Comment triage (Agent 6) and ticket fit
+(Agent 5) are separate, later passes that produce their own sections — they do not feed back into
+Agents 1-4, and Agents 1-4's output does not feed into them either. If a future edit needs richer
+context in Agent 1-4's prompt, it must not be `RAW_COMMENTS` or `TICKET_DATA`.
+
 **Supplementary question:** if the user's invocation included something beyond the PR URL (e.g.
-"also explain X" or "and what does Y mean here"), dispatch a 5th agent scoped to that question,
+"also explain X" or "and what does Y mean here"), dispatch an extra agent scoped to that question,
 reading whatever part of the diff or codebase it needs. This is explanatory, not reviewer-facing —
 it goes in its own content section right after "The story" (see Step 5), not folded into Questions
 or Risks. Return plain text (not JSON) capped at ~300 words.
@@ -243,6 +281,85 @@ Return a **JSON object**:
 
 Do not soften. Do not inflate. "None identified" only if genuinely true.
 
+### Agent 5 — Ticket fit (only if Step 2b found a ticket)
+
+**Task:** Compare what the ticket asked for against what the PR actually built, and rate how
+well the ticket itself was written. This is two separate judgments — don't blend them.
+
+Input: `TICKET_DATA` (summary, description, acceptance criteria), `PR_META`, `PR_BODY`, `FILE_LIST`,
+the diff. No `RAW_COMMENTS`.
+
+Return a **JSON object**:
+
+```json
+{
+  "ticket_key": "PROJ-1234",
+  "ticket_quality": {
+    "score": "good | adequate | thin | missing",
+    "notes": "1-2 sentences: are the AC concrete and checkable, is who/what/why clear?"
+  },
+  "acceptance_criteria": [
+    {
+      "criterion": "Restated from the ticket",
+      "status": "Met | Partially Met | Not Met | Unplanned Deviation",
+      "evidence": "file:line or PR comment reference"
+    }
+  ],
+  "scope_delta": "What the PR does beyond, or short of, what the ticket asked for. Empty string if none."
+}
+```
+
+Rules:
+
+- `ticket_quality` grades the _ticket_, independent of whether the PR satisfies it — a thin ticket
+  that happens to get satisfied is still a thin ticket, and a good ticket partially met is still a
+  good ticket.
+- If the ticket has no acceptance criteria at all, that alone caps `ticket_quality.score` at `thin`
+  and `acceptance_criteria` is `[]` — don't invent AC to fill the table.
+- `status: "Unplanned Deviation"` is for scope the PR added that the ticket never mentioned (not
+  necessarily bad — flag it, don't judge it here; that's Agent 4's job on the diff, not this one).
+- If Step 2b found no ticket, skip this agent — Step 5 renders "no ticket linked" without calling it.
+
+### Agent 6 — Comment triage (only if Step 2a found comments)
+
+**Task:** Classify who said what in the PR's existing discussion, for later reference. This is
+classification, not review — do not evaluate whether a comment's concern is valid or already
+addressed in the diff; that risks leaking comment-informed opinions back into how you'd frame the
+diff, which is exactly what the isolation rule above exists to prevent.
+
+Input: `RAW_COMMENTS` only. No diff, no file list, no `PR_BODY` beyond what's needed to recognize
+who's who (e.g. matching a login to the PR author).
+
+Return a **JSON array**, one entry per comment or review body (skip empty/dismissed review shells
+with no body text):
+
+```json
+[
+  {
+    "author": "login",
+    "author_kind": "bot | human",
+    "human_authenticity": "genuine | bot-posing-as-human | uncertain",
+    "summary": "One line: what this comment/review actually said.",
+    "resolved": true
+  }
+]
+```
+
+Rules:
+
+- `author_kind: "bot"` for accounts that are structurally bots regardless of what they wrote:
+  `github-actions`, org review bots (e.g. `groot-production`, `dependabot`), any login with
+  `authorAssociation: "NONE"` plus a machine-generated footer/signature.
+- `human_authenticity` only applies when `author_kind: "human"`. Default to `"genuine"`. Mark
+  `"bot-posing-as-human"` when a real person's account posted content that is clearly tool-authored
+  — the tell is a generation footer or signature (e.g. "🤖 Generated with Claude Code") under a human
+  login, not the writing style alone. Mark `"uncertain"` rather than guessing either way.
+- `resolved: true` only when the thread's own content makes that clear (an "Approve" review, a
+  reply confirming a fix, a later commit referenced as addressing it) — never infer resolution from
+  the diff, since you're not looking at it here.
+- If Step 2a found zero comments, skip this agent — Step 5 renders "no comments yet" without
+  calling it.
+
 ---
 
 ## Step 5 — Assemble walk.html
@@ -256,6 +373,10 @@ Write each agent's returned JSON to its own file — `build-walk.py` reads them 
 # questions   → /tmp/walk-${PR_NUMBER}-questions.json   [...]
 # risks       → /tmp/walk-${PR_NUMBER}-risks.json       [...]
 # judgment    → /tmp/walk-${PR_NUMBER}-judgment.json    {fit, risks_summary, gaps, overall}
+# ticket-fit  → /tmp/walk-${PR_NUMBER}-ticket-fit.json   {ticket_key, ticket_quality, acceptance_criteria, scope_delta}
+#               only if Agent 5 ran (Step 2b found a ticket)
+# comment-triage → /tmp/walk-${PR_NUMBER}-comment-triage.json  [...]
+#               only if Agent 6 ran (Step 2a found comments)
 ```
 
 Build the context JSON from Step 3's results:
@@ -298,18 +419,25 @@ WALK_TODAY=$(date +%Y-%m-%d) python3 "${SKILL_BIN}/build-walk.py" \
   --repo "${REPO}" \
   --tags "{2-3 topic words, comma separated}" \
   [--extra-sections /tmp/walk-${PR_NUMBER}-extra.json] \
+  [--ticket-fit /tmp/walk-${PR_NUMBER}-ticket-fit.json] \
+  [--comment-triage /tmp/walk-${PR_NUMBER}-comment-triage.json] \
   [--force]
 ```
+
+Omit `--ticket-fit` entirely if Agent 5 didn't run; omit `--comment-triage` entirely if Agent 6
+didn't run. Both degrade to an explicit empty-state message in the walk rather than erroring.
 
 This does everything that used to be manual in this step: derives the slug, renders each group's
 diffs via `render-diff.sh`, inlines the compiled mate-ds stylesheet, builds the sticky top bar
 (wordmark, theme switcher, "all walks" link only — no title, no badges, kept deliberately quiet
 since it never leaves the viewport) and an in-content title block at the top of the wide column
 (repo eyebrow, PR title linked to GitHub, branch pill — sized as a document heading, not a hero),
-injects the sticky rail and toggle JS, opens all links in a new tab, writes `meta.json`
-(auto-extracting `PROJ-XXXX`-style ticket IDs from the title and merging them with `--tags`), and
-runs the lint binary — printing violations to stderr if any remain. It prints the walk directory
-path on success.
+injects the sticky rail and toggle JS, opens all links in a new tab, renders the ticket-fit
+section (right after "The story") and the collapsed prior-discussion section (after the questions
+section) when their inputs are present, writes `meta.json` (auto-extracting `PROJ-XXXX`-style
+ticket IDs from the title and merging them with `--tags`, plus `ticket_key`/`ticket_quality`/
+`comment_counts` when those inputs were given), and runs the lint binary — printing violations to
+stderr if any remain. It prints the walk directory path on success.
 
 The template has 1 pre-existing violation (`inlined-css`) plus several `small-font` violations
 inside the inlined stylesheet and the header/footer chrome — all template-origin, not from agent
@@ -494,16 +622,21 @@ git -C ~/brain commit -m "chore: walk pr-${PR_NUMBER} learning entry"
 
 ## Edge cases
 
-| Situation                    | Behavior                                                                                  |
-| ---------------------------- | ----------------------------------------------------------------------------------------- |
-| PR body empty                | Infer story from diff; note "No description — inferred from diff" in story section        |
-| Diff > 2000 lines            | Cap per-group at 80 lines; add "[diff large — showing key hunks only]" note in each group |
-| > 20 changed files           | Agent 1 caps at 5 groups, merges minor files into nearest logical group                   |
-| Walk already exists          | Ask: "Overwrite existing walk at `{WALK_DIR}`? [y/N]"                                     |
-| Lint fails                   | Surface each violation with file:line. Fix before opening.                                |
-| qmd update slow on first run | Print: "Indexing brain — first run, may take ~60s"                                        |
-| gh review fails              | Surface error verbatim. meta.json stays with `verdict: null`.                             |
-| User skips submission        | meta.json stays with `verdict: null`. Walk stays in index as "pending".                   |
+| Situation                             | Behavior                                                                                  |
+| ------------------------------------- | ----------------------------------------------------------------------------------------- |
+| PR body empty                         | Infer story from diff; note "No description — inferred from diff" in story section        |
+| Diff > 2000 lines                     | Cap per-group at 80 lines; add "[diff large — showing key hunks only]" note in each group |
+| > 20 changed files                    | Agent 1 caps at 5 groups, merges minor files into nearest logical group                   |
+| Walk already exists                   | Ask: "Overwrite existing walk at `{WALK_DIR}`? [y/N]"                                     |
+| Lint fails                            | Surface each violation with file:line. Fix before opening.                                |
+| qmd update slow on first run          | Print: "Indexing brain — first run, may take ~60s"                                        |
+| gh review fails                       | Surface error verbatim. meta.json stays with `verdict: null`.                             |
+| User skips submission                 | meta.json stays with `verdict: null`. Walk stays in index as "pending".                   |
+| No ticket key found in title/body     | Skip Agent 5 and `--ticket-fit`. Ticket fit section renders "no ticket linked."           |
+| Jira fetch fails (no access, deleted) | Same as no ticket found — skip, don't fail the walk.                                      |
+| PR has zero comments/reviews          | Skip Agent 6 and `--comment-triage`. Prior discussion section renders "no comments yet."  |
+| `fetch-pr-comments.sh` gh call fails  | Non-fatal — writes empty `{"comments":[],"reviews":[]}`, same as zero comments.           |
+| Ticket has no acceptance criteria     | `ticket_quality.score` caps at `thin`; `acceptance_criteria` stays `[]`, not invented.    |
 
 ---
 

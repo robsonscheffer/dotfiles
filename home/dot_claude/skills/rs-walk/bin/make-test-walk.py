@@ -142,6 +142,38 @@ w("judgment.json", {
     "overall": "cautious",
 })
 
+w("ticket-fit.json", {
+    "ticket_key": "PROJ-4242",
+    "ticket_quality": {
+        "score": "adequate",
+        "notes": "Clear who/what/why, but the AC only covers the happy path — nothing about "
+                 "the three other apps that consume the shared layer.",
+    },
+    "acceptance_criteria": [
+        {"criterion": "Portal boots with no global store", "status": "Met",
+         "evidence": "src/apps/portal/index.tsx"},
+        {"criterion": "No regression in the impersonation flow", "status": "Partially Met",
+         "evidence": "Covered by unit tests only, no integration test — see judgment gaps"},
+        {"criterion": "Shared layer stays backward-compatible for other consumers",
+         "status": "Not Met", "evidence": "No test touches admin/reports/settings"},
+    ],
+    "scope_delta": "The redirect/navigate untangling (group 2) was not scoped in the ticket — "
+                   "it surfaced once the store removal made the coupling visible.",
+})
+
+w("comment-triage.json", [
+    {"author": "octocat", "author_kind": "human", "human_authenticity": "genuine",
+     "summary": "Confirmed the impersonation path was manually tested in staging.",
+     "resolved": True},
+    {"author": "review-bot", "author_kind": "bot",
+     "summary": "Flagged the missing shared-layer test coverage as MEDIUM risk.",
+     "resolved": False},
+    {"author": "octocat", "author_kind": "human", "human_authenticity": "bot-posing-as-human",
+     "summary": "Posted a generated risk summary of the redirect changes, signed "
+                "\"🤖 Generated with Claude Code\".",
+     "resolved": False},
+])
+
 w("context.json", {"mode": "qmd", "items": [
     {"path": "wiki/learning/2026-05-02-store-teardown-order.md", "score": 82,
      "snippet": "Store teardown has to follow provider unmount or listeners leak."},
