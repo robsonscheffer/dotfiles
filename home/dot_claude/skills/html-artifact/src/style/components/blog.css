@@ -22,6 +22,9 @@
   gap: 56px;
   align-items: start;
 }
+.blog-layout.with-toc > * {
+  min-width: 0;
+}
 
 .blog-header {
   margin-bottom: 32px;
@@ -157,6 +160,7 @@
   background: color-mix(in oklab, var(--mate-frame-text) 8%, transparent);
   padding: 1px 6px;
   border-radius: 4px;
+  overflow-wrap: anywhere;
 }
 .blog-prose pre {
   background: var(--mate-frame-nav);
@@ -187,6 +191,7 @@
 }
 .blog-prose table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-family: var(--mate-font-body);
   font-size: 14px;
@@ -207,6 +212,7 @@
   border-bottom: 1px solid var(--mate-frame-border);
   padding: 10px 12px;
   vertical-align: top;
+  overflow-wrap: anywhere;
 }
 .blog-prose tr:last-child td {
   border-bottom: none;

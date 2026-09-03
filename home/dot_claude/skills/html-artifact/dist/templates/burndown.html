@@ -6,9 +6,8 @@
     <title><!-- EPIC_TITLE --> · burndown</title>
     <script>
       (function () {
-        var THEMES = ["mate", "mate-light"];
         var t = localStorage.getItem("mate-theme");
-        if (THEMES.indexOf(t) === -1)
+        if (!t)
           t = matchMedia("(prefers-color-scheme: dark)").matches
             ? "mate"
             : "mate-light";
@@ -16,7 +15,7 @@
       })();
     </script>
     <link
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght;500;600;700&family=Geist+Mono:wght;500;600&display=swap"
       rel="stylesheet"
     />
     <style rel="stylesheet" crossorigin>
@@ -18299,6 +18298,9 @@
         gap: 24px;
         display: grid;
       }
+      .spec-layout > * {
+        min-width: 0;
+      }
       .spec-rail {
         border: 1px solid var(--mate-frame-border);
         background: var(--mate-frame-bg);
@@ -18325,6 +18327,59 @@
         color: var(--mate-frame-text);
         font-size: 12px;
         font-family: var(--mate-font-body);
+        overflow-wrap: anywhere;
+      }
+      .crumb-link {
+        color: var(--mate-frame-muted);
+        border-bottom: 1px solid #0000;
+        text-decoration: none;
+      }
+      .crumb-link:hover {
+        color: var(--mate-frame-text);
+        border-bottom-color: var(--mate-frame-border);
+      }
+      .crumb-here {
+        color: var(--mate-frame-text);
+        font-family: var(--mate-font-mono);
+        font-size: 12px;
+      }
+      .sep {
+        color: var(--mate-frame-dim);
+      }
+      .md-context-nav {
+        border: 1px solid var(--mate-frame-border);
+        background: var(--mate-frame-bg);
+        font-family: var(--mate-font-body);
+        border-radius: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin: 12px 0 0;
+        padding: 8px 12px;
+        font-size: 12px;
+        display: flex;
+      }
+      .md-context-nav a {
+        color: var(--mate-primary);
+        text-decoration: none;
+      }
+      .md-context-nav a:hover {
+        text-decoration: underline;
+      }
+      .md-context-nav a.disabled {
+        color: var(--mate-frame-dim);
+        pointer-events: none;
+      }
+      .ctx-label {
+        color: var(--mate-frame-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 9px;
+        font-weight: 700;
+      }
+      .ctx-spacer {
+        flex: 1;
+        min-width: 0;
       }
       .spec-decision {
         background: var(--color-primary);
@@ -18411,6 +18466,9 @@
         gap: 56px;
         max-width: 1060px;
         display: grid;
+      }
+      .blog-layout.with-toc > * {
+        min-width: 0;
       }
       .blog-header {
         margin-bottom: 32px;
@@ -18577,6 +18635,7 @@
         }
       }
       .blog-prose code {
+        overflow-wrap: anywhere;
         border-radius: 4px;
         padding: 1px 6px;
       }
@@ -18615,6 +18674,7 @@
         margin: 40px 0;
       }
       .blog-prose table {
+        table-layout: fixed;
         border-collapse: collapse;
         width: 100%;
         font-family: var(--mate-font-body);
@@ -18635,6 +18695,7 @@
         color: var(--mate-frame-text);
         border-bottom: 1px solid var(--mate-frame-border);
         vertical-align: top;
+        overflow-wrap: anywhere;
         padding: 10px 12px;
       }
       .blog-prose tr:last-child td {
