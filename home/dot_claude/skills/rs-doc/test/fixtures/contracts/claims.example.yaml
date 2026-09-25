@@ -1,0 +1,41 @@
+claims:
+  - id: C7
+    claim: Checkout clicks take their label from the nearest data-analytics-name attribute.
+    status: verified
+    evidence:
+      kind: code
+      ref: acme/web@origin/main:src/analytics/label.ts:42
+      excerpt: const label = el.closest('[data-analytics-name]')?.dataset.analyticsName
+      needs: git
+    verdict: supports
+    checked_by: agent:claude
+    checked_at: 2026-09-25
+    ttl_days: 30
+  - id: C12
+    claim: 918 people qualify once the last 7 days are excluded.
+    status: verified
+    evidence:
+      kind: query
+      sql: queries/c12-qualifying.sql
+      expect: { rows: 1, value: 918, tolerance: 0 }
+      needs: snow
+    verdict: supports
+    checked_by: agent:claude
+    checked_at: 2026-09-25
+    ttl_days: 7
+  - id: C15
+    claim: The orders team discussed the label rule and agreed to keep it.
+    status: verified
+    evidence:
+      kind: mcp
+      source: https://chat.example.com/archives/C000/p1700000000
+      excerpt: "Agreed, we keep the nearest-attribute rule for now."
+      needs: mcp:slack
+    verdict: supports
+    checked_by: agent:claude
+    checked_at: 2026-09-25
+    ttl_days: 30
+  - id: C19
+    claim: Which ID the lab record splits by.
+    status: not_verified
+    owner: Sam
