@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# mate-doc setup. Idempotent: safe to run again at any time.
+#   1. bun present and new enough, else install through mise
+#   2. dependencies installed
+#   3. mate-doc linked onto PATH (~/.local/bin)
+#   4. config written if missing (~/.config/mate-doc/config.yaml)
+set -euo pipefail
+
+self="$(readlink -f "${BASH_SOURCE[0]}")"
+root="$(cd "$(dirname "$self")/.." && pwd)"
+min_bun="1.3.14"
+bin_dir="$HOME/.local/bin"
+config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/mate-doc"
+state_dir="${XDG_STATE_HOME:-$HOME/.local/state}/mate-doc"
+
+version_ge() {
+  # true when $1 >= $2, comparing dotted versions
+  [[ "$(printf '%s\n%s\n' "$2" "$1" | sort -t. -k1,1n -k2,2n -k3,3n | head -1)" == "$2" ]]
+}
+
+if command -v bun >/dev/null 2>&1 && version_ge "$(bun --version)" "$min_bun"; then
+  echo "setup: bun $(bun --version) ok"
+elif command -v mise >/dev/null 2>&1; then
+  echo "setup: installing bun $min_bun through mise"
+  mise use -g "bun@$min_bun"
+  eval "$(mise env -s bash)"
+else
+  echo "setup: bun >= $min_bun is required and mise is not available. Install bun, then rerun." >&2
+  exit 3
+fi
+
+echo "setup: installing dependencies"
+(cd "$root" && bun install --frozen-lockfile 2>/dev/null || bun install)
+
+mkdir -p "$bin_dir" "$state_dir"
+ln -sfn "$root/bin/mate-doc" "$bin_dir/mate-doc"
+echo "setup: linked $bin_dir/mate-doc"
+case ":$PATH:" in
+  *":$bin_dir:"*) ;;
+  *) echo "setup: note, $bin_dir is not on PATH" ;;
+esac
+
+if [[ ! -f "$config_dir/config.yaml" ]]; then
+  mkdir -p "$config_dir"
+  cat > "$config_dir/config.yaml" <<CONF
+# mate-doc config. Edit freely; setup never overwrites this file.
+port: 52011
+# Where \`mate-doc new\` puts docs when no path is given. Unset means a path is required.
+home: null
+# Evidence adapter files (company sources, allowed publish targets). Machine-local, never in dotfiles.
+adapters: []
+CONF
+  echo "setup: wrote $config_dir/config.yaml"
+else
+  echo "setup: config exists, left as is"
+fi
+
+echo "setup: done"
