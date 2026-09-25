@@ -2,10 +2,15 @@ import { describe, expect, test } from "bun:test";
 import { renderDirective } from "../../src/render/directives.ts";
 import { renderBlock } from "../../src/render/block.ts";
 import { createCtx } from "../../src/render/ctx.ts";
+import { computeFlowLayout } from "../../src/render/flow.ts";
 import type { DirectiveNode } from "../../src/types.ts";
 import { codeBlock, directive, heading, link, listItem, makeClaim, makeLedger, para, span, table, text } from "./helpers.ts";
 
 const ctx = () => createCtx(null, { theme: "auto" });
+
+function rectsOverlap(a: { x: number; y: number; width: number; height: number }, b: { x: number; y: number; width: number; height: number }): boolean {
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+}
 
 describe("means / warn / note callouts", () => {
   test("means renders a What it means box", () => {
@@ -64,6 +69,25 @@ describe("flow", () => {
     expect(html).toContain("currentColor");
     expect(html).toContain("var(--flow-fill)");
   });
+
+  test("a branching node puts its branches on separate rows with no overlap", () => {
+    // checkout has two outgoing edges (to paid and to abandoned); paid and abandoned must
+    // land on different rows so neither the "abandoned" edge nor its label crosses "paid".
+    const layout = computeFlowLayout(["cart -> checkout : submit", "checkout -> paid : confirm", "checkout -> abandoned : timeout"]);
+
+    expect(layout.nodes.length).toBe(4);
+    for (let i = 0; i < layout.nodes.length; i++) {
+      for (let j = i + 1; j < layout.nodes.length; j++) {
+        expect(rectsOverlap(layout.nodes[i]!, layout.nodes[j]!)).toBe(false);
+      }
+    }
+
+    for (const label of layout.labels) {
+      for (const node of layout.nodes) {
+        expect(rectsOverlap(label, node)).toBe(false);
+      }
+    }
+  });
 });
 
 describe("steps / tabs / cards", () => {
@@ -76,13 +100,31 @@ describe("steps / tabs / cards", () => {
 
   test("tabs render buttons, panels, and a tiny inline script", () => {
     const n = directive("tabs", {
-      children: [heading(2, "tab-a", "First"), heading(2, "tab-b", "Second")],
+      children: [
+        heading(2, "tab-a", "First"),
+        para(text("Body of the first tab.")),
+        heading(2, "tab-b", "Second"),
+        para(text("Body of the second tab.")),
+      ],
     });
     const html = renderDirective(n, ctx());
     expect(html).toContain('role="tablist"');
     expect(html).toContain("<script>");
     expect(html).toContain("First");
     expect(html).toContain("Second");
+  });
+
+  test("a tab panel contains its non-heading children, and the heading isn't duplicated inside it", () => {
+    const n = directive("tabs", {
+      children: [heading(2, "tab-staging", "Staging"), para(text("Point the client at the staging origin.")), heading(2, "tab-prod", "Production")],
+    });
+    const html = renderDirective(n, ctx());
+    const panelMatch = /<div class="tab-panel"[^>]*>(.*?)<\/div>/s.exec(html);
+    expect(panelMatch).not.toBeNull();
+    const firstPanel = panelMatch![1]!;
+    expect(firstPanel).toContain("Point the client at the staging origin.");
+    expect(firstPanel).not.toContain("<h2");
+    expect(firstPanel).not.toContain("Staging");
   });
 
   test("cards render link cards only", () => {

@@ -149,7 +149,7 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
 .tile-label { color: var(--muted); font-size: 0.85rem; }
 .flow-diagram { max-width: 100%; height: auto; margin: 1rem 0; }
 .steps { padding-left: 0; list-style: none; }
-.step { display: flex; gap: 0.75rem; margin: 0.75rem 0; }
+.step { display: flex; align-items: baseline; gap: 0.75rem; margin: 0.75rem 0; }
 .step-number {
   flex: 0 0 auto;
   width: 1.6rem;

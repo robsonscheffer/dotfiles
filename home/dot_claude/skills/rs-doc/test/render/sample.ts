@@ -69,7 +69,9 @@ const body: Block[] = [
   directive("tabs", {
     children: [
       heading(2, "tab-staging", "Staging"),
+      para(text("Point the client at the staging origin and use a seeded test account.")),
       heading(2, "tab-prod", "Production"),
+      para(text("Real traffic. Roll out behind the flag and watch the dashboards.")),
     ],
   }),
   heading(2, "cards", "Related pages"),

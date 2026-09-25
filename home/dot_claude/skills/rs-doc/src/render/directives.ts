@@ -88,11 +88,34 @@ function renderSteps(n: DirectiveNode, ctx: Ctx): string {
   return `<ol class="steps">${items}</ol>`;
 }
 
+interface TabGroup {
+  title: string;
+  body: Parameters<typeof renderBlocks>[0];
+}
+
+// Each heading in the directive's children starts a new tab; the blocks that follow it (up to
+// the next heading) become that tab's body. The heading itself becomes only the tab's button
+// label, never part of the panel content.
+function groupTabs(children: DirectiveNode["children"]): TabGroup[] {
+  const groups: TabGroup[] = [];
+  let current: TabGroup | null = null;
+  for (const child of children) {
+    if (child.type === "heading") {
+      current = { title: plainTextOf(child.children), body: [] };
+      groups.push(current);
+    } else {
+      if (!current) {
+        current = { title: `Tab ${groups.length + 1}`, body: [] };
+        groups.push(current);
+      }
+      current.body.push(child);
+    }
+  }
+  return groups;
+}
+
 function renderTabs(n: DirectiveNode, ctx: Ctx): string {
-  const tabs = n.children.map((child, i) => {
-    const title = child.type === "heading" ? plainTextOf(child.children) : `Tab ${i + 1}`;
-    return { title, html: renderBlock(child, ctx), id: nextId(ctx, "tab") };
-  });
+  const tabs = groupTabs(n.children).map((g) => ({ title: g.title, html: renderBlocks(g.body, ctx), id: nextId(ctx, "tab") }));
   const buttons = tabs
     .map((t, i) => `<button type="button" class="tab-btn" data-tab="${t.id}"${i === 0 ? ' aria-selected="true"' : ""}>${escapeHtml(t.title)}</button>`)
     .join("");
