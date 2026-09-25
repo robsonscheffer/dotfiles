@@ -161,6 +161,16 @@ function ttlExpiredClaimIds(freshnessStale: { claim: string; reason: string }[])
   return new Set(freshnessStale.filter((s) => s.reason === "ttl").map((s) => s.claim));
 }
 
+const FALLBACK_POS = { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } };
+
+// Point a gate reason at the claim's first {Cn} reference in the page, so every reason carries
+// a real file:line. Falls back to line 1 of the page (or the folder itself, with no doc) when
+// the claim is never referenced in prose.
+function posForClaim(doc: Doc | null, claimId: string) {
+  const ref = doc?.claimRefs.find((r) => r.id === claimId);
+  return ref?.pos ?? FALLBACK_POS;
+}
+
 export async function gate(docDir: string, env: Env): Promise<GateResult> {
   const mdPath = await findPrimaryMarkdownFile(docDir);
   const doc = mdPath ? await loadDocFromDisk(mdPath) : null;
@@ -182,6 +192,7 @@ export async function gate(docDir: string, env: Env): Promise<GateResult> {
           severity: "error",
           message: `${claim.id} is not_verified with no owner`,
           path,
+          pos: posForClaim(doc, claim.id),
           claim: claim.id,
         });
       }
@@ -194,6 +205,7 @@ export async function gate(docDir: string, env: Env): Promise<GateResult> {
         severity: "error",
         message: `${claim.id} has no fresh "supports" verdict`,
         path,
+        pos: posForClaim(doc, claim.id),
         claim: claim.id,
       });
       continue;
@@ -205,6 +217,7 @@ export async function gate(docDir: string, env: Env): Promise<GateResult> {
         severity: "error",
         message: `${claim.id} is stale: ttl_days elapsed`,
         path,
+        pos: posForClaim(doc, claim.id),
         claim: claim.id,
       });
       continue;
@@ -219,6 +232,7 @@ export async function gate(docDir: string, env: Env): Promise<GateResult> {
         severity: "error",
         message: `${claim.id} has no runnable capability here, cannot be trusted`,
         path,
+        pos: posForClaim(doc, claim.id),
         claim: claim.id,
       });
       continue;
@@ -229,6 +243,7 @@ export async function gate(docDir: string, env: Env): Promise<GateResult> {
         severity: "error",
         message: `${claim.id} evidence check failed: ${check.detail}`,
         path,
+        pos: posForClaim(doc, claim.id),
         claim: claim.id,
       });
     }

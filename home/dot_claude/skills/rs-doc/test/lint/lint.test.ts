@@ -51,7 +51,7 @@ describe("lint: claim-unresolved", () => {
 
 describe("lint: em-dash", () => {
   test("flags an em-dash in prose", () => {
-    const doc = baseDoc({ body: [textParagraph("Fast — not instant.")] });
+    const doc = baseDoc({ body: [textParagraph("Fast \u2014 not instant.")] });
     expect(rulesOf(lint([doc], null))).toContain("em-dash");
   });
 

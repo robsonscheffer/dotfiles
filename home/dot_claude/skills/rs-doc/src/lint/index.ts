@@ -1,4 +1,5 @@
 // Lint: doc-shape rules plus ledger-shape rules, evaluated together.
+import { readFileSync } from "node:fs";
 import { validateLedger } from "../ledger/index.ts";
 import type {
   Block,
@@ -10,7 +11,7 @@ import type {
   Span,
 } from "../types.ts";
 
-const EM_DASH = "—";
+const EM_DASH = "\u2014";
 const SECRET_PATTERNS: RegExp[] = [
   /AKIA[0-9A-Z]{10,}/, // AWS-shaped access key
   /sk-[a-zA-Z0-9]{20,}/, // generic secret-key-shaped token
@@ -156,6 +157,29 @@ function lintDoc(doc: Doc, ledger: Ledger | null): LintIssue[] {
   return issues;
 }
 
+// claims.yaml carries no position info out of Bun.YAML.parse, so recover a line number the
+// cheap way: scan the raw text for the claim's own id and take the line it first appears on.
+// Falls back to line 1 when the file cannot be read (e.g. a ledger built by hand in a test,
+// with no file on disk) or the id isn't found verbatim.
+function findLineForClaim(ledgerPath: string, claimId: string | undefined): Span {
+  const fallback: Span = { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } };
+  if (!claimId) return fallback;
+  let raw: string;
+  try {
+    raw = readFileSync(ledgerPath, "utf8");
+  } catch {
+    return fallback;
+  }
+  const idPattern = new RegExp(`["']?id["']?\\s*[:=]\\s*["']?${claimId}\\b`);
+  const lines = raw.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    if (idPattern.test(lines[i] ?? "")) {
+      return { start: { line: i + 1, column: 1 }, end: { line: i + 1, column: 1 } };
+    }
+  }
+  return fallback;
+}
+
 function lintLedger(ledger: Ledger): LintIssue[] {
   const issues: LintIssue[] = [];
   const { valid, errors } = validateLedger(ledger);
@@ -170,6 +194,7 @@ function lintLedger(ledger: Ledger): LintIssue[] {
         severity: "error",
         message: `${err.instancePath || "/claims"} ${err.message ?? "is invalid"}`,
         path: ledger.path,
+        pos: findLineForClaim(ledger.path, claim),
         claim,
       });
     }
@@ -190,6 +215,7 @@ function lintLedger(ledger: Ledger): LintIssue[] {
             severity: "error",
             message: `evidence excerpt for ${claim.id} looks like a secret`,
             path: ledger.path,
+            pos: findLineForClaim(ledger.path, claim.id),
             claim: claim.id,
           });
         }
@@ -199,6 +225,7 @@ function lintLedger(ledger: Ledger): LintIssue[] {
             severity: "error",
             message: `evidence excerpt for ${claim.id} looks like PII`,
             path: ledger.path,
+            pos: findLineForClaim(ledger.path, claim.id),
             claim: claim.id,
           });
         }

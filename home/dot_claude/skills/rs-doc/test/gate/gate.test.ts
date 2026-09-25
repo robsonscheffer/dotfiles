@@ -47,6 +47,15 @@ async function writeClaimsYaml(dir: string, claims: unknown[]): Promise<void> {
   await writeFile(join(dir, "claims.yaml"), `claims:\n${claims.map((c) => "  - " + JSON.stringify(c)).join("\n")}`);
 }
 
+// Every gate reason must be locatable: a non-empty file, and a real line number.
+function expectFileLine(reasons: { path: string; pos?: { start: { line: number } } }[]): void {
+  expect(reasons.length).toBeGreaterThan(0);
+  for (const reason of reasons) {
+    expect(reason.path.length).toBeGreaterThan(0);
+    expect(reason.pos?.start.line).toBeGreaterThan(0);
+  }
+}
+
 describe("gate: all green", () => {
   test("passes and promotes draft to audited", async () => {
     const dir = await tempDir();
@@ -72,6 +81,7 @@ describe("gate: one stale claim", () => {
     expect(result.pass).toBe(false);
     expect(result.levelAfter).toBe("draft");
     expect(result.summary.stale).toBeGreaterThan(0);
+    expectFileLine(result.reasons);
   });
 });
 
@@ -84,6 +94,23 @@ describe("gate: one missing verdict", () => {
     const result = await gate(dir, env);
     expect(result.pass).toBe(false);
     expect(result.reasons.some((r) => r.claim === "C1")).toBe(true);
+    expectFileLine(result.reasons);
+  });
+});
+
+describe("gate: capability missing", () => {
+  test("a verified claim whose evidence needs a capability this environment does not have fails, with a locatable reason", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [CLEAN_CLAIM]);
+    const env = fakeEnv({ has: () => false });
+    const result = await gate(dir, env);
+    expect(result.pass).toBe(false);
+    expect(result.levelAfter).toBe("draft");
+    const reason = result.reasons.find((r) => r.claim === "C1");
+    expect(reason).toBeDefined();
+    expect(reason?.rule).toBe("claim-incomplete");
+    expectFileLine(result.reasons);
   });
 });
 
@@ -99,6 +126,7 @@ describe("gate: one not_verified without owner", () => {
     const result = await gate(dir, fakeEnv());
     expect(result.pass).toBe(false);
     expect(result.reasons.some((r) => r.rule === "not-verified-without-owner")).toBe(true);
+    expectFileLine(result.reasons);
   });
 
   test("passes when an owner is present", async () => {
@@ -139,6 +167,7 @@ describe("gate: hash mismatch demotion", () => {
     expect(result.levelBefore).toBe("official");
     expect(result.pass).toBe(false);
     expect(result.levelAfter).toBe("draft");
+    expectFileLine(result.reasons);
   });
 });
 
@@ -164,5 +193,6 @@ describe("gate: world staleness never changes level", () => {
     expect(result.levelBefore).toBe("official");
     expect(result.pass).toBe(false); // still reports the staleness as a failing reason
     expect(result.levelAfter).toBe("official"); // but the level itself does not move
+    expectFileLine(result.reasons);
   });
 });
