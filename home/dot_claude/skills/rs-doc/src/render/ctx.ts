@@ -1,4 +1,4 @@
-// Shared render context. Not part of the contract (src/types.ts) — internal to L2 only.
+// Shared render context. Not part of the contract (src/types.ts); internal to L2 only.
 
 import type { Ledger, RenderOptions } from "../types.ts";
 

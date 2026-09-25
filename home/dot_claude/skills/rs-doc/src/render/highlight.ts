@@ -1,6 +1,6 @@
 import hljs from "highlight.js";
 
-// Build-time syntax highlighting only — no client-side JS ships for this. hljs.highlight()
+// Build-time syntax highlighting only, no client-side JS ships for this. hljs.highlight()
 // returns HTML with entities already escaped, so callers must not re-escape the result.
 export function highlightCode(code: string, lang?: string): { html: string; language?: string } {
   try {

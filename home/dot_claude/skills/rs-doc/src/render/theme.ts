@@ -1,5 +1,5 @@
 // Theme tokens as CSS custom properties, light and dark. No embedded font: the stack below is
-// system fonts only (see the report from this lane for why — no OFL-licensed webfont was
+// system fonts only (see the report from this lane for why: no OFL-licensed webfont was
 // available to vendor into a self-contained page without adding a new dependency).
 
 export const THEME_CSS = `
