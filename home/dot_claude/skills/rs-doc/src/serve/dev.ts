@@ -27,7 +27,7 @@ const loadLedger = (_docDir: string): Ledger | null => null;
 
 const stateDir = await mkdtemp(join(tmpdir(), "mate-doc-dev-state-"));
 const entry = await addFolder(stateDir, target);
-const handle = await serve({ host: "127.0.0.1", port: 52012, stateDir, parse, render, loadLedger });
+const handle = await serve({ host: "127.0.0.1", port: 52010, stateDir, parse, render, loadLedger });
 
 process.stdout.write(`serving at ${handle.url}/${entry.alias}/  (state dir: ${stateDir})\n`);
 process.stdout.write("Ctrl-C to stop.\n");

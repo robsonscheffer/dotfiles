@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // rs-walk lint-walk — validates that a generated walk is a genuinely standalone
-// document. Replaces html-artifact's lint-artifact.mjs, whose first rule
+// document. Replaces an earlier generic artifact linter, whose first rule
 // ("CSS is inlined — link to localhost instead") is the exact inverse of what a
 // walk needs, so every walk failed it and the failure had to be ignored.
 //

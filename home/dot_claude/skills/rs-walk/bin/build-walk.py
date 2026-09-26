@@ -5,12 +5,11 @@ output (Step 4's four JSON schemas) plus a PR diff.
 This is a deterministic transcription of SKILL.md Step 5 into code, so every
 walk gets byte-identical structure regardless of which agent run built it.
 
-rs-walk owns its own template (assets/walk-template.html) — it does not
-borrow and patch html-artifact's report.html. It still depends on
-html-artifact for the compiled mate-ds stylesheet (inlined at build time
-below, same as html-artifact's own singlefile build does) and the lint
-binary, but the walk document's structure, header, and layout are rs-walk's
-own and can evolve independently.
+rs-walk owns its own template (assets/walk-template.html), its own compiled
+mate-DS stylesheet (assets/walk.css, inlined at build time below), and its
+own lint binary (bin/lint-walk.mjs); nothing here reaches into another
+skill. The walk document's structure, header, and layout are rs-walk's own
+and can evolve independently.
 
 Usage:
   build-walk.py \
@@ -27,8 +26,8 @@ Usage:
     --comment-triage /tmp/walk-N-comment-triage.json \
     [--render-diff-bin path/to/render-diff.sh] \
     [--template path/to/walk-template.html] \
-    [--main-css path/to/main.css] \
-    [--lint-bin path/to/lint-artifact.mjs] \
+    [--main-css path/to/walk.css] \
+    [--lint-bin path/to/lint-walk.mjs] \
     [--tags "PROJ-1234,topic-a,topic-b"] \
     [--out-root ~/brain/wiki/walks] \
     [--back-link ../index.html] \

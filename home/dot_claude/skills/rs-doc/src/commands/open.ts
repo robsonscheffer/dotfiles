@@ -7,7 +7,7 @@ import { loadLedgerSync } from "../serve/ledger-sync.ts";
 import { defaultStateDir } from "../serve/state.ts";
 import { EXIT } from "../types.ts";
 
-const DEFAULT_PORT = 52012;
+const DEFAULT_PORT = 52010;
 
 function openBrowser(url: string): void {
   const platform = process.platform;
@@ -20,10 +20,26 @@ function openBrowser(url: string): void {
   }
 }
 
+function extractFlags(argv: string[]): { target?: string; alias?: string; urlOnly: boolean } {
+  let positional = argv;
+  let alias: string | undefined;
+
+  const aliasIdx = positional.indexOf("--alias");
+  if (aliasIdx !== -1) {
+    alias = positional[aliasIdx + 1];
+    positional = [...positional.slice(0, aliasIdx), ...positional.slice(aliasIdx + 2)];
+  }
+
+  const urlOnly = positional.includes("--url");
+  positional = positional.filter((a) => a !== "--url");
+
+  return { target: positional[0], alias, urlOnly };
+}
+
 export async function runOpen(argv: string[]): Promise<number> {
-  const [target] = argv;
+  const { target, alias, urlOnly } = extractFlags(argv);
   if (!target) {
-    process.stderr.write("mate-doc open: usage: mate-doc open <path>\n");
+    process.stderr.write("mate-doc open: usage: mate-doc open <path> [--alias <name>] [--url]\n");
     return EXIT.usage;
   }
 
@@ -31,14 +47,19 @@ export async function runOpen(argv: string[]): Promise<number> {
   const port = Number(process.env.MATE_DOC_PORT ?? DEFAULT_PORT);
 
   try {
-    const result = await openPath(target, {
-      stateDir,
-      port,
-      parse,
-      render,
-      loadLedger: loadLedgerSync,
-      openBrowser,
-    });
+    const result = await openPath(
+      target,
+      {
+        stateDir,
+        port,
+        parse,
+        render,
+        loadLedger: loadLedgerSync,
+        // `--url` (the legacy mdview compatibility flag): print the URL, never open a browser.
+        openBrowser: urlOnly ? () => {} : openBrowser,
+      },
+      alias,
+    );
     process.stdout.write(`${result.url}\n`);
     return EXIT.ok;
   } catch (err) {

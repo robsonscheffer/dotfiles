@@ -49,7 +49,7 @@ mate-doc audit <folder>       # runs the evidence checks, prints the verdict wor
 mate-doc verdict <folder> <Cn> --supports|--overstates|--contradicts|--unrelated --by agent:claude
 mate-doc gate <folder>        # pass/fail with reasons; the exit code is the contract
 mate-doc build <folder> --out <dir>   # self-contained offline HTML
-mate-doc open <folder-or-file>        # live viewer at http://127.0.0.1:52012
+mate-doc open <folder-or-file>        # live viewer at http://127.0.0.1:52010
 mate-doc status <folder>      # level (draft/audited/official), freshness, open claims
 ```
 
@@ -90,7 +90,7 @@ Only `supports` passes the gate. Picking `--supports` to get green is the one mo
 
 ## Previewing
 
-`mate-doc open <path>` remembers the folder, starts a detached viewer on port 52012 if one is not running, and prints the URL. Any markdown folder works, including ones with no claims.yaml. Give Robson the URL it prints. If it reports the port is taken, set `MATE_DOC_PORT` to a free port and retry.
+`mate-doc open <path>` remembers the folder, starts a detached viewer on port 52010 if one is not running, and prints the URL. Any markdown folder works, including ones with no claims.yaml. Give Robson the URL it prints. If it reports the port is taken, set `MATE_DOC_PORT` to a free port and retry. Existing `.html` pages in a remembered folder are served as-is, and `mate-doc open <folder> --alias <name>` pins the URL prefix (`/artifacts/...` for the legacy artifact folder). `mdview <path>` is a wrapper for `mate-doc open`.
 
 ## PR walks
 

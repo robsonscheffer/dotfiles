@@ -52,23 +52,29 @@ function realOrSelf(p: string): string {
   }
 }
 
-function aliasFor(state: FoldersState, folderPath: string): string {
-  const base = basename(folderPath) || "root";
+function aliasFor(state: FoldersState, desired: string): string {
   const taken = new Set(state.folders.map((f) => f.alias));
-  if (!taken.has(base)) return base;
+  if (!taken.has(desired)) return desired;
   let n = 2;
-  while (taken.has(`${base}-${n}`)) n += 1;
-  return `${base}-${n}`;
+  while (taken.has(`${desired}-${n}`)) n += 1;
+  return `${desired}-${n}`;
 }
 
 // Adds a folder to the registry (idempotent by realpath) and returns its alias.
-export async function addFolder(stateDir: string, folderPath: string): Promise<RememberedFolder> {
+// An explicit `alias` (e.g. from `open <folder> --alias artifacts`) is used as the desired
+// alias instead of the folder's basename; it still collides and numbers like any alias.
+export async function addFolder(
+  stateDir: string,
+  folderPath: string,
+  alias?: string,
+): Promise<RememberedFolder> {
   const real = realOrSelf(folderPath);
   const state = await loadFolders(stateDir);
   const existing = state.folders.find((f) => f.path === real);
   if (existing) return existing;
-  const alias = aliasFor(state, real);
-  const entry: RememberedFolder = { path: real, alias };
+  const desired = alias || basename(real) || "root";
+  const resolvedAlias = aliasFor(state, desired);
+  const entry: RememberedFolder = { path: real, alias: resolvedAlias };
   state.folders.push(entry);
   await saveFolders(stateDir, state);
   return entry;

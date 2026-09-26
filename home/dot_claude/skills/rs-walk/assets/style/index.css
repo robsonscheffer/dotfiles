@@ -2,7 +2,7 @@
    Splice this with bin/build-assets.sh; do not edit assets/walk.css by hand.
 
    Everything a walk needs and nothing else. rs-walk used to inline
-   html-artifact's compiled main.css (548 KB of Tailwind + DaisyUI) to reach the
+   a shared design-system skill's compiled main.css (548 KB of Tailwind + DaisyUI) to reach the
    21 classes below. */
 
 /* INCLUDE: style/fonts.css */

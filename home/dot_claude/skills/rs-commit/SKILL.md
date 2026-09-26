@@ -67,7 +67,7 @@ Exclude:
 - Subject line ≤72 characters (including mood emoji)
 - Present tense ("add" not "added")
 - Focus on WHY, not WHAT (the diff shows what)
-- Body lines ≤80 characters
+- Body is optional, **2 lines max**, each ≤80 characters. No bullet lists, no file inventories, no diff recap
 
 **Message source:**
 
