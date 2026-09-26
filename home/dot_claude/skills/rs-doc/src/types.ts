@@ -338,11 +338,29 @@ export interface LintIssue {
   claim?: ClaimId;
 }
 
+export type GateReason =
+  | "lint"
+  | "no-verdict"
+  | "verdict-not-supports"
+  | "stale"
+  | "capability-missing"
+  | "check-failed"
+  | "no-owner";
+
+export interface GateReasonItem {
+  kind: GateReason;
+  message: string;
+  path: string;
+  pos: Span;
+  claim?: ClaimId;
+  rule?: LintRule; // present when kind is "lint"
+}
+
 export interface GateResult {
   pass: boolean;
   levelBefore: Level;
   levelAfter: Level;
-  reasons: LintIssue[];
+  reasons: GateReasonItem[];
   summary: { claims: number; verified: number; open: number; stale: number };
 }
 
