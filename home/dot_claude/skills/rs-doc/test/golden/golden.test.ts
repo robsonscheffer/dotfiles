@@ -46,7 +46,7 @@ function errorsOf(issues: { severity: "error" | "warn" }[]) {
 // tags are allowed to carry http links: those are the point of the "link" directive/markdown
 // link, not a resource load.)
 function assertRenderInvariants(html: string): void {
-  expect(html.includes("—")).toBe(false);
+  expect(html.includes("\u2014")).toBe(false);
   const tagRe = /<(link|script|img)\b[^>]*>/gi;
   let m: RegExpExecArray | null;
   while ((m = tagRe.exec(html))) {
