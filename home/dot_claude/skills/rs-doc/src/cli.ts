@@ -12,6 +12,8 @@ import { runOpen } from "./commands/open.ts";
 import { runSetup } from "./commands/setup.ts";
 import { runStatus } from "./commands/status.ts";
 import { runVerdict } from "./commands/verdict.ts";
+import { createEnv } from "./env.ts";
+import { runWalk } from "./walk/command.ts";
 
 const HELP = `mate-doc: markdown docs you can trust
 
@@ -29,7 +31,7 @@ Usage: mate-doc <command> [args]
   publish <path> --to <t>    share an official, fresh doc
   status [<path>]            level, freshness, open claims
   forget <folder>            stop serving a folder
-  walk <pr-url>              build a PR walk
+  walk <pr-url> --inputs <d> build a PR walk (--fetch-only to fetch)
 `;
 
 function isCommand(s: string): s is Command {
@@ -74,8 +76,9 @@ export async function main(argv: string[], deps: MainDeps = {}): Promise<number>
       return runOpen(rest);
     case "forget":
       return runForget(rest);
-    case "publish":
     case "walk":
+      return runWalk(rest, deps.env ?? createEnv());
+    case "publish":
       process.stderr.write(`mate-doc ${cmd}: not built yet.\n`);
       return EXIT.usage;
   }
