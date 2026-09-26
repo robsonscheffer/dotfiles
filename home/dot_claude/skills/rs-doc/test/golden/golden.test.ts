@@ -329,8 +329,8 @@ describe("golden: ledgerHash is stable and total", () => {
     const dir = join(FIXTURES, "golden-guide");
     const docs = await loadDocs(dir);
     const ledger = await loadLedger(dir);
-    const a = ledgerHash(docs, ledger);
-    const b = ledgerHash(docs, ledger);
+    const a = ledgerHash(docs, ledger, dir);
+    const b = ledgerHash(docs, ledger, dir);
     expect(a).toBe(b);
     expect(a.length).toBeGreaterThan(0);
   });
