@@ -6,7 +6,8 @@ own AGENTS.md or CLAUDE.md wins where they conflict.
 ## Reading order
 
 - **Chat: the end is read first.** The terminal shows the last lines first. Put the answer and the
-  one next action there. A reply to another agent is read top-down: answer first.
+  one next action there. Asides go before the answer, never after. A reply to another agent is
+  read top-down: answer first.
 - **The middle is scanned.** Paragraphs of three lines or fewer. After evidence, say what it means
   for the work.
 - **Files: the top is read first.** Readers scan the title, headings, and the first sentence under
