@@ -482,6 +482,18 @@ export function convertBlocks(tokens: Token[], lo: number, hi: number, ctx: Ctx)
         i = close + 1;
         break;
       }
+      case "stray_close": {
+        const node: ErrorNode = {
+          type: "error",
+          message: `closing fence ${t.markup} has no open directive`,
+          children: [],
+          pos: blockSpan(ctx, t.map),
+        };
+        out.push(node);
+        ctx.errors.push(node);
+        i++;
+        break;
+      }
       case "directive_open": {
         const close = findClose(tokens, i, "directive_open", "directive_close");
         const meta = t.meta as unknown as { name: string; args: string[]; closed: boolean };
