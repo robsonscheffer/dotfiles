@@ -10,3 +10,4 @@ export {
   type FoldersState,
 } from "./state.ts";
 export { LIVE_RELOAD_PATH } from "./sse.ts";
+export { loadLedgerSync } from "./ledger-sync.ts";

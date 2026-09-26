@@ -1,0 +1,25 @@
+claims:
+  - id: C1
+    claim: 312 orders used the fast checkout path this week.
+    status: verified
+    evidence:
+      kind: query
+      sql: queries/c1-fast-checkout.sql
+      expect: { rows: 1, value: 312, tolerance: 0 }
+      needs: snow
+    verdict: supports
+    checked_by: agent:claude
+    checked_at: 2026-09-25
+    ttl_days: 7
+  - id: C2
+    claim: The fast-checkout flag rollout is documented in the release notes.
+    status: verified
+    evidence:
+      kind: link
+      url: https://example.com/acme/release-notes
+      excerpt: "fast-checkout flag"
+      needs: http
+    verdict: supports
+    checked_by: agent:claude
+    checked_at: 2026-09-25
+    ttl_days: 7

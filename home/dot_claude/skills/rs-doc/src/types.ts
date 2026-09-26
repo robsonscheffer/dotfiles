@@ -338,11 +338,29 @@ export interface LintIssue {
   claim?: ClaimId;
 }
 
+export type GateReason =
+  | "lint"
+  | "no-verdict"
+  | "verdict-not-supports"
+  | "stale"
+  | "capability-missing"
+  | "check-failed"
+  | "no-owner";
+
+export interface GateReasonItem {
+  kind: GateReason;
+  message: string;
+  path: string;
+  pos: Span;
+  claim?: ClaimId;
+  rule?: LintRule; // present when kind is "lint"
+}
+
 export interface GateResult {
   pass: boolean;
   levelBefore: Level;
   levelAfter: Level;
-  reasons: LintIssue[];
+  reasons: GateReasonItem[];
   summary: { claims: number; verified: number; open: number; stale: number };
 }
 
@@ -403,7 +421,7 @@ export type Render = (doc: Doc, ledger: Ledger | null, opts: RenderOptions) => s
 export type Lint = (docs: Doc[], ledger: Ledger | null) => LintIssue[]; // L3
 export type Audit = (docDir: string, env: Env) => Promise<AuditResult>; // L3
 export type Gate = (docDir: string, env: Env) => Promise<GateResult>; // L3
-export type LedgerHash = (docs: Doc[], ledger: Ledger | null) => string; // L3
+export type LedgerHash = (docs: Doc[], ledger: Ledger | null, docDir: string) => string; // L3
 export type Serve = (opts: ServeOptions) => Promise<ServerHandle>; // L5
 
 // ---------------------------------------------------------------------------------------------
