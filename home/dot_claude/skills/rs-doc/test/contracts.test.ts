@@ -68,9 +68,17 @@ describe("contract constants", () => {
   });
 });
 
-describe("cli stubs", () => {
-  test("every command except setup reports not built yet", async () => {
-    for (const cmd of COMMANDS.filter((c) => c !== "setup")) {
+describe("cli dispatch", () => {
+  test("publish and walk are not built yet", async () => {
+    expect(await main(["publish"])).toBe(EXIT.usage);
+    expect(await main(["walk"])).toBe(EXIT.usage);
+  });
+
+  test("commands requiring a path report usage when none is given", async () => {
+    const needsPath = COMMANDS.filter(
+      (c) => !["setup", "publish", "walk", "status", "help"].includes(c),
+    );
+    for (const cmd of needsPath) {
       expect(await main([cmd])).toBe(EXIT.usage);
     }
   });
