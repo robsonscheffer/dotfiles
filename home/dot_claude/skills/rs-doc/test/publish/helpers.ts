@@ -86,7 +86,7 @@ export async function writeOfficialDoc(dir: string, opts: OfficialDocOptions = {
   const ledger = await loadLedger(dir);
   const src = await Bun.file(path).text();
   const doc = parse(src, path);
-  const hash = stableLedgerHash([doc], ledger);
+  const hash = stableLedgerHash([doc], ledger, dir);
 
   await writeFile(
     path,

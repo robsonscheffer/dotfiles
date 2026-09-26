@@ -9,6 +9,7 @@ import { runGate } from "./commands/gate.ts";
 import { runLint } from "./commands/lint.ts";
 import { runNew } from "./commands/new.ts";
 import { runOpen } from "./commands/open.ts";
+import { runPublish } from "./commands/publish.ts";
 import { runSetup } from "./commands/setup.ts";
 import { runStatus } from "./commands/status.ts";
 import { runVerdict } from "./commands/verdict.ts";
@@ -79,8 +80,7 @@ export async function main(argv: string[], deps: MainDeps = {}): Promise<number>
     case "walk":
       return runWalk(rest, deps.env ?? createEnv());
     case "publish":
-      process.stderr.write(`mate-doc ${cmd}: not built yet.\n`);
-      return EXIT.usage;
+      return deps.env ? runPublish(rest, deps.env) : runPublish(rest);
   }
 }
 

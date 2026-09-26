@@ -106,7 +106,7 @@ export async function publish(opts: PublishOptions, deps: PublishDeps): Promise<
   if (primaryFrontmatter?.status !== "official") {
     return refuse(`${opts.docPath} is not official (status: ${primaryFrontmatter?.status ?? "draft"})`);
   }
-  const currentHash = stableLedgerHash(docs, ledger);
+  const currentHash = stableLedgerHash(docs, ledger, resolved.docDir);
   if (primaryFrontmatter.ledger_hash !== currentHash) {
     return refuse(`${opts.docPath} has changed since it was approved; ledger_hash no longer matches`);
   }
