@@ -421,7 +421,7 @@ export type Render = (doc: Doc, ledger: Ledger | null, opts: RenderOptions) => s
 export type Lint = (docs: Doc[], ledger: Ledger | null) => LintIssue[]; // L3
 export type Audit = (docDir: string, env: Env) => Promise<AuditResult>; // L3
 export type Gate = (docDir: string, env: Env) => Promise<GateResult>; // L3
-export type LedgerHash = (docs: Doc[], ledger: Ledger | null) => string; // L3
+export type LedgerHash = (docs: Doc[], ledger: Ledger | null, docDir: string) => string; // L3
 export type Serve = (opts: ServeOptions) => Promise<ServerHandle>; // L5
 
 // ---------------------------------------------------------------------------------------------

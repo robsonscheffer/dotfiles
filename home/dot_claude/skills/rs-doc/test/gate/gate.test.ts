@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { writeApproval } from "../../src/commands/approve.ts";
 import { gate } from "../../src/gate/index.ts";
 import { ledgerHash } from "../../src/ledger/index.ts";
 import { parse } from "../../src/parser/index.ts";
@@ -177,30 +178,51 @@ describe("gate: world staleness never changes level", () => {
     const dir = await tempDir();
     const staleClaim = { ...CLEAN_CLAIM, checked_at: "2026-01-01", ttl_days: 7 };
     await writeClaimsYaml(dir, [staleClaim]);
-    // ledgerHash hashes each doc's body as parsed, positions included, and the real parser's
-    // positions are absolute file lines: they shift with the frontmatter block's own line
-    // count. So the hash must be computed against the doc's *final* frontmatter shape (the
-    // one that stays on disk from here on), not a shorter draft shape that gets rewritten
-    // afterward, or the shift alone would make a freshly-approved doc look changed. A real
-    // `approve` must do the same: write the final frontmatter with a same-length placeholder
-    // for ledger_hash, parse that, compute the hash, then swap the placeholder text for the
-    // real hash in place (same line, same line count, so positions do not move again).
+    // ledgerHash strips position info and hashes by folder-relative path, so it no longer
+    // matters that approving a doc grows the frontmatter block (shifting absolute positions):
+    // the hash can be computed straight from a draft's content and stay valid once that same
+    // content is re-parsed under a longer, official frontmatter block.
     const bodyOnly = "Self-serve pricing starts at $40 a month. {C1}\n";
     const draftPath = join(dir, "index.md");
-    const placeholder = "0".repeat(64);
+    await writeFile(draftPath, `---\ntitle: Checkout\n---\n\n${bodyOnly}`);
+    const docForHash = parse(await Bun.file(draftPath).text(), draftPath);
+    const matchingHash = ledgerHash(
+      [docForHash],
+      { path: join(dir, "claims.yaml"), claims: [staleClaim as never] },
+      dir,
+    );
     await writeFile(
       draftPath,
-      `---\ntitle: Checkout\nstatus: official\napproved_by: Sam\napproved_at: 2026-09-01\nledger_hash: ${placeholder}\n---\n\n${bodyOnly}`,
+      `---\ntitle: Checkout\nstatus: official\napproved_by: Sam\napproved_at: 2026-09-01\nledger_hash: ${matchingHash}\n---\n\n${bodyOnly}`,
     );
-    const docForHash = parse(await Bun.file(draftPath).text(), draftPath);
-    const matchingHash = ledgerHash([docForHash], { path: join(dir, "claims.yaml"), claims: [staleClaim as never] });
-    const finalText = (await Bun.file(draftPath).text()).replace(placeholder, matchingHash);
-    await writeFile(draftPath, finalText);
     const result = await gate(dir, fakeEnv());
     expect(result.levelBefore).toBe("official");
     expect(result.pass).toBe(false); // still reports the staleness as a failing reason
     expect(result.levelAfter).toBe("official"); // but the level itself does not move
     expectFileLine(result.reasons);
+  });
+});
+
+describe("gate: approve, then gate, stays official", () => {
+  test("the real approval write, followed by a real gate, keeps the doc official", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [CLEAN_CLAIM]);
+    const env = fakeEnv({
+      fetch: async () => ({ status: 200, body: "Self-serve pricing starts at $40/month." }),
+      run: async () => ({ code: 0, stdout: "Sam\n", stderr: "" }),
+    });
+
+    // writeApproval is the same write runApprove does after its TTY/agent gate and y/N
+    // prompt; exercised directly here since this is not an interactive test.
+    await writeApproval(dir, true, env);
+    const approvedText = await Bun.file(join(dir, "index.md")).text();
+    expect(approvedText).toContain("status: official");
+
+    const result = await gate(dir, env);
+    expect(result.levelBefore).toBe("official");
+    expect(result.pass).toBe(true);
+    expect(result.levelAfter).toBe("official");
   });
 });
 

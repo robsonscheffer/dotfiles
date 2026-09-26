@@ -148,7 +148,7 @@ export async function gate(target: string, env: Env): Promise<GateResult> {
 
   const levelBefore: Level = (doc?.frontmatter.status as Level | undefined) ?? "draft";
   const recordedHash = doc?.frontmatter.ledger_hash;
-  const currentHash = docs.length > 0 ? ledgerHash(docs, ledger) : undefined;
+  const currentHash = docs.length > 0 ? ledgerHash(docs, ledger, docDir) : undefined;
 
   let levelAfter: Level;
   if (levelBefore === "official") {
