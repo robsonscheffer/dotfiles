@@ -42,4 +42,28 @@ describe("open: reusing a live pid", () => {
     expect(result.url).toBe("http://127.0.0.1:59999/" + result.folder.alias + "/");
     expect(opened).toEqual([result.url]);
   });
+
+  test("an explicit alias sets the folder's URL segment", async () => {
+    const stateDir = await tempDir("mate-doc-open-alias-state-");
+    const served = await tempDir("mate-doc-open-alias-served-");
+    writeFileSync(join(served, "index.md"), "---\ntitle: Doc\n---\n\nBody.\n");
+
+    await writePidFile(stateDir, { pid: process.pid, port: 59998, url: "http://127.0.0.1:59998" });
+
+    const result = await openPath(
+      served,
+      {
+        stateDir,
+        port: 59998,
+        parse,
+        render,
+        loadLedger: (): Ledger | null => null,
+        openBrowser: () => {},
+      },
+      "artifacts",
+    );
+
+    expect(result.folder.alias).toBe("artifacts");
+    expect(result.url).toBe("http://127.0.0.1:59998/artifacts/");
+  });
 });

@@ -72,7 +72,7 @@ if command -v qmd &>/dev/null; then
   CONTEXT_MODE=qmd
 fi
 
-# ── 6. artifacts.json — optional coupling with html-artifact's unified index ──
+# -- 6. artifacts.json - optional coupling with a wiki-wide unified index --
 # Presence of the file is the whole contract. Absent is not an error: walks fall
 # back to their own index at wiki/walks/index.html.
 ARTIFACT_MODE=standalone
