@@ -102,7 +102,10 @@ But: the observed fields, plus "Items 3 and 7 look out of scope. Flag them?"
 ## Commits
 
 - Atomic commits: one logical change each.
-- Conventional format: `type: description` (feat, fix, refactor, docs, test, chore).
+- Conventional format: `type(scope): subject` (feat, fix, refactor, docs, test, chore). Scope is
+  optional. Subject 72 characters or fewer, imperative.
+- Body is optional: at most 2 lines, the why. No bullets, no file lists, no recap of the diff.
+  A commit-msg hook rejects anything else.
 - Check the branch before pushing. When required to force-push, use --force-with-lease and check if the PR isn't in merge queue already, and we are the owner. Never commit or work in main or master without explicit confirmation.
 
 ## Knowledge base
