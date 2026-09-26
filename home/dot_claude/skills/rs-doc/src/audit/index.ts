@@ -1,4 +1,6 @@
 // Audit: run capability checkers against ledger evidence, report freshness and worklist.
+import { resolveRepoPath } from "./adapters.ts";
+import { sanitizeDetail } from "./detail.ts";
 import { loadLedger } from "../ledger/index.ts";
 import type {
   AuditResult,
@@ -54,32 +56,50 @@ function withinTolerance(actual: unknown, expect: number | string, tolerance?: n
 async function checkCode(claim: Claim, ev: CodeEvidence, env: Env): Promise<CheckResult> {
   const match = /^([^@]+)@([^:]+):([^:]+):([0-9]+)$/.exec(ev.ref);
   if (!match) {
-    return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: `malformed ref: ${ev.ref}` };
+    return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: sanitizeDetail(`malformed ref: ${ev.ref}`) };
   }
   const [, repo, rev, path, lineStr] = match as unknown as [string, string, string, string, string];
   const line = Number(lineStr);
   try {
-    if (ev.needs === "git") {
-      const result = await env.run(["git", "show", `${rev}:${path}`]);
+    // Prefer a real local checkout over the network: `git show` only ever inspects whatever
+    // repo the current working directory happens to be in, so it has to run against the repo
+    // the ref names, not wherever `mate-doc` was started.
+    const localRepoPath = await resolveRepoPath(repo);
+    if (localRepoPath) {
+      const result = await env.run(["git", "-C", localRepoPath, "show", `${rev}:${path}`]);
       if (result.code !== 0) {
-        return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: result.stderr || "git show failed" };
+        return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: sanitizeDetail(result.stderr || "git show failed") };
       }
       const ok = nearLine(result.stdout, ev.excerpt, line);
       return { claim: claim.id, capability: ev.needs, ran: true, ok, detail: ok ? "excerpt found" : "excerpt not found near line" };
     }
-    // needs === "gh": fetch file contents through the GitHub API.
-    const result = await env.run(["gh", "api", `repos/${repo}/contents/${path}?ref=${rev}`]);
-    if (result.code !== 0) {
-      return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: result.stderr || "gh api failed" };
+
+    // No local checkout mapped for this repo: fall back to the GitHub API when either the
+    // evidence explicitly asked for it, or `gh` just happens to be available here.
+    if (ev.needs === "gh" || env.has("gh")) {
+      const result = await env.run(["gh", "api", `repos/${repo}/contents/${path}?ref=${rev}`]);
+      if (result.code !== 0) {
+        return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: sanitizeDetail(result.stderr || "gh api failed") };
+      }
+      const parsed = JSON.parse(result.stdout) as { content?: string; encoding?: string };
+      const content = parsed.content
+        ? Buffer.from(parsed.content, (parsed.encoding as BufferEncoding) ?? "base64").toString("utf8")
+        : "";
+      const ok = nearLine(content, ev.excerpt, line);
+      return { claim: claim.id, capability: ev.needs, ran: true, ok, detail: ok ? "excerpt found" : "excerpt not found near line" };
     }
-    const parsed = JSON.parse(result.stdout) as { content?: string; encoding?: string };
-    const content = parsed.content
-      ? Buffer.from(parsed.content, (parsed.encoding as BufferEncoding) ?? "base64").toString("utf8")
-      : "";
-    const ok = nearLine(content, ev.excerpt, line);
-    return { claim: claim.id, capability: ev.needs, ran: true, ok, detail: ok ? "excerpt found" : "excerpt not found near line" };
+
+    // Neither a mapped local checkout nor gh: this claim cannot be trusted or distrusted here,
+    // which is not the same thing as having read the source and found the excerpt gone.
+    return {
+      claim: claim.id,
+      capability: ev.needs,
+      ran: false,
+      ok: null,
+      detail: sanitizeDetail(`repo ${repo} not available here`),
+    };
   } catch (err) {
-    return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: `error: ${(err as Error).message}` };
+    return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: sanitizeDetail(`error: ${(err as Error).message}`) };
   }
 }
 
@@ -92,7 +112,7 @@ async function checkQuery(claim: Claim, ev: QueryEvidence, env: Env, docDir: str
     const sql = await sqlFile.text();
     const result = await env.run(["snow", "sql", "--format", "json", "-q", sql]);
     if (result.code !== 0) {
-      return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: result.stderr || "snow sql failed" };
+      return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: sanitizeDetail(result.stderr || "snow sql failed") };
     }
     const rows = JSON.parse(result.stdout) as Array<Record<string, unknown>>;
     if (ev.expect.rows !== undefined && rows.length !== ev.expect.rows) {
@@ -101,18 +121,18 @@ async function checkQuery(claim: Claim, ev: QueryEvidence, env: Env, docDir: str
         capability: ev.needs,
         ran: true,
         ok: false,
-        detail: `expected ${ev.expect.rows} rows, got ${rows.length}`,
+        detail: sanitizeDetail(`expected ${ev.expect.rows} rows, got ${rows.length}`),
       };
     }
     if (ev.expect.value !== undefined) {
       const firstRow = rows[0];
       const actual = firstRow ? Object.values(firstRow)[0] : undefined;
       const ok = withinTolerance(actual, ev.expect.value, ev.expect.tolerance);
-      return { claim: claim.id, capability: ev.needs, ran: true, ok, detail: `expected ${ev.expect.value}, got ${actual}` };
+      return { claim: claim.id, capability: ev.needs, ran: true, ok, detail: sanitizeDetail(`expected ${ev.expect.value}, got ${actual}`) };
     }
-    return { claim: claim.id, capability: ev.needs, ran: true, ok: true, detail: `${rows.length} rows` };
+    return { claim: claim.id, capability: ev.needs, ran: true, ok: true, detail: sanitizeDetail(`${rows.length} rows`) };
   } catch (err) {
-    return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: `error: ${(err as Error).message}` };
+    return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: sanitizeDetail(`error: ${(err as Error).message}`) };
   }
 }
 
@@ -121,7 +141,7 @@ async function checkLink(claim: Claim, ev: LinkEvidence, env: Env): Promise<Chec
     if (ev.needs === "gh") {
       const result = await env.run(["gh", "api", ev.url]);
       if (result.code !== 0) {
-        return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: result.stderr || "gh api failed" };
+        return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: sanitizeDetail(result.stderr || "gh api failed") };
       }
       const ok = !ev.excerpt || result.stdout.includes(ev.excerpt);
       return { claim: claim.id, capability: ev.needs, ran: true, ok, detail: ok ? "matched" : "excerpt not found" };
@@ -133,10 +153,10 @@ async function checkLink(claim: Claim, ev: LinkEvidence, env: Env): Promise<Chec
       capability: ev.needs,
       ran: true,
       ok,
-      detail: ok ? "matched" : `status ${status}${ev.excerpt ? ", excerpt check" : ""}`,
+      detail: sanitizeDetail(ok ? "matched" : `status ${status}${ev.excerpt ? ", excerpt check" : ""}`),
     };
   } catch (err) {
-    return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: `error: ${(err as Error).message}` };
+    return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: sanitizeDetail(`error: ${(err as Error).message}`) };
   }
 }
 
@@ -146,29 +166,29 @@ async function checkRecord(claim: Claim, ev: RecordEvidence, env: Env): Promise<
     if (ev.needs === "gh") {
       const result = await env.run(["gh", "api", ev.ref]);
       if (result.code !== 0) {
-        return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: result.stderr || "gh api failed" };
+        return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: sanitizeDetail(result.stderr || "gh api failed") };
       }
       record = JSON.parse(result.stdout);
     } else if (ev.needs === "snow") {
       const result = await env.run(["snow", "sql", "--format", "json", "-q", ev.ref]);
       if (result.code !== 0) {
-        return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: result.stderr || "snow sql failed" };
+        return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: sanitizeDetail(result.stderr || "snow sql failed") };
       }
       const rows = JSON.parse(result.stdout) as Array<Record<string, unknown>>;
       record = rows[0];
     } else {
       const { status, body } = await env.fetch(ev.ref);
       if (status !== 200) {
-        return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: `status ${status}` };
+        return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: sanitizeDetail(`status ${status}`) };
       }
       record = JSON.parse(body);
     }
     const actual = getField(record, ev.field);
     const ok =
       typeof ev.expect === "boolean" ? actual === ev.expect : withinTolerance(actual, ev.expect as number | string);
-    return { claim: claim.id, capability: ev.needs, ran: true, ok, detail: `${ev.field} = ${actual}` };
+    return { claim: claim.id, capability: ev.needs, ran: true, ok, detail: sanitizeDetail(`${ev.field} = ${actual}`) };
   } catch (err) {
-    return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: `error: ${(err as Error).message}` };
+    return { claim: claim.id, capability: ev.needs, ran: true, ok: false, detail: sanitizeDetail(`error: ${(err as Error).message}`) };
   }
 }
 
@@ -275,7 +295,19 @@ export async function audit(docDir: string, env: Env): Promise<AuditResult> {
 
     const result = await runEvidenceCheck(claim, claim.evidence, env, docDir);
     checks.push(result);
-    if (result.ok === false) {
+    if (result.ran === false) {
+      // The capability itself passed env.has() above, but the specific evidence still
+      // couldn't be checked here (e.g. a code ref whose repo has no local checkout mapped and
+      // no gh fallback available). That's "cannot be trusted here", not "read it and it drifted".
+      stale.push({ claim: claim.id, reason: "capability-missing", detail: result.detail });
+      worklist.push({
+        claim: claim.id,
+        reason: "capability-missing",
+        needs: claim.evidence.needs,
+        source: evidenceSource(claim.evidence),
+        sentence: claim.claim,
+      });
+    } else if (result.ok === false) {
       stale.push({ claim: claim.id, reason: "drift", detail: result.detail });
       worklist.push({
         claim: claim.id,
