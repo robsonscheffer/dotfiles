@@ -111,7 +111,7 @@ describe("ledgerHash", () => {
       frontmatter: {
         title: "Checkout events",
         status: "official",
-        approved_by: "Robson",
+        approved_by: "Sam",
         approved_at: "2026-09-25",
         ledger_hash: "stale-hash",
         extra: {},

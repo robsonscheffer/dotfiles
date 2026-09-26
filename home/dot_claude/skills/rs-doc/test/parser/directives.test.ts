@@ -4,13 +4,13 @@ import type { DirectiveNode, ErrorNode } from "../../src/types.ts";
 
 describe("directives", () => {
   test("a known directive parses its args and children as markdown", () => {
-    const src = ":::collide participant_id\nThey collide on this field.\n:::\n";
+    const src = ":::collide order_id\nThey collide on this field.\n:::\n";
     const doc = parse(src, "collide.md");
     const node = doc.body[0] as DirectiveNode;
     expect(node.type).toBe("directive");
     expect(node.name).toBe("collide");
     expect(node.known).toBe(true);
-    expect(node.args).toEqual(["participant_id"]);
+    expect(node.args).toEqual(["order_id"]);
     expect(node.children).toHaveLength(1);
     expect(node.children[0]?.type).toBe("paragraph");
   });

@@ -147,7 +147,7 @@ describe("gate: hash mismatch demotion", () => {
     await writeClaimsYaml(dir, [CLEAN_CLAIM]);
     await writeFile(
       join(dir, "index.md"),
-      "---\ntitle: Checkout\nstatus: official\napproved_by: Robson\napproved_at: 2026-09-01\nledger_hash: stale-hash-does-not-match\n---\n\nSelf-serve pricing starts at $40 a month. {C1}\n",
+      "---\ntitle: Checkout\nstatus: official\napproved_by: Sam\napproved_at: 2026-09-01\nledger_hash: stale-hash-does-not-match\n---\n\nSelf-serve pricing starts at $40 a month. {C1}\n",
     );
     const env = fakeEnv({ fetch: async () => ({ status: 200, body: "Self-serve pricing starts at $40/month." }) });
     const result = await gate(dir, env);
@@ -161,7 +161,7 @@ describe("gate: hash mismatch demotion", () => {
     await writeClaimsYaml(dir, [{ ...CLEAN_CLAIM, verdict: undefined }]);
     await writeFile(
       join(dir, "index.md"),
-      "---\ntitle: Checkout\nstatus: official\napproved_by: Robson\napproved_at: 2026-09-01\nledger_hash: stale-hash-does-not-match\n---\n\nSelf-serve pricing starts at $40 a month. {C1}\n",
+      "---\ntitle: Checkout\nstatus: official\napproved_by: Sam\napproved_at: 2026-09-01\nledger_hash: stale-hash-does-not-match\n---\n\nSelf-serve pricing starts at $40 a month. {C1}\n",
     );
     const result = await gate(dir, fakeEnv());
     expect(result.levelBefore).toBe("official");
@@ -187,7 +187,7 @@ describe("gate: world staleness never changes level", () => {
     const matchingHash = ledgerHash([docForHash], { path: join(dir, "claims.yaml"), claims: [staleClaim as never] });
     await writeFile(
       draftPath,
-      `---\ntitle: Checkout\nstatus: official\napproved_by: Robson\napproved_at: 2026-09-01\nledger_hash: ${matchingHash}\n---\n\n${bodyOnly}`,
+      `---\ntitle: Checkout\nstatus: official\napproved_by: Sam\napproved_at: 2026-09-01\nledger_hash: ${matchingHash}\n---\n\n${bodyOnly}`,
     );
     const result = await gate(dir, fakeEnv());
     expect(result.levelBefore).toBe("official");
