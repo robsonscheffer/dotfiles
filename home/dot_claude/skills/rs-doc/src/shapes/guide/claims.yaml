@@ -1,0 +1,6 @@
+claims:
+  - id: C1
+    claim: "TODO: state the fact this guide leaves unverified."
+    status: not_verified
+    owner: "TODO: who to ask"
+    ttl_days: 30

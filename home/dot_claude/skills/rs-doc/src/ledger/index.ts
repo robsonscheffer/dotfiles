@@ -1,5 +1,6 @@
 // Ledger: load, validate, and hash claims.yaml.
 import { createHash } from "node:crypto";
+import { relative } from "node:path";
 import Ajv2020, { type ErrorObject } from "ajv/dist/2020";
 import schema from "../../schema/claims.schema.json";
 import type { Claim, Doc, Frontmatter, Ledger } from "../types.ts";
@@ -61,15 +62,51 @@ function strippedFrontmatter(fm: Frontmatter): Record<string, unknown> {
   return copy;
 }
 
-// sha256 of: each doc's (frontmatter stripped of status/approved_by/approved_at/ledger_hash)
-// plus body, canonicalized, ordered by path; plus the canonicalized ledger claims.
-export function ledgerHash(docs: Doc[], ledger: Ledger | null): string {
-  const ordered = [...docs].sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+// Claim fields that record *when the claim was last checked*, not what it claims. Re-running a
+// check (a fresh verdict, a new checked_at) is the world catching up, not a content change, and
+// must not make an approved doc look different underneath its approval.
+const STRIPPED_CLAIM_KEYS = ["verdict", "checked_by", "checked_at"] as const;
+
+function strippedClaim(claim: Claim): Record<string, unknown> {
+  const copy: Record<string, unknown> = { ...claim };
+  for (const key of STRIPPED_CLAIM_KEYS) delete copy[key];
+  return copy;
+}
+
+// Removes every "pos" field, at any depth, from a parsed body. Positions are absolute file
+// line/column: they shift whenever unrelated content earlier in the file changes line count
+// (e.g. the frontmatter block growing when a doc is approved), even though nothing the reader
+// sees moved. The hash should only change when the doc's actual content changes.
+function stripPos(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stripPos);
+  if (value !== null && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, v] of Object.entries(value as Record<string, unknown>)) {
+      if (key === "pos") continue;
+      out[key] = stripPos(v);
+    }
+    return out;
+  }
+  return value;
+}
+
+// sha256 of: each doc's (frontmatter stripped of status/approved_by/approved_at/ledger_hash,
+// body stripped of position info), keyed by its path relative to docDir so moving or renaming
+// the folder doesn't change the hash, ordered by that relative path; plus the ledger's claims,
+// stripped of verdict/checked_by/checked_at (the "when last checked" metadata, not content).
+export function ledgerHash(docs: Doc[], ledger: Ledger | null, docDir: string): string {
+  const relPath = (doc: Doc): string => relative(docDir, doc.path);
+  const ordered = [...docs].sort((a, b) => {
+    const ra = relPath(a);
+    const rb = relPath(b);
+    return ra < rb ? -1 : ra > rb ? 1 : 0;
+  });
   const pages = ordered.map((doc) => ({
-    path: doc.path,
+    path: relPath(doc),
     frontmatter: strippedFrontmatter(doc.frontmatter),
-    body: doc.body,
+    body: stripPos(doc.body),
   }));
-  const payload = canonicalize(pages) + canonicalize(ledger?.claims ?? []);
+  const claims = (ledger?.claims ?? []).map(strippedClaim);
+  const payload = canonicalize(pages) + canonicalize(claims);
   return createHash("sha256").update(payload).digest("hex");
 }

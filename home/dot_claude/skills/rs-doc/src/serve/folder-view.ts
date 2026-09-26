@@ -2,6 +2,7 @@
 // frontmatter) and subfolders. Used when a directory has no index.md.
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { THEME_CSS, THEME_TOGGLE_SCRIPT } from "../render/theme.ts";
 import type { Parse } from "../types.ts";
 
 export interface FolderEntryPage {
@@ -60,18 +61,29 @@ export function renderFolderListing(alias: string, urlPrefix: string, listing: F
     .join("\n");
   const pageLis = listing.pages
     .map((p) => {
-      const status = p.status ? ` <span class="status">${esc(p.status)}</span>` : "";
-      const summary = p.summary ? `<p>${esc(p.summary)}</p>` : "";
+      const status = p.status ? ` <span class="status-banner status-${esc(p.status)}">${esc(p.status)}</span>` : "";
+      const summary = p.summary ? `<p class="doc-summary">${esc(p.summary)}</p>` : "";
       return `<li><a href="${esc(urlPrefix)}/${esc(p.name)}">${esc(p.title)}</a>${status}${summary}</li>`;
     })
     .join("\n");
   return `<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>${esc(alias)}</title></head>
-<body>
-<h1>${esc(alias)}</h1>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(alias)}</title>
+<style>${THEME_CSS}</style>
+</head>
+<body class="no-nav">
+<button type="button" class="theme-toggle" aria-label="Toggle color theme">Theme</button>
+<div class="layout">
+<main>
+<header class="doc-header"><h1>${esc(alias)}</h1></header>
 <section class="subfolders"><ul>${subLis}</ul></section>
-<section class="pages"><ul>${pageLis}</ul></section>
+<section class="pages"><ul class="not-verified-list">${pageLis}</ul></section>
+</main>
+</div>
+<script>${THEME_TOGGLE_SCRIPT}</script>
 </body>
 </html>`;
 }
