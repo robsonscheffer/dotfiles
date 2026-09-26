@@ -263,3 +263,34 @@ describe("gate: folder mode lints every page, not only the primary one", () => {
     expect(result.pass).toBe(true);
   });
 });
+
+describe("gate: summary.open counts not_verified claims, same as status", () => {
+  test("a not_verified claim with a real owner is open even though it isn't a gate failure", async () => {
+    const dir = await tempDir();
+    await writeFile(
+      join(dir, "index.md"),
+      "---\ntitle: Checkout\n---\n\nWhich ID the lab record splits by. {C2}\n",
+    );
+    await writeClaimsYaml(dir, [
+      { id: "C2", claim: "Which ID the lab record splits by.", status: "not_verified", owner: "Sam" },
+    ]);
+    const result = await gate(dir, fakeEnv());
+    expect(result.pass).toBe(true); // a real owner is not a gate failure
+    expect(result.summary.open).toBe(1); // but it is still an open claim
+  });
+
+  test("a placeholder TODO owner fails the gate and is still counted as open", async () => {
+    const dir = await tempDir();
+    await writeFile(
+      join(dir, "index.md"),
+      "---\ntitle: Checkout\n---\n\nWhich ID the lab record splits by. {C2}\n",
+    );
+    await writeClaimsYaml(dir, [
+      { id: "C2", claim: "Which ID the lab record splits by.", status: "not_verified", owner: "TODO: who to ask" },
+    ]);
+    const result = await gate(dir, fakeEnv());
+    expect(result.pass).toBe(false);
+    expect(result.reasons.some((r) => r.kind === "no-owner" && r.claim === "C2")).toBe(true);
+    expect(result.summary.open).toBe(1);
+  });
+});
