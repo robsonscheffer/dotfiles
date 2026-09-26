@@ -2,8 +2,9 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { gate, loadDocFromDisk } from "../../src/gate/index.ts";
+import { gate } from "../../src/gate/index.ts";
 import { ledgerHash } from "../../src/ledger/index.ts";
+import { parse } from "../../src/parser/index.ts";
 import type { Env, RunResult } from "../../src/types.ts";
 
 const dirs: string[] = [];
@@ -93,7 +94,7 @@ describe("gate: one missing verdict", () => {
     const env = fakeEnv({ fetch: async () => ({ status: 200, body: "Self-serve pricing starts at $40/month." }) });
     const result = await gate(dir, env);
     expect(result.pass).toBe(false);
-    expect(result.reasons.some((r) => r.claim === "C1")).toBe(true);
+    expect(result.reasons.some((r) => r.claim === "C1" && r.kind === "no-verdict")).toBe(true);
     expectFileLine(result.reasons);
   });
 });
@@ -109,7 +110,7 @@ describe("gate: capability missing", () => {
     expect(result.levelAfter).toBe("draft");
     const reason = result.reasons.find((r) => r.claim === "C1");
     expect(reason).toBeDefined();
-    expect(reason?.rule).toBe("claim-incomplete");
+    expect(reason?.kind).toBe("capability-missing");
     expectFileLine(result.reasons);
   });
 });
@@ -125,7 +126,7 @@ describe("gate: one not_verified without owner", () => {
     await writeClaimsYaml(dir, [{ id: "C2", claim: "Which ID the lab record splits by.", status: "not_verified" }]);
     const result = await gate(dir, fakeEnv());
     expect(result.pass).toBe(false);
-    expect(result.reasons.some((r) => r.rule === "not-verified-without-owner")).toBe(true);
+    expect(result.reasons.some((r) => r.kind === "no-owner")).toBe(true);
     expectFileLine(result.reasons);
   });
 
@@ -176,23 +177,67 @@ describe("gate: world staleness never changes level", () => {
     const dir = await tempDir();
     const staleClaim = { ...CLEAN_CLAIM, checked_at: "2026-01-01", ttl_days: 7 };
     await writeClaimsYaml(dir, [staleClaim]);
-    // Compute the real hash the same way gate does, from the actual page content, so the
-    // fixture's recorded ledger_hash matches and only ttl staleness is in play.
+    // ledgerHash hashes each doc's body as parsed, positions included, and the real parser's
+    // positions are absolute file lines: they shift with the frontmatter block's own line
+    // count. So the hash must be computed against the doc's *final* frontmatter shape (the
+    // one that stays on disk from here on), not a shorter draft shape that gets rewritten
+    // afterward, or the shift alone would make a freshly-approved doc look changed. A real
+    // `approve` must do the same: write the final frontmatter with a same-length placeholder
+    // for ledger_hash, parse that, compute the hash, then swap the placeholder text for the
+    // real hash in place (same line, same line count, so positions do not move again).
     const bodyOnly = "Self-serve pricing starts at $40 a month. {C1}\n";
-    // Write the page once without a ledger_hash, load it exactly the way gate() does, then
-    // compute the hash gate() would compute, and write that back in as the recorded hash.
     const draftPath = join(dir, "index.md");
-    await writeFile(draftPath, `---\ntitle: Checkout\n---\n\n${bodyOnly}`);
-    const docForHash = await loadDocFromDisk(draftPath);
-    const matchingHash = ledgerHash([docForHash], { path: join(dir, "claims.yaml"), claims: [staleClaim as never] });
+    const placeholder = "0".repeat(64);
     await writeFile(
       draftPath,
-      `---\ntitle: Checkout\nstatus: official\napproved_by: Sam\napproved_at: 2026-09-01\nledger_hash: ${matchingHash}\n---\n\n${bodyOnly}`,
+      `---\ntitle: Checkout\nstatus: official\napproved_by: Sam\napproved_at: 2026-09-01\nledger_hash: ${placeholder}\n---\n\n${bodyOnly}`,
     );
+    const docForHash = parse(await Bun.file(draftPath).text(), draftPath);
+    const matchingHash = ledgerHash([docForHash], { path: join(dir, "claims.yaml"), claims: [staleClaim as never] });
+    const finalText = (await Bun.file(draftPath).text()).replace(placeholder, matchingHash);
+    await writeFile(draftPath, finalText);
     const result = await gate(dir, fakeEnv());
     expect(result.levelBefore).toBe("official");
     expect(result.pass).toBe(false); // still reports the staleness as a failing reason
     expect(result.levelAfter).toBe("official"); // but the level itself does not move
     expectFileLine(result.reasons);
+  });
+});
+
+describe("gate: a verdict that does not support", () => {
+  test("fails with kind verdict-not-supports, distinct from no-verdict", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [{ ...CLEAN_CLAIM, verdict: "overstates" }]);
+    const env = fakeEnv({ fetch: async () => ({ status: 200, body: "Self-serve pricing starts at $40/month." }) });
+    const result = await gate(dir, env);
+    expect(result.pass).toBe(false);
+    expect(result.reasons.some((r) => r.claim === "C1" && r.kind === "verdict-not-supports")).toBe(true);
+    expectFileLine(result.reasons);
+  });
+});
+
+describe("gate: folder mode lints every page, not only the primary one", () => {
+  test("a lint error on a secondary page fails the gate", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [CLEAN_CLAIM]);
+    // A second page in the same folder with an unresolved claim ref: a lint error that only
+    // a full-folder scan (not a single primary-file loader) will ever see.
+    await writeFile(join(dir, "extra.md"), "---\ntitle: Extra\n---\n\nAn extra claim. {C99}\n");
+    const env = fakeEnv({ fetch: async () => ({ status: 200, body: "Self-serve pricing starts at $40/month." }) });
+    const result = await gate(dir, env);
+    expect(result.pass).toBe(false);
+    expect(result.reasons.some((r) => r.kind === "lint" && r.rule === "claim-unresolved")).toBe(true);
+  });
+
+  test("a single .md path only gates that page, ignoring lint errors on sibling pages", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [CLEAN_CLAIM]);
+    await writeFile(join(dir, "extra.md"), "---\ntitle: Extra\n---\n\nAn extra claim. {C99}\n");
+    const env = fakeEnv({ fetch: async () => ({ status: 200, body: "Self-serve pricing starts at $40/month." }) });
+    const result = await gate(join(dir, "index.md"), env);
+    expect(result.pass).toBe(true);
   });
 });
