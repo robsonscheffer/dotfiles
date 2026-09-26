@@ -35,8 +35,8 @@ function phaseSection(fromDir: string, group: PhaseGroup, phaseTitles: Record<nu
   const rows = group.tickets
     .map((t) => {
       const idCell = `[${escapeCell(t.id)}](${mdLink(fromDir, t.path)})`;
-      const depends = t.depends.length > 0 ? t.depends.join(", ") : "—";
-      return `| ${idCell} | ${escapeCell(t.title)} | ${escapeCell(t.status)} | ${escapeCell(t.needs || "—")} | ${escapeCell(depends)} |`;
+      const depends = t.depends.length > 0 ? t.depends.join(", ") : "none";
+      return `| ${idCell} | ${escapeCell(t.title)} | ${escapeCell(t.status)} | ${escapeCell(t.needs || "none")} | ${escapeCell(depends)} |`;
     })
     .join("\n");
 

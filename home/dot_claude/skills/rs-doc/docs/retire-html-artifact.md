@@ -27,6 +27,9 @@ rm -f ~/Library/LaunchAgents/com.robsonscheffer.html-artifact.plist
 chezmoi apply
 ```
 
+`chezmoi apply` does not delete files that disappeared from the source on its own; the
+`.chezmoiremove` entry for `.claude/skills/html-artifact` is what removes the live copy.
+
 **Verify:** `test -d ~/.claude/skills/html-artifact && echo "still present" || echo "gone"`
 prints `gone`; `test -x ~/.claude/skills/rs-doc/bin/mate-doc && echo ok`.
 
