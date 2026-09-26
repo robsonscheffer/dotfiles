@@ -7,7 +7,7 @@ import { loadLedgerSync } from "../serve/ledger-sync.ts";
 import { defaultStateDir } from "../serve/state.ts";
 import { EXIT } from "../types.ts";
 
-const DEFAULT_PORT = 52011;
+const DEFAULT_PORT = 52012;
 
 function openBrowser(url: string): void {
   const platform = process.platform;

@@ -43,3 +43,29 @@ describe("open: reusing a live pid", () => {
     expect(opened).toEqual([result.url]);
   });
 });
+
+describe("open: a port held by another program", () => {
+  test("refuses to treat a foreign server as the viewer", async () => {
+    const stateDir = await tempDir("mate-doc-open-state-");
+    const served = await tempDir("mate-doc-open-served-");
+    writeFileSync(join(served, "index.md"), "---\ntitle: Doc\n---\n\nBody.\n");
+
+    // Something else (like a dashboard) already answers every request on the port.
+    const squatter = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response("not us") });
+    try {
+      const opened: string[] = [];
+      const attempt = openPath(served, {
+        stateDir,
+        port: squatter.port!,
+        parse,
+        render,
+        loadLedger: (): Ledger | null => null,
+        openBrowser: (url: string) => opened.push(url),
+      });
+      await expect(attempt).rejects.toThrow(/isn't a mate-doc viewer/);
+      expect(opened).toEqual([]);
+    } finally {
+      squatter.stop(true);
+    }
+  }, 20_000);
+});

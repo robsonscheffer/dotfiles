@@ -12,6 +12,10 @@ import { createSseHub, LIVE_RELOAD_PATH, liveReloadClientScript } from "./sse.ts
 import { THEME_CSS, THEME_TOGGLE_SCRIPT } from "../render/theme.ts";
 import { createWatcher } from "./watch.ts";
 
+// Answers only from a mate-doc viewer, so `open` can tell it apart from whatever else holds the port.
+export const PING_PATH = "/__mate-doc/ping";
+export const PING_BODY = "mate-doc";
+
 function notFound(): Response {
   return new Response("not found", { status: 404 });
 }
@@ -89,6 +93,10 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
 
   async function fetchHandler(req: Request): Promise<Response> {
     const url = new URL(req.url);
+
+    if (url.pathname === PING_PATH) {
+      return new Response(PING_BODY, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+    }
 
     if (url.pathname === LIVE_RELOAD_PATH) {
       return hub.subscribe();

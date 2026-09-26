@@ -50,7 +50,7 @@ if [[ ! -f "$config_dir/config.yaml" ]]; then
   mkdir -p "$config_dir"
   cat > "$config_dir/config.yaml" <<CONF
 # mate-doc config. Edit freely; setup never overwrites this file.
-port: 52011
+port: 52012
 # Where \`mate-doc new\` puts docs when no path is given. Unset means a path is required.
 home: null
 # Evidence adapter files (company sources, allowed publish targets). Machine-local, never in dotfiles.

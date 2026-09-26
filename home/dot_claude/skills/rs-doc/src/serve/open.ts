@@ -3,7 +3,7 @@
 import { existsSync, statSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import type { Parse, Render, ServerHandle, Ledger } from "../types.ts";
-import { serve } from "./server.ts";
+import { PING_BODY, PING_PATH, serve } from "./server.ts";
 import {
   addFolder,
   isPidAlive,
@@ -57,8 +57,10 @@ async function waitForServer(url: string, timeoutMs = 5000): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
-      await fetch(url);
-      return true;
+      // Any answer is not enough: another program on the port would pass. Only our ping counts.
+      const res = await fetch(`${url}${PING_PATH}`);
+      if (res.ok && (await res.text()) === PING_BODY) return true;
+      await new Promise((resolve_) => setTimeout(resolve_, 100));
     } catch {
       await new Promise((resolve_) => setTimeout(resolve_, 100));
     }
@@ -91,14 +93,21 @@ export async function openPath(target: string, deps: OpenDeps): Promise<OpenResu
     if (spawned) {
       baseUrl = spawned;
     } else {
-      handle = await serve({
-        host: "127.0.0.1",
-        port: deps.port,
-        stateDir: deps.stateDir,
-        parse: deps.parse,
-        render: deps.render,
-        loadLedger: deps.loadLedger,
-      });
+      try {
+        handle = await serve({
+          host: "127.0.0.1",
+          port: deps.port,
+          stateDir: deps.stateDir,
+          parse: deps.parse,
+          render: deps.render,
+          loadLedger: deps.loadLedger,
+        });
+      } catch (err) {
+        throw new Error(
+          `port ${deps.port} is taken by something that isn't a mate-doc viewer. ` +
+            `Set MATE_DOC_PORT to a free port. (${(err as Error).message})`,
+        );
+      }
       baseUrl = handle.url;
       await writePidFile(deps.stateDir, { pid: process.pid, port: deps.port, url: baseUrl });
     }
