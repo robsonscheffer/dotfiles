@@ -78,3 +78,28 @@ describe("gate command: exit codes", () => {
     expect(await main(["gate"])).toBe(EXIT.usage);
   });
 });
+
+describe("gate command: a fresh shape skeleton's placeholder owner", () => {
+  test("new --shape guide, then gate, fails on purpose: TODO is not a real owner", async () => {
+    const dir = await tempDir();
+    const target = join(dir, "guide");
+    expect(await main(["new", target, "--shape", "guide"])).toBe(EXIT.ok);
+
+    const env = fakeEnv();
+    const code = await main(["gate", target], { env });
+    expect(code).toBe(EXIT.failed);
+
+    const chunks: string[] = [];
+    const originalWrite = process.stdout.write.bind(process.stdout);
+    process.stdout.write = ((chunk: string) => {
+      chunks.push(String(chunk));
+      return true;
+    }) as typeof process.stdout.write;
+    try {
+      await main(["gate", target], { env });
+    } finally {
+      process.stdout.write = originalWrite;
+    }
+    expect(chunks.join("")).toContain("placeholder, not a real owner");
+  });
+});

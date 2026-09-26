@@ -82,6 +82,16 @@ export async function gate(target: string, env: Env): Promise<GateResult> {
           pos,
           claim: claim.id,
         });
+      } else if (claim.owner.startsWith("TODO")) {
+        // A placeholder left over from a shape skeleton is not an owner: nobody named "TODO"
+        // is going to answer for this claim.
+        claimReasons.push({
+          kind: "no-owner",
+          message: `${claim.id} owner "${claim.owner}" is a placeholder, not a real owner`,
+          path,
+          pos,
+          claim: claim.id,
+        });
       }
       continue;
     }
@@ -162,7 +172,10 @@ export async function gate(target: string, env: Env): Promise<GateResult> {
 
   const claims = ledger?.claims.length ?? 0;
   const verified = ledger?.claims.filter((c) => c.status === "verified").length ?? 0;
-  const open = new Set(claimReasons.map((r) => r.claim)).size;
+  // "open" means the same thing here and in `status`: a not_verified claim, full stop, not
+  // "however many distinct claims currently have a failing gate reason" (those overlap, but
+  // a not_verified claim with a real owner is still open even when it isn't a gate failure).
+  const open = ledger?.claims.filter((c) => c.status === "not_verified").length ?? 0;
   const stale = auditResult.freshness.stale.length;
 
   return { pass, levelBefore, levelAfter, reasons, summary: { claims, verified, open, stale } };
