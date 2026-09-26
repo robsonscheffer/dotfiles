@@ -82,6 +82,7 @@ When one is the whole message, apply it to your previous answer. Otherwise it is
 Not: "Option A: a cache. Option B: the database. Which do you prefer?"
 But: "One writer, no cross-host coordination, so a cache adds a failure mode and solves nothing.
 Use the existing database. Does anything need sub-second reads?"
+When required to choose from options use `askuserquestion` tool when available.
 
 **Report what you saw.** Asked to take notes on config items.
 Not: notes asserting which project each item "really" belongs to.
@@ -102,11 +103,10 @@ But: the observed fields, plus "Items 3 and 7 look out of scope. Flag them?"
 
 - Atomic commits: one logical change each.
 - Conventional format: `type: description` (feat, fix, refactor, docs, test, chore).
-- Check the branch before pushing. Confirm before any force-push, and never force-push to
-  main or master without explicit confirmation.
+- Check the branch before pushing. When required to force-push, use --force-with-lease and check if the PR isn't in merge queue already, and we are the owner. Never commit or work in main or master without explicit confirmation.
 
 ## Knowledge base
 
-Robson's vault is `~/brain/` (Obsidian-compatible), a plain directory. Its `AGENTS.md` is the
+Robson's vault is `~/brain/` a plain directory. Its `AGENTS.md` is the
 source of truth for its schema and workflows. When Robson says "my notes", "the brain",
 or "knowledge base" outside that repo, search `~/brain/` before general knowledge.
