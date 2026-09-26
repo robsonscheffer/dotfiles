@@ -71,14 +71,21 @@ async function waitForServer(url: string, timeoutMs = 5000): Promise<boolean> {
 // the server in-process (the detach path failed) and the caller owns that handle's lifecycle;
 // null means the server is either already running, or now running detached, either way owned
 // by nobody in this process.
-export async function openPath(target: string, deps: OpenDeps): Promise<OpenResult> {
+//
+// `alias` (e.g. from `open <folder> --alias artifacts`) sets the remembered folder's URL
+// segment instead of its basename; it only applies the first time a folder is remembered.
+export async function openPath(
+  target: string,
+  deps: OpenDeps,
+  alias?: string,
+): Promise<OpenResult> {
   const abs = resolve(target);
   if (!existsSync(abs)) {
     throw new Error(`mate-doc open: no such file or folder: ${target}`);
   }
   const isDir = statSync(abs).isDirectory();
   const folderPath = isDir ? abs : dirname(abs);
-  const folder = await addFolder(deps.stateDir, folderPath);
+  const folder = await addFolder(deps.stateDir, folderPath, alias);
 
   const pidInfo = await readPidFile(deps.stateDir);
   let handle: ServerHandle | null = null;

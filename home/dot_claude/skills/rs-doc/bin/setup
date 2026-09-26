@@ -35,6 +35,10 @@ echo "setup: installing dependencies"
 mkdir -p "$bin_dir" "$state_dir"
 ln -sfn "$root/bin/mate-doc" "$bin_dir/mate-doc"
 echo "setup: linked $bin_dir/mate-doc"
+ln -sfn "$root/bin/burndown-sync" "$bin_dir/burndown-sync"
+echo "setup: linked $bin_dir/burndown-sync"
+ln -sfn "$root/bin/mdview" "$bin_dir/mdview"
+echo "setup: linked $bin_dir/mdview"
 case ":$PATH:" in
   *":$bin_dir:"*) ;;
   *) echo "setup: note, $bin_dir is not on PATH" ;;
@@ -44,7 +48,7 @@ if [[ ! -f "$config_dir/config.yaml" ]]; then
   mkdir -p "$config_dir"
   cat > "$config_dir/config.yaml" <<CONF
 # mate-doc config. Edit freely; setup never overwrites this file.
-port: 52011
+port: 52010
 # Where \`mate-doc new\` puts docs when no path is given. Unset means a path is required.
 home: null
 # Evidence adapter files (company sources, allowed publish targets). Machine-local, never in dotfiles.

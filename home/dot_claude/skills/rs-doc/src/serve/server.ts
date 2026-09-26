@@ -94,6 +94,12 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
       return hub.subscribe();
     }
 
+    // Standalone HTML artifacts (e.g. a diff artifact opened as a plain file) link here for
+    // the mate-doc theme CSS, independent of any remembered folder.
+    if (url.pathname === "/style/main.css") {
+      return new Response(THEME_CSS, { headers: { "Content-Type": "text/css; charset=utf-8" } });
+    }
+
     const state = await loadFolders(opts.stateDir);
 
     if (url.pathname === "/" || url.pathname === "") {
