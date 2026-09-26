@@ -7,9 +7,19 @@ allowed-tools:
   - Edit
   - Grep
   - Glob
-  - Bash(mate-doc:*)
-  - Bash(gh:*)
-  - Bash(git:*)
+  - Bash(mate-doc --help:*)
+  - Bash(mate-doc new:*)
+  - Bash(mate-doc lint:*)
+  - Bash(mate-doc audit:*)
+  - Bash(mate-doc verdict:*)
+  - Bash(mate-doc gate:*)
+  - Bash(mate-doc build:*)
+  - Bash(mate-doc open:*)
+  - Bash(mate-doc status:*)
+  - Bash(mate-doc walk:*)
+  - Bash(git show:*)
+  - Bash(git log:*)
+  - Bash(gh pr view:*)
 ---
 
 # mate-doc: docs you can trust

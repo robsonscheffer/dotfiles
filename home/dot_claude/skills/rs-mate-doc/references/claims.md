@@ -34,7 +34,7 @@ evidence:
 - `ref` is `owner/repo@<rev>:<path>:<line>`. The repo is always explicit; audit never guesses from the current directory.
 - The check passes when `excerpt` appears within 3 lines of `<line>` at `<rev>`.
 - Audit uses a local checkout when `~/.config/mate-doc/config.yaml` maps the repo under `repos:`, otherwise `gh api`. `needs: gh` is the safe default for anything on GitHub.
-- Read the file at that revision before writing the claim (`gh api repos/<owner>/<repo>/contents/<path>?ref=<rev> --jq .content | base64 -d`, or `git show <rev>:<path>` in a checkout) and copy the excerpt exactly, including quotes.
+- Read the file at that revision before writing the claim and copy the excerpt exactly, including quotes. Prefer `git show <rev>:<path>` from inside a local checkout (run `git log -1 <rev>` first to confirm the rev exists there). Without a checkout, `gh api repos/<owner>/<repo>/contents/<path>?ref=<rev> --jq .content | base64 -d` works but asks Robson first: the skill does not pre-approve `gh api`, because the same command can write.
 
 ### link
 
