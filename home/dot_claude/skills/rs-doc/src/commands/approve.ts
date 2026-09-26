@@ -21,6 +21,32 @@ async function gitUserName(env: Env): Promise<string> {
   return name.length > 0 ? name : "unknown";
 }
 
+// The actual "mark it official" write, split out from runApprove so it's testable without the
+// TTY/agent gate and the interactive prompt in front of it.
+export async function writeApproval(target: string, isDir: boolean, env: Env): Promise<void> {
+  const docDir = isDir ? target : dirname(target);
+  const mdPath = isDir ? await findPrimaryMarkdown(target) : target;
+  if (!mdPath) throw new Error("mate-doc approve: no markdown page found.");
+
+  const approvedBy = await gitUserName(env);
+  const approvedAt = isoWithOffset(new Date());
+
+  const mdFiles = isDir ? await collectMarkdownFiles(target) : [mdPath];
+  const docs = [];
+  for (const f of mdFiles) docs.push(parse(await readFile(f, "utf8"), f));
+  const ledger = await loadLedger(docDir);
+  const hash = ledgerHash(docs, ledger, docDir);
+
+  const raw = await readFile(mdPath, "utf8");
+  const updated = setFrontmatterFields(raw, {
+    status: "official",
+    approved_by: approvedBy,
+    approved_at: approvedAt,
+    ledger_hash: hash,
+  });
+  await writeFile(mdPath, updated, "utf8");
+}
+
 export async function runApprove(argv: string[], env: Env = createEnv()): Promise<number> {
   const [target] = argv;
   if (!target) {
@@ -53,40 +79,12 @@ export async function runApprove(argv: string[], env: Env = createEnv()): Promis
     return EXIT.ok;
   }
 
-  const docDir = st.isDirectory() ? target : dirname(target);
-  const mdPath = st.isDirectory() ? await findPrimaryMarkdown(target) : target;
-  if (!mdPath) {
-    process.stderr.write("mate-doc approve: no markdown page found.\n");
+  try {
+    await writeApproval(target, st.isDirectory(), env);
+  } catch (err) {
+    process.stderr.write(`${(err as Error).message}\n`);
     return EXIT.usage;
   }
-
-  const approvedBy = await gitUserName(env);
-  const approvedAt = isoWithOffset(new Date());
-
-  // ledgerHash hashes each doc's body with absolute file positions, and those shift with the
-  // frontmatter block's own line count. So the hash must be computed against the *final*
-  // frontmatter (the one left on disk), not the pre-approval one: write the final frontmatter
-  // first with a same-length placeholder for ledger_hash, parse that, compute the hash, then
-  // swap the placeholder text for the real hash in place (same line, no further line-count
-  // change, so positions don't move again after the hash is computed).
-  const placeholder = "0".repeat(64);
-  const rawBefore = await readFile(mdPath, "utf8");
-  const withPlaceholder = setFrontmatterFields(rawBefore, {
-    status: "official",
-    approved_by: approvedBy,
-    approved_at: approvedAt,
-    ledger_hash: placeholder,
-  });
-  await writeFile(mdPath, withPlaceholder, "utf8");
-
-  const mdFiles = st.isDirectory() ? await collectMarkdownFiles(target) : [mdPath];
-  const docs = [];
-  for (const f of mdFiles) docs.push(parse(await readFile(f, "utf8"), f));
-  const ledger = await loadLedger(docDir);
-  const hash = ledgerHash(docs, ledger);
-
-  const finalText = (await readFile(mdPath, "utf8")).replace(placeholder, hash);
-  await writeFile(mdPath, finalText, "utf8");
 
   process.stdout.write(`mate-doc approve: ${target} is now official.\n`);
   return EXIT.ok;
