@@ -1,0 +1,45 @@
+import { afterEach, describe, expect, test } from "bun:test";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { openPath } from "../../src/serve/open.ts";
+import { writePidFile } from "../../src/serve/state.ts";
+import { parse } from "../../src/parser/index.ts";
+import { render } from "../../src/render/index.ts";
+import type { Ledger } from "../../src/types.ts";
+import { mkTmpDir, rmTmpDir } from "./util.ts";
+
+const dirs: string[] = [];
+async function tempDir(prefix: string): Promise<string> {
+  const dir = await mkTmpDir(prefix);
+  dirs.push(dir);
+  return dir;
+}
+afterEach(async () => {
+  await Promise.all(dirs.splice(0).map(rmTmpDir));
+});
+
+describe("open: reusing a live pid", () => {
+  test("never spawns a new server when the pid file points at a live process", async () => {
+    const stateDir = await tempDir("mate-doc-open-state-");
+    const served = await tempDir("mate-doc-open-served-");
+    writeFileSync(join(served, "index.md"), "---\ntitle: Doc\n---\n\nBody.\n");
+
+    // process.pid (this very test process) is always alive, so the reuse branch fires and the
+    // spawn/in-process-serve branch never runs: no real port ever gets bound.
+    await writePidFile(stateDir, { pid: process.pid, port: 59999, url: "http://127.0.0.1:59999" });
+
+    const opened: string[] = [];
+    const result = await openPath(served, {
+      stateDir,
+      port: 59999,
+      parse,
+      render,
+      loadLedger: (): Ledger | null => null,
+      openBrowser: (url: string) => opened.push(url),
+    });
+
+    expect(result.handle).toBeNull();
+    expect(result.url).toBe("http://127.0.0.1:59999/" + result.folder.alias + "/");
+    expect(opened).toEqual([result.url]);
+  });
+});

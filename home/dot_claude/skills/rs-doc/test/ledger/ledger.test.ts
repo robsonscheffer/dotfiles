@@ -100,14 +100,15 @@ describe("ledgerHash", () => {
     path: "claims.yaml",
     claims: [{ id: "C1", claim: "x happened", status: "not_verified", owner: "Sam" }],
   };
+  const docDir = "/docs/checkout";
 
   test("is deterministic for the same input", () => {
-    const docs = [doc("a.md")];
-    expect(ledgerHash(docs, ledger)).toBe(ledgerHash(docs, ledger));
+    const docs = [doc(`${docDir}/a.md`)];
+    expect(ledgerHash(docs, ledger, docDir)).toBe(ledgerHash(docs, ledger, docDir));
   });
 
   test("ignores frontmatter status, approved_by, approved_at, ledger_hash", () => {
-    const withTrust = doc("a.md", {
+    const withTrust = doc(`${docDir}/a.md`, {
       frontmatter: {
         title: "Checkout events",
         status: "official",
@@ -117,30 +118,105 @@ describe("ledgerHash", () => {
         extra: {},
       },
     });
-    const withoutTrust = doc("a.md", { frontmatter: { title: "Checkout events", extra: {} } });
-    expect(ledgerHash([withTrust], ledger)).toBe(ledgerHash([withoutTrust], ledger));
+    const withoutTrust = doc(`${docDir}/a.md`, { frontmatter: { title: "Checkout events", extra: {} } });
+    expect(ledgerHash([withTrust], ledger, docDir)).toBe(ledgerHash([withoutTrust], ledger, docDir));
   });
 
   test("changes when the body changes", () => {
-    const original = doc("a.md");
-    const edited = doc("a.md", {
+    const original = doc(`${docDir}/a.md`);
+    const edited = doc(`${docDir}/a.md`, {
       body: [{ type: "paragraph", children: [{ type: "text", value: "Different text.", pos }], pos }],
     });
-    expect(ledgerHash([original], ledger)).not.toBe(ledgerHash([edited], ledger));
+    expect(ledgerHash([original], ledger, docDir)).not.toBe(ledgerHash([edited], ledger, docDir));
   });
 
   test("changes when the ledger changes", () => {
-    const docs = [doc("a.md")];
+    const docs = [doc(`${docDir}/a.md`)];
     const otherLedger: Ledger = {
       path: "claims.yaml",
       claims: [{ id: "C2", claim: "y happened", status: "not_verified", owner: "Sam" }],
     };
-    expect(ledgerHash(docs, ledger)).not.toBe(ledgerHash(docs, otherLedger));
+    expect(ledgerHash(docs, ledger, docDir)).not.toBe(ledgerHash(docs, otherLedger, docDir));
   });
 
   test("is stable across doc array ordering", () => {
-    const a = doc("a.md");
-    const b = doc("b.md");
-    expect(ledgerHash([a, b], ledger)).toBe(ledgerHash([b, a], ledger));
+    const a = doc(`${docDir}/a.md`);
+    const b = doc(`${docDir}/b.md`);
+    expect(ledgerHash([a, b], ledger, docDir)).toBe(ledgerHash([b, a], ledger, docDir));
+  });
+
+  test("ignores position shifts: a paragraph moved down by extra frontmatter lines hashes the same", () => {
+    const original = doc(`${docDir}/a.md`);
+    const shiftedPos = { start: { line: 40, column: 1 }, end: { line: 40, column: 11 } };
+    const shifted = doc(`${docDir}/a.md`, {
+      body: [
+        {
+          type: "paragraph",
+          children: [{ type: "text", value: "Body text.", pos: shiftedPos }],
+          pos: shiftedPos,
+        },
+      ],
+    });
+    expect(ledgerHash([original], ledger, docDir)).toBe(ledgerHash([shifted], ledger, docDir));
+  });
+
+  test("ignores the doc folder's absolute location: moving/renaming it keeps the hash", () => {
+    const here = [doc(`${docDir}/a.md`), doc(`${docDir}/b.md`)];
+    const movedDir = "/somewhere/else/renamed";
+    const moved = [doc(`${movedDir}/a.md`), doc(`${movedDir}/b.md`)];
+    expect(ledgerHash(here, ledger, docDir)).toBe(ledgerHash(moved, ledger, movedDir));
+  });
+
+  test("ignores verdict, checked_by, and checked_at: re-verifying an expired claim does not change the hash", () => {
+    const docs = [doc(`${docDir}/a.md`)];
+    const freshlyChecked: Ledger = {
+      path: "claims.yaml",
+      claims: [
+        {
+          id: "C1",
+          claim: "x happened",
+          status: "not_verified",
+          owner: "Sam",
+        },
+      ],
+    };
+    const reVerified: Ledger = {
+      path: "claims.yaml",
+      claims: [
+        {
+          ...freshlyChecked.claims[0]!,
+          verdict: "supports",
+          checked_by: "agent:claude",
+          checked_at: "2026-09-25",
+        },
+      ],
+    };
+    expect(ledgerHash(docs, freshlyChecked, docDir)).toBe(ledgerHash(docs, reVerified, docDir));
+  });
+
+  test("still changes when claim text, status, evidence, ttl_days, or owner change", () => {
+    const docs = [doc(`${docDir}/a.md`)];
+    const base: Ledger = {
+      path: "claims.yaml",
+      claims: [
+        {
+          id: "C1",
+          claim: "x happened",
+          status: "verified",
+          evidence: { kind: "link", url: "https://example.com/x", excerpt: "x happened here", needs: "http" },
+          ttl_days: 30,
+        },
+      ],
+    };
+    const editedExcerpt: Ledger = {
+      path: "claims.yaml",
+      claims: [
+        {
+          ...base.claims[0]!,
+          evidence: { ...(base.claims[0]!.evidence as object), excerpt: "a different excerpt" } as never,
+        },
+      ],
+    };
+    expect(ledgerHash(docs, base, docDir)).not.toBe(ledgerHash(docs, editedExcerpt, docDir));
   });
 });

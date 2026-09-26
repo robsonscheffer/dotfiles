@@ -14,6 +14,8 @@ export interface FoldersState {
 }
 
 export function defaultStateDir(): string {
+  if (process.env.MATE_DOC_STATE_DIR) return process.env.MATE_DOC_STATE_DIR;
+  if (process.env.XDG_STATE_HOME) return join(process.env.XDG_STATE_HOME, "mate-doc");
   const home = process.env.HOME ?? "";
   return join(home, ".local", "state", "mate-doc");
 }

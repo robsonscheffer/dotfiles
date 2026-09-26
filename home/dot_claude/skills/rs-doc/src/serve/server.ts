@@ -9,6 +9,7 @@ import { precomputeResolvedLinks } from "./link-resolve.ts";
 import { resolveSafePath } from "./security.ts";
 import { loadFolders, type RememberedFolder } from "./state.ts";
 import { createSseHub, LIVE_RELOAD_PATH, liveReloadClientScript } from "./sse.ts";
+import { THEME_CSS, THEME_TOGGLE_SCRIPT } from "../render/theme.ts";
 import { createWatcher } from "./watch.ts";
 
 function notFound(): Response {
@@ -19,8 +20,20 @@ function renderIndex(folders: RememberedFolder[]): string {
   const items = folders
     .map((f) => `<li><a href="/${encodeURIComponent(f.alias)}/">${f.alias}</a></li>`)
     .join("\n");
-  return `<!doctype html><html><head><meta charset="utf-8"><title>mate-doc</title></head>
-<body><h1>Remembered folders</h1><ul>${items}</ul></body></html>`;
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mate-doc</title>
+<style>${THEME_CSS}</style>
+</head>
+<body class="no-nav">
+<button type="button" class="theme-toggle" aria-label="Toggle color theme">Theme</button>
+<div class="layout"><main><header class="doc-header"><h1>Remembered folders</h1></header><ul>${items}</ul></main></div>
+<script>${THEME_TOGGLE_SCRIPT}</script>
+</body>
+</html>`;
 }
 
 export async function serve(opts: ServeOptions): Promise<ServerHandle> {
