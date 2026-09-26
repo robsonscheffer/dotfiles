@@ -39,6 +39,10 @@ prints `gone`; `test -x ~/.claude/skills/rs-doc/bin/mate-doc && echo ok`.
 ~/.claude/skills/rs-doc/bin/setup
 ```
 
+The viewer's default port is now 52010, the one html-artifact freed in step 1. If you exported
+`MATE_DOC_PORT` (for example 52012 while both viewers ran side by side), unset it, and change
+`port:` in `~/.config/mate-doc/config.yaml` to 52010; setup never overwrites that file.
+
 **Verify:** the command prints `setup: done` with no errors; `command -v mate-doc` and
 `command -v burndown-sync` and `command -v mdview` all resolve (open a new shell first if
 `~/.local/bin` was just added to `PATH`).
