@@ -5,6 +5,11 @@ set -euo pipefail
 self="$(readlink -f "${BASH_SOURCE[0]}")"
 root="$(cd "$(dirname "$self")/.." && pwd)"
 
+# setup is what installs bun, so it has to run before the bun check below.
+if [[ "${1:-}" == "setup" ]]; then
+  exec "$root/bin/setup"
+fi
+
 if ! command -v bun >/dev/null 2>&1; then
   echo "mate-doc: bun not found. Run: $root/bin/setup" >&2
   exit 3
