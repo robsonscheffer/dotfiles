@@ -89,6 +89,14 @@ function makeEnv(opts: FakeEnvOpts = {}): Env {
         if (content === undefined) return { code: 1, stdout: "", stderr: `no fixture git content for ${key}` };
         return { code: 0, stdout: content, stderr: "" };
       }
+      if (cmd[0] === "gh" && cmd[1] === "api") {
+        // Code evidence with no local checkout falls back to the contents API:
+        // repos/<owner>/<repo>/contents/<path>?ref=<rev>, answered from the same gitShow map.
+        const m = /^repos\/[^/]+\/[^/]+\/contents\/(.+)\?ref=(.+)$/.exec(cmd[2] ?? "");
+        const content = m ? opts.gitShow?.[`${m[2]}:${m[1]}`] : undefined;
+        if (content === undefined) return { code: 1, stdout: "", stderr: `no fixture content for ${cmd[2]}` };
+        return { code: 0, stdout: JSON.stringify({ content: Buffer.from(content).toString("base64"), encoding: "base64" }), stderr: "" };
+      }
       if (cmd[0] === "snow") {
         const sqlText = cmd[cmd.length - 1] ?? "";
         const key = Object.keys(opts.snowRows ?? {}).find((k) => sqlText.includes(k));
