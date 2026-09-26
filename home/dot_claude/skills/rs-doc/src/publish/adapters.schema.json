@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "mate-doc/adapters.schema.json",
+  "title": "mate-doc publish adapters",
+  "type": "object",
+  "required": ["adapters", "targets"],
+  "additionalProperties": false,
+  "properties": {
+    "adapters": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["company"],
+        "additionalProperties": false,
+        "properties": {
+          "company": { "type": "boolean" }
+        }
+      }
+    },
+    "company_hosts": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "targets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["driver", "endpoint", "tool_create", "tool_update", "company_ok", "verified"],
+        "additionalProperties": false,
+        "properties": {
+          "driver": { "const": "mcp-share" },
+          "endpoint": { "type": "string", "pattern": "^https://" },
+          "tool_create": { "type": "string", "minLength": 1 },
+          "tool_update": { "type": "string", "minLength": 1 },
+          "company_ok": { "type": "boolean" },
+          "verified": { "type": "boolean" }
+        }
+      }
+    }
+  }
+}
