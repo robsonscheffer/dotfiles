@@ -25,10 +25,13 @@ export EDITOR="nvim"
 export VISUAL="nvim"
 
 # --- PATH ---
-export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
-export PATH=$PATH:$ANDROID_HOME/emulator
-export PATH=$PATH:$ANDROID_HOME/platform-tools
-export PATH=$PATH:$HOME/.maestro/bin
+for _p in "$HOME/.local/bin" "$HOME/.local/share/mise/shims"; do
+  [[ ":$PATH:" != *":$_p:"* ]] && export PATH="$_p:$PATH"
+done
+for _p in "$ANDROID_HOME/emulator" "$ANDROID_HOME/platform-tools" "$HOME/.maestro/bin"; do
+  [[ ":$PATH:" != *":$_p:"* ]] && export PATH="$PATH:$_p"
+done
+unset _p
 
 # --- Terminal ---
 if [[ "$TERM_PROGRAM" == "ghostty" ]]; then
