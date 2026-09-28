@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>rs-claude-cost - 2026-W39</title>
 <style>
-.viz-root {
+:root {
   color-scheme: light;
   --surface-1: #fcfcfb;
   --page-plane: #f9f9f7;
@@ -26,7 +26,7 @@
   --status-critical: #d03b3b;
 }
 @media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) .viz-root {
+  :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
     --surface-1: #1a1a19;
     --page-plane: #0d0d0d;
@@ -47,7 +47,7 @@
     --status-critical: #d03b3b;
   }
 }
-:root[data-theme="dark"] .viz-root {
+:root[data-theme="dark"] {
   color-scheme: dark;
   --surface-1: #1a1a19;
   --page-plane: #0d0d0d;
@@ -118,13 +118,22 @@ details.table-toggle summary { cursor: pointer; color: var(--text-secondary); fo
 }
 footer { color: var(--text-muted); font-size: 12px; margin-top: 32px; }
 code { background: var(--gridline); padding: 1px 4px; border-radius: 3px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; margin: 8px 0; color: var(--text-secondary); }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.legend-value { color: var(--text-primary); }
+.swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.finding-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) 170px; gap: 12px; align-items: center; padding: 5px 0; font-size: 13px; }
+.finding-track { height: 14px; }
+.finding-bar { height: 100%; min-width: 2px; border-radius: 0 4px 4px 0; background: var(--series-4); }
+.finding-estimated { background: repeating-linear-gradient(45deg, var(--series-4) 0 3px, transparent 3px 6px); border: 1px solid var(--series-4); }
+.finding-value { white-space: nowrap; font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
 <div class="viz-root page">
-<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark')">Toggle theme</button>
+<button class="theme-toggle" onclick="var r=document.documentElement,t=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');r.setAttribute('data-theme',t==='dark'?'light':'dark')">Toggle theme</button>
 <h1>rs-claude-cost &middot; 2026-W39</h1>
-<div class="subtitle">2026-09-21T00:00:00.000Z to 2026-09-28T00:00:00.000Z &middot; UTC time &middot; list prices, local data, not shared</div>
+<div class="subtitle">Sep 21 to Sep 27 &middot; UTC time &middot; list prices, local data, not shared</div>
 
 <div class="card">
   <div class="stat-row">
@@ -136,7 +145,7 @@ code { background: var(--gridline); padding: 1px 4px; border-radius: 3px; }
 </div>
 
 <h2>Where it went</h2>
-<div class="card"><svg class="chart" viewBox="0 0 640 60" role="img" aria-label="Where the money went, by token kind"><rect x="0.0" y="0" width="477.3" height="60" fill="var(--series-1)" rx="4"><title>fresh input: $0.02 (75%)</title></rect><rect x="479.3" y="0" width="33.9" height="60" fill="var(--series-2)" rx="4"><title>re-reading context: $0.00 (6%)</title></rect><rect x="515.2" y="0" width="23.0" height="60" fill="var(--series-3)" rx="4"><title>storing context 5m: $0.00 (4%)</title></rect><rect x="540.2" y="0" width="97.8" height="60" fill="var(--series-5)" rx="4"><title>Claude writing: $0.01 (16%)</title></rect></svg><details class="table-toggle"><summary>show table</summary><table><thead><tr><th>Kind</th><th>Dollars</th><th>Share</th></tr></thead><tbody><tr><td>fresh input</td><td>$0.02</td><td>75%</td></tr><tr><td>re-reading context</td><td>$0.00</td><td>6%</td></tr><tr><td>storing context 5m</td><td>$0.00</td><td>4%</td></tr><tr><td>storing context 1h</td><td>$0.00</td><td>0%</td></tr><tr><td>Claude writing</td><td>$0.01</td><td>16%</td></tr></tbody></table></details></div>
+<div class="card"><svg class="chart" viewBox="0 0 640 60" role="img" aria-label="Where the money went, by token kind"><rect x="0.0" y="0" width="477.3" height="60" fill="var(--series-1)" rx="4"><title>fresh input: $0.02 (75%)</title></rect><rect x="479.3" y="0" width="33.9" height="60" fill="var(--series-2)" rx="4"><title>re-reading context: $0.00 (6%)</title></rect><rect x="515.2" y="0" width="23.0" height="60" fill="var(--series-3)" rx="4"><title>storing context 5m: $0.00 (4%)</title></rect><rect x="540.2" y="0" width="97.8" height="60" fill="var(--series-5)" rx="4"><title>Claude writing: $0.01 (16%)</title></rect></svg><div class="legend"><span class="legend-item"><span class="swatch" style="background:var(--series-1)"></span>fresh input <span class="legend-value">$0.02 · 75%</span></span><span class="legend-item"><span class="swatch" style="background:var(--series-2)"></span>re-reading context <span class="legend-value">$0.00 · 6%</span></span><span class="legend-item"><span class="swatch" style="background:var(--series-3)"></span>storing context 5m <span class="legend-value">$0.00 · 4%</span></span><span class="legend-item"><span class="swatch" style="background:var(--series-5)"></span>Claude writing <span class="legend-value">$0.01 · 16%</span></span></div><details class="table-toggle"><summary>show table</summary><table><thead><tr><th>Kind</th><th>Dollars</th><th>Share</th></tr></thead><tbody><tr><td>fresh input</td><td>$0.02</td><td>75%</td></tr><tr><td>re-reading context</td><td>$0.00</td><td>6%</td></tr><tr><td>storing context 5m</td><td>$0.00</td><td>4%</td></tr><tr><td>storing context 1h</td><td>$0.00</td><td>0%</td></tr><tr><td>Claude writing</td><td>$0.01</td><td>16%</td></tr></tbody></table></details></div>
 
 <h2>Context and cache</h2>
 <div class="card">
@@ -145,14 +154,14 @@ code { background: var(--gridline); padding: 1px 4px; border-radius: 3px; }
     <div class="stat-tile"><div class="label">Median context</div><div class="value">12K</div></div>
     <div class="stat-tile"><div class="label">p90 context</div><div class="value">12K</div></div>
   </div>
-  <svg class="chart" viewBox="0 0 640 160" role="img" aria-label="Cost by context size"><rect x="0.0" y="20.0" width="148.0" height="140.0" fill="var(--series-2)" rx="4"><title>under_50k: $0.03, 2 turns</title></rect><text x="74.0" y="156" text-anchor="middle" class="axis-label">under 50k</text><rect x="164.0" y="160.0" width="148.0" height="0.0" fill="var(--series-2)" rx="4"><title>50k_to_150k: $0.00, 0 turns</title></rect><text x="238.0" y="156" text-anchor="middle" class="axis-label">50k to 150k</text><rect x="328.0" y="160.0" width="148.0" height="0.0" fill="var(--series-2)" rx="4"><title>150k_to_300k: $0.00, 0 turns</title></rect><text x="402.0" y="156" text-anchor="middle" class="axis-label">150k to 300k</text><rect x="492.0" y="160.0" width="148.0" height="0.0" fill="var(--series-2)" rx="4"><title>over_300k: $0.00, 0 turns</title></rect><text x="566.0" y="156" text-anchor="middle" class="axis-label">over 300k</text></svg><details class="table-toggle"><summary>show table</summary><table><thead><tr><th>Bin</th><th>Turns</th><th>Dollars</th></tr></thead><tbody><tr><td>under_50k</td><td>2</td><td>$0.03</td></tr><tr><td>50k_to_150k</td><td>0</td><td>$0.00</td></tr><tr><td>150k_to_300k</td><td>0</td><td>$0.00</td></tr><tr><td>over_300k</td><td>0</td><td>$0.00</td></tr></tbody></table></details>
+  <svg class="chart" viewBox="0 0 640 160" role="img" aria-label="Cost by context size"><rect x="0.0" y="20.0" width="148.0" height="120.0" fill="var(--series-2)" rx="4"><title>under_50k: $0.03, 2 turns</title></rect><text x="74.0" y="16.0" text-anchor="middle" class="axis-label">$0.03</text><text x="74.0" y="156" text-anchor="middle" class="axis-label">under 50k</text><rect x="164.0" y="140.0" width="148.0" height="0.0" fill="var(--series-2)" rx="4"><title>50k_to_150k: $0.00, 0 turns</title></rect><text x="238.0" y="136.0" text-anchor="middle" class="axis-label">$0.00</text><text x="238.0" y="156" text-anchor="middle" class="axis-label">50k to 150k</text><rect x="328.0" y="140.0" width="148.0" height="0.0" fill="var(--series-2)" rx="4"><title>150k_to_300k: $0.00, 0 turns</title></rect><text x="402.0" y="136.0" text-anchor="middle" class="axis-label">$0.00</text><text x="402.0" y="156" text-anchor="middle" class="axis-label">150k to 300k</text><rect x="492.0" y="140.0" width="148.0" height="0.0" fill="var(--series-2)" rx="4"><title>over_300k: $0.00, 0 turns</title></rect><text x="566.0" y="136.0" text-anchor="middle" class="axis-label">$0.00</text><text x="566.0" y="156" text-anchor="middle" class="axis-label">over 300k</text></svg><details class="table-toggle"><summary>show table</summary><table><thead><tr><th>Bin</th><th>Turns</th><th>Dollars</th></tr></thead><tbody><tr><td>under_50k</td><td>2</td><td>$0.03</td></tr><tr><td>50k_to_150k</td><td>0</td><td>$0.00</td></tr><tr><td>150k_to_300k</td><td>0</td><td>$0.00</td></tr><tr><td>over_300k</td><td>0</td><td>$0.00</td></tr></tbody></table></details>
   <p class="subtitle">1h cache: paid $0.00 premium, avoided $0.00 rewrites, net saved $0.00.</p>
 </div>
 
 <h2>Models</h2>
-<div class="card"><svg class="chart" viewBox="0 0 640 28" role="img" aria-label="Dollars by model"><text x="0" y="18" class="axis-label">claude-sonnet-5</text><rect x="150" y="4" width="480.0" height="20" fill="var(--series-1)" rx="4"><title>claude-sonnet-5: $0.03 (100%)</title></rect></svg><details class="table-toggle"><summary>show table</summary><table><thead><tr><th>Model</th><th>Dollars</th><th>Share</th></tr></thead><tbody><tr><td>claude-sonnet-5</td><td>$0.03</td><td>100%</td></tr></tbody></table></details></div>
+<div class="card"><svg class="chart" viewBox="0 0 640 28" role="img" aria-label="Dollars by model"><text x="0" y="18" class="axis-label">claude-sonnet-5</text><rect x="150" y="4" width="370.0" height="20" fill="var(--series-1)" rx="4"><title>claude-sonnet-5: $0.03 (100%)</title></rect><text x="528.0" y="18" class="axis-label">$0.03 · 100%</text></svg><details class="table-toggle"><summary>show table</summary><table><thead><tr><th>Model</th><th>Dollars</th><th>Share</th></tr></thead><tbody><tr><td>claude-sonnet-5</td><td>$0.03</td><td>100%</td></tr></tbody></table></details></div>
 
-<h2>Sessions</h2><div class="card"><h2>example-project · $0.03 · 2 turns</h2><svg class="chart session-chart" viewBox="0 0 640 120" role="img" aria-label="Context size over turns for example-project"><polyline points="10.0,10.0 630.0,23.0" fill="none" stroke="var(--series-1)" stroke-width="2"/></svg><p class="subtitle"><code>claude --resume session-golden</code></p></div>
+<h2>Sessions</h2><p class="subtitle">Context size per turn for the top sessions. Dots mark cache breaks; vertical lines mark compactions.</p><div class="legend"><span class="legend-item"><span class="swatch" style="background:var(--status-good)"></span>compaction</span><span class="legend-item"><span class="swatch" style="background:var(--status-warning)"></span>likely model switch</span><span class="legend-item"><span class="swatch" style="background:var(--status-serious)"></span>likely idle expiry</span><span class="legend-item"><span class="swatch" style="background:var(--status-critical)"></span>unknown cause</span></div><div class="card"><h2>example-project · $0.03 · 2 turns</h2><svg class="chart session-chart" viewBox="0 0 640 120" role="img" aria-label="Context size over turns for example-project"><text x="10" y="12" class="axis-label">peak 12K tokens</text><polyline points="10.0,10.0 630.0,23.0" fill="none" stroke="var(--series-1)" stroke-width="2"/></svg><p class="subtitle"><code>claude --resume session-golden</code></p></div>
 
 <div class="card"><h2>Findings</h2><p>None above threshold this week.</p></div>
 

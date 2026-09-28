@@ -2,13 +2,17 @@
 // URLs. Renders the one report object only (D2) - every chart and table
 // below reads from `report`, none recomputes.
 
-import type { Report } from "../types.ts";
+import type { CacheBreakCause, Report } from "../types.ts";
+import { windowLabel } from "../date.ts";
 import {
+  CAUSE_LABEL,
+  CAUSE_VAR,
   contextHistogram,
   contextHistogramTable,
   escapeXml,
   findingsBarChart,
   findingsTable,
+  legend,
   modelsBarChart,
   modelsTable,
   sessionContextLine,
@@ -23,7 +27,7 @@ function usd(microDollars: number): string {
 }
 
 const STYLE = `
-.viz-root {
+:root {
   color-scheme: light;
   --surface-1: #fcfcfb;
   --page-plane: #f9f9f7;
@@ -44,7 +48,7 @@ const STYLE = `
   --status-critical: #d03b3b;
 }
 @media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) .viz-root {
+  :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
     --surface-1: #1a1a19;
     --page-plane: #0d0d0d;
@@ -65,7 +69,7 @@ const STYLE = `
     --status-critical: #d03b3b;
   }
 }
-:root[data-theme="dark"] .viz-root {
+:root[data-theme="dark"] {
   color-scheme: dark;
   --surface-1: #1a1a19;
   --page-plane: #0d0d0d;
@@ -136,6 +140,15 @@ details.table-toggle summary { cursor: pointer; color: var(--text-secondary); fo
 }
 footer { color: var(--text-muted); font-size: 12px; margin-top: 32px; }
 code { background: var(--gridline); padding: 1px 4px; border-radius: 3px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; margin: 8px 0; color: var(--text-secondary); }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.legend-value { color: var(--text-primary); }
+.swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.finding-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) 170px; gap: 12px; align-items: center; padding: 5px 0; font-size: 13px; }
+.finding-track { height: 14px; }
+.finding-bar { height: 100%; min-width: 2px; border-radius: 0 4px 4px 0; background: var(--series-4); }
+.finding-estimated { background: repeating-linear-gradient(45deg, var(--series-4) 0 3px, transparent 3px 6px); border: 1px solid var(--series-4); }
+.finding-value { white-space: nowrap; font-variant-numeric: tabular-nums; }
 `;
 
 function statTile(label: string, value: string): string {
@@ -202,7 +215,10 @@ function sessionsSection(report: Report): string {
       );
     })
     .join("");
-  return `<h2>Sessions</h2>${charts}`;
+  const markers = legend(
+    (Object.keys(CAUSE_LABEL) as CacheBreakCause[]).map((c) => ({ color: CAUSE_VAR[c], label: CAUSE_LABEL[c] })),
+  );
+  return `<h2>Sessions</h2><p class="subtitle">Context size per turn for the top sessions. Dots mark cache breaks; vertical lines mark compactions.</p>${markers}${charts}`;
 }
 
 function dataQualitySection(report: Report): string {
@@ -241,9 +257,9 @@ export function renderHtml(report: Report, options: RenderHtmlOptions): string {
 </head>
 <body>
 <div class="viz-root page">
-<button class="theme-toggle" onclick="document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark')">Toggle theme</button>
+<button class="theme-toggle" onclick="var r=document.documentElement,t=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');r.setAttribute('data-theme',t==='dark'?'light':'dark')">Toggle theme</button>
 <h1>rs-claude-cost &middot; ${escapeXml(report.window.isoWeek)}</h1>
-<div class="subtitle">${escapeXml(report.window.start)} to ${escapeXml(report.window.end)} &middot; ${escapeXml(
+<div class="subtitle">${escapeXml(windowLabel(report.window))} &middot; ${escapeXml(
     report.window.tz,
   )} time &middot; list prices, local data, not shared</div>
 ${warningBanner}

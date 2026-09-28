@@ -67,3 +67,14 @@ export function lastCompletedWeek(now: Date, tz: TimeZoneMode): WeekRange {
   const end = currentWeekStart;
   return { isoWeek: isoWeekLabel(start, tz), start, end };
 }
+
+/** "Sep 21 to Sep 27" for a report window whose end is exclusive. */
+export function windowLabel(window: { start: string; end: string; tz: string }): string {
+  const fmt = (ms: number) =>
+    new Date(ms).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone: window.tz === "UTC" ? "UTC" : undefined,
+    });
+  return `${fmt(Date.parse(window.start))} to ${fmt(Date.parse(window.end) - 1)}`;
+}

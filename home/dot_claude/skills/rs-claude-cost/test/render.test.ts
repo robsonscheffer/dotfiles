@@ -88,6 +88,7 @@ describe("golden renders", () => {
       rebuildCommand: "rs-claude-cost --week 2026-W39 --tz UTC",
       exitCode,
     });
+    if (process.env.UPDATE_GOLDEN) writeFileSync(GOLDEN_HTML, html);
     const golden = readFileSync(GOLDEN_HTML, "utf8");
     expect(html).toBe(golden);
     expect(/https?:\/\//.test(html)).toBe(false);

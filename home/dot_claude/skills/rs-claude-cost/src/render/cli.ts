@@ -4,6 +4,7 @@
 
 import type { Report, TokenKind } from "../types.ts";
 import { WHATIF_CAVEAT_SHORT } from "../whatif.ts";
+import { windowLabel } from "../date.ts";
 
 const WIDTH = 100;
 const MAX_BAR = 24;
@@ -55,19 +56,8 @@ export function renderCli(report: Report, options: RenderCliOptions): string {
   const divider = "─".repeat(WIDTH);
 
   // window.start/end are UTC instants at a week boundary in report.window.tz;
-  // format in that same zone so a UTC-zoned week always prints its own
-  // calendar day regardless of the host machine's local time zone.
-  const dateFmt = (iso: string) =>
-    new Date(iso).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      timeZone: report.window.tz === "UTC" ? "UTC" : undefined,
-    });
-
   lines.push(
-    `rs-claude-cost · ${report.window.isoWeek} · ${dateFmt(report.window.start)} to ${dateFmt(
-      new Date(new Date(report.window.end).getTime() - 86_400_000).toISOString(),
-    )} · ${report.window.tz} time · list prices`,
+    `rs-claude-cost · ${report.window.isoWeek} · ${windowLabel(report.window)} · ${report.window.tz} time · list prices`,
   );
   lines.push(divider);
 
