@@ -5,6 +5,7 @@
 // renderers land in a later step, against the same object.
 
 import { mkdirSync, writeFileSync } from "node:fs";
+import { renderSession } from "./session.ts";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
@@ -30,6 +31,8 @@ Options:
   --root <dir>            Alternate transcript root (default: ~/.claude/projects)
   --no-record            Do not touch history or findings
   --quiet                Do not print the terminal summary
+
+  rs-claude-cost session <id>   Print one session turn by turn
   --help                 Show this help
 
 Exit codes: 0 clean, 2 written with warnings, 1 failed reconciliation, 64 bad usage.
@@ -71,6 +74,28 @@ function defaultThresholds(): string {
 }
 
 class UsageError extends Error {}
+
+async function runSession(argv: string[]): Promise<number> {
+  const id = argv[0];
+  if (!id || id.startsWith("-")) {
+    console.error("rs-claude-cost: usage: rs-claude-cost session <session-id> [--root <dir>] [--pricing <file>]");
+    return 64;
+  }
+  const flagValue = (name: string) => {
+    const i = argv.indexOf(name);
+    return i >= 0 ? argv[i + 1] : undefined;
+  };
+  const lines = await renderSession(id, {
+    root: flagValue("--root") ?? defaultRoot(),
+    pricingPath: flagValue("--pricing") ?? defaultPricing(),
+  });
+  if (!lines) {
+    console.error(`rs-claude-cost: no transcript found for session ${id}`);
+    return 64;
+  }
+  console.log(lines.join("\n"));
+  return 0;
+}
 
 function parseArgs(argv: string[]): Flags {
   const flags: Flags = {
@@ -143,6 +168,7 @@ function parseArgs(argv: string[]): Flags {
 }
 
 export async function main(argv: string[]): Promise<number> {
+  if (argv[0] === "session") return runSession(argv.slice(1));
   let flags: Flags;
   try {
     flags = parseArgs(argv);
