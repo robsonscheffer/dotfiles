@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { main } from "../../src/cli.ts";
 import { loadLedger, validateLedger } from "../../src/ledger/index.ts";
 import { lint } from "../../src/lint/index.ts";
 import { parse } from "../../src/parser/index.ts";
@@ -132,6 +133,35 @@ describe("composeWalk", () => {
     const acNotVerified = claims.filter((c) => c.status === "not_verified" && acCriteria.has(c.claim));
     expect(acNotVerified).toHaveLength(acCriteria.size);
     for (const c of acNotVerified) expect(c.owner).toBeTruthy();
+  });
+
+  test("claims.yaml is block-style, so `mate-doc verdict` can edit a composed claim in place", async () => {
+    const dir = await tempDir();
+    try {
+      const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
+      await Bun.write(join(dir, "index.md"), composed.files["index.md"]!);
+      await Bun.write(join(dir, "claims.yaml"), composed.files["claims.yaml"]!);
+
+      const before = claimsFromYaml(composed.files["claims.yaml"]!);
+      const targetId = before[0]!.id;
+
+      const code = await main(["verdict", dir, targetId, "--supports", "--by", "agent:test"]);
+      expect(code).toBe(0);
+
+      const raw = await readFile(join(dir, "claims.yaml"), "utf8");
+      const ledger = await loadLedger(dir);
+      expect(ledger).not.toBeNull();
+      expect(validateLedger(ledger!).valid).toBe(true);
+
+      const target = ledger!.claims.find((c) => c.id === targetId);
+      expect(target?.verdict).toBe("supports");
+      expect(target?.checked_by).toBe("agent:test");
+      // Every other claim's own line-count survives the surgical edit untouched.
+      expect(ledger!.claims).toHaveLength(before.length);
+      expect(raw).toContain(`  - id: ${targetId}`);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 
   test("is deterministic for the same inputs and now", () => {

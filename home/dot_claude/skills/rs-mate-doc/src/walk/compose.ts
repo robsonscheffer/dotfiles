@@ -260,9 +260,36 @@ function renderJudgmentSection(j: JudgmentData): string {
   ].join("\n");
 }
 
+// Block-style scalar, quoted whenever the value isn't a bare-safe token, so lines stay easy for
+// applyVerdictToYaml's line-oriented editor to find and replace later.
+function yamlBlockScalar(value: string | number): string {
+  if (typeof value === "number") return String(value);
+  return yamlString(value);
+}
+
+// One claim per list item, one key per line, matching the shape `mate-doc verdict` edits
+// (src/commands/verdict.ts: "- id: Cn" then two-space-deeper keys). renderClaimsYaml used to
+// emit each claim as a single JSON object on one line; verdict's line-oriented editor can only
+// find and patch a claim written this way.
+function renderClaimBlock(claim: Claim): string {
+  const lines = [`  - id: ${claim.id}`, `    claim: ${yamlBlockScalar(claim.claim)}`, `    status: ${claim.status}`];
+  if (claim.evidence) {
+    lines.push("    evidence:");
+    for (const [key, value] of Object.entries(claim.evidence)) {
+      lines.push(`      ${key}: ${yamlBlockScalar(value as string | number)}`);
+    }
+  }
+  if (claim.verdict) lines.push(`    verdict: ${claim.verdict}`);
+  if (claim.checked_by) lines.push(`    checked_by: ${yamlBlockScalar(claim.checked_by)}`);
+  if (claim.checked_at) lines.push(`    checked_at: ${claim.checked_at}`);
+  if (claim.ttl_days !== undefined) lines.push(`    ttl_days: ${claim.ttl_days}`);
+  if (claim.owner) lines.push(`    owner: ${yamlBlockScalar(claim.owner)}`);
+  return lines.join("\n");
+}
+
 function renderClaimsYaml(claims: Claim[]): string {
   if (claims.length === 0) return "claims: []\n";
-  return "claims:\n" + claims.map((c) => "  - " + JSON.stringify(c)).join("\n") + "\n";
+  return "claims:\n" + claims.map(renderClaimBlock).join("\n") + "\n";
 }
 
 export interface ComposeOptions {

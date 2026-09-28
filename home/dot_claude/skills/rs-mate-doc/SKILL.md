@@ -107,9 +107,8 @@ The walk does not submit a GitHub review. rs-walk still owns that.
 
 When `context.json` has items, the composed doc gets a "Related notes" section rendering each as a wikilink (no vault path, just the note name).
 
-Two known gaps in the composed `claims.yaml`, until the walk code is fixed:
+One known gap in the composed `claims.yaml`, until the walk code is fixed:
 
-- It is written one JSON object per claim, and `verdict` only edits block-style YAML (`- id: C1` then one key per line). Rewrite it to block style with the same fields before running `verdict`.
 - Code refs use `@pr<N>` as the rev, which neither `git` nor `gh` can resolve. Replace it with the PR's head SHA (`gh pr view <N> --json headRefOid`) or, for a merged PR, the merge commit, and give the claim a `ttl_days`.
 
 ## Reporting back
