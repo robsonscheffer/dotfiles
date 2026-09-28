@@ -46,7 +46,7 @@ Each group's `framing` becomes a claim. When a file in the group has a hunk in t
 
 - `ticket-fit.json`: `{ "ticket_key", "ticket_quality": { "score": "good|adequate|thin|missing", "notes" }, "acceptance_criteria": [{ "criterion", "status": "Met|Partially Met|Not Met|Unplanned Deviation", "evidence" }], "scope_delta" }`
 - `comment-triage.json`: `[{ "author", "author_kind": "bot|human", "human_authenticity": "genuine|bot-posing-as-human|uncertain", "summary", "resolved" }]`
-- `context.json`: `{ "mode": "qmd|grep", "items": [...] }`. Not rendered yet (vault paths trip lint).
+- `context.json`: `{ "mode": "qmd|grep", "items": [...] }`. Each item is either a bare string or `{ "path", "score", "snippet" }`. Renders as a "Related notes" section, one wikilink per item built from the note's file name only (no folder, no extension), plus its snippet when present.
 
 ## Output
 

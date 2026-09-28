@@ -14,6 +14,7 @@ export interface PrMeta {
   title: string;
   author: PrAuthor;
   headRefName: string;
+  headRefOid: string;
   baseRefName: string;
   additions: number;
   deletions: number;

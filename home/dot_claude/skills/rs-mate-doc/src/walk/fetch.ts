@@ -43,7 +43,7 @@ export async function fetchPr(repo: string, number: number, env: Env): Promise<F
       "--repo",
       repo,
       "--json",
-      "number,title,author,headRefName,baseRefName,additions,deletions,changedFiles,url",
+      "number,title,author,headRefName,headRefOid,baseRefName,additions,deletions,changedFiles,url",
     ],
     `gh pr view for ${repo}#${number}`,
   );

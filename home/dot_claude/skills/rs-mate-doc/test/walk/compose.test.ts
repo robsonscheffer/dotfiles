@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { main } from "../../src/cli.ts";
 import { loadLedger, validateLedger } from "../../src/ledger/index.ts";
 import { lint } from "../../src/lint/index.ts";
 import { parse } from "../../src/parser/index.ts";
@@ -134,11 +135,81 @@ describe("composeWalk", () => {
     for (const c of acNotVerified) expect(c.owner).toBeTruthy();
   });
 
+  test("claims.yaml is block-style, so `mate-doc verdict` can edit a composed claim in place", async () => {
+    const dir = await tempDir();
+    try {
+      const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
+      await Bun.write(join(dir, "index.md"), composed.files["index.md"]!);
+      await Bun.write(join(dir, "claims.yaml"), composed.files["claims.yaml"]!);
+
+      const before = claimsFromYaml(composed.files["claims.yaml"]!);
+      const targetId = before[0]!.id;
+
+      const code = await main(["verdict", dir, targetId, "--supports", "--by", "agent:test"]);
+      expect(code).toBe(0);
+
+      const raw = await readFile(join(dir, "claims.yaml"), "utf8");
+      const ledger = await loadLedger(dir);
+      expect(ledger).not.toBeNull();
+      expect(validateLedger(ledger!).valid).toBe(true);
+
+      const target = ledger!.claims.find((c) => c.id === targetId);
+      expect(target?.verdict).toBe("supports");
+      expect(target?.checked_by).toBe("agent:test");
+      // Every other claim's own line-count survives the surgical edit untouched.
+      expect(ledger!.claims).toHaveLength(before.length);
+      expect(raw).toContain(`  - id: ${targetId}`);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("every code ref resolves against the PR head commit, not a pull-request revision", () => {
+    const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
+    const claims = claimsFromYaml(composed.files["claims.yaml"]!);
+    const codeClaims = claims.filter((c) => c.evidence?.kind === "code");
+    expect(codeClaims.length).toBeGreaterThan(0);
+    for (const c of codeClaims) {
+      if (c.evidence?.kind !== "code") continue;
+      expect(c.evidence.ref).toMatch(/@[0-9a-f]{7,40}:/);
+      expect(c.evidence.ref).not.toContain("@pr");
+      expect(c.ttl_days).toBe(14);
+    }
+  });
+
   test("is deterministic for the same inputs and now", () => {
     const a = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
     const b = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
     expect(a.files["index.md"]).toBe(b.files["index.md"]);
     expect(a.files["claims.yaml"]).toBe(b.files["claims.yaml"]);
+  });
+
+  test("related notes render as wikilinks with no private paths, and lint passes", async () => {
+    const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
+    const md = composed.files["index.md"]!;
+    expect(md).toContain("## Related notes");
+    expect(md).toContain("[[store-teardown-order]]");
+    expect(md).toContain("[[session-provider-migration]]");
+    expect(md).not.toContain("wiki/");
+    expect(md).not.toContain("~/brain");
+
+    const dir = await tempDir();
+    try {
+      await Bun.write(join(dir, "index.md"), md);
+      await Bun.write(join(dir, "claims.yaml"), composed.files["claims.yaml"]!);
+      const doc = parse(md, "index.md");
+      const ledger = await loadLedger(dir);
+      const issues = lint([doc], ledger);
+      expect(issues.filter((i) => i.severity === "error")).toEqual([]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("omitting context renders no related-notes section", () => {
+    const inputs = { ...WALK_INPUTS, context: undefined };
+    const composed = composeWalk(FETCHED_PR, inputs, { now: NOW });
+    expect(composed.files["index.md"]).not.toContain("## Related notes");
   });
 
   test("omitting ticket fit and comment triage renders the documented empty states, with no claims from either", () => {
