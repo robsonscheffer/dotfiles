@@ -3,7 +3,7 @@
 import { existsSync, statSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import type { Parse, Render, ServerHandle, Ledger } from "../types.ts";
-import { PING_BODY, PING_PATH, serve } from "./server.ts";
+import { PING_BODY, PING_PATH, pingIdentity, serve } from "./server.ts";
 import {
   addFolder,
   isPidAlive,
@@ -27,11 +27,16 @@ export interface OpenResult {
   handle: ServerHandle | null; // non-null only when this call started the server
 }
 
+type SpawnOutcome =
+  | { kind: "up"; url: string }
+  | { kind: "mismatch" } // something answers the port, but it isn't this state dir's viewer
+  | { kind: "no-server" }; // nothing ever answered
+
 // Spawns the viewer as its own detached process (see detached-server.ts), so the browser tab
 // keeps working after this CLI invocation exits. Returns the base URL once the server answers,
-// or null when it couldn't be spawned at all (no bun binary reachable, e.g. inside some
+// or "no-server" when it couldn't be spawned at all (no bun binary reachable, e.g. inside some
 // sandboxes) so the caller can fall back to an in-process server.
-async function trySpawnDetached(deps: OpenDeps): Promise<string | null> {
+async function trySpawnDetached(deps: OpenDeps): Promise<SpawnOutcome> {
   const scriptPath = new URL("./detached-server.ts", import.meta.url).pathname;
   const bun = process.execPath;
   let child: ReturnType<typeof Bun.spawn>;
@@ -43,29 +48,38 @@ async function trySpawnDetached(deps: OpenDeps): Promise<string | null> {
       stderr: "ignore",
     });
   } catch {
-    return null;
+    return { kind: "no-server" };
   }
   child.unref();
   const url = `http://127.0.0.1:${deps.port}`;
-  const up = await waitForServer(url);
-  if (!up) return null;
+  const outcome = await waitForServer(url, deps.stateDir);
+  if (outcome === "mismatch") return { kind: "mismatch" };
+  if (outcome === "timeout") return { kind: "no-server" };
   await writePidFile(deps.stateDir, { pid: child.pid, port: deps.port, url });
-  return url;
+  return { kind: "up", url };
 }
 
-async function waitForServer(url: string, timeoutMs = 5000): Promise<boolean> {
+async function waitForServer(
+  url: string,
+  stateDir: string,
+  timeoutMs = 5000,
+): Promise<"up" | "mismatch" | "timeout"> {
+  const expected = `${PING_BODY}:${pingIdentity(stateDir)}`;
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
-      // Any answer is not enough: another program on the port would pass. Only our ping counts.
       const res = await fetch(`${url}${PING_PATH}`);
-      if (res.ok && (await res.text()) === PING_BODY) return true;
+      if (res.ok) {
+        const body = await res.text();
+        if (body === expected) return "up";
+        if (body.startsWith(`${PING_BODY}:`)) return "mismatch";
+      }
       await new Promise((resolve_) => setTimeout(resolve_, 100));
     } catch {
       await new Promise((resolve_) => setTimeout(resolve_, 100));
     }
   }
-  return false;
+  return "timeout";
 }
 
 // Starts (or reuses) a server for the given state dir, then opens the
@@ -97,8 +111,13 @@ export async function openPath(
     baseUrl = pidInfo.url;
   } else {
     const spawned = await trySpawnDetached(deps);
-    if (spawned) {
-      baseUrl = spawned;
+    if (spawned.kind === "up") {
+      baseUrl = spawned.url;
+    } else if (spawned.kind === "mismatch") {
+      throw new Error(
+        `port ${deps.port} is already taken by a different mate-doc viewer (a different state dir). ` +
+          `Set MATE_DOC_PORT to a free port.`,
+      );
     } else {
       try {
         handle = await serve({

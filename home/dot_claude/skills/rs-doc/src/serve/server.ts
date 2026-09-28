@@ -17,6 +17,12 @@ import { createWatcher } from "./watch.ts";
 export const PING_PATH = "/__mate-doc/ping";
 export const PING_BODY = "mate-doc";
 
+// The ping body carries this too, so `open` can tell its own viewer apart from a different
+// mate-doc viewer (a different state dir) that happens to already hold the same port.
+export function pingIdentity(stateDir: string): string {
+  return Bun.hash(stateDir).toString(36);
+}
+
 // legacy: remove after pages migrate. The compiled Tailwind + DaisyUI stylesheet standalone
 // pages from the retired html-artifact skill still link at /style/main.css.
 const LEGACY_CSS_PATH = join(dirname(fileURLToPath(import.meta.url)), "../../assets/legacy/main.css");
@@ -102,7 +108,8 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
     const url = new URL(req.url);
 
     if (url.pathname === PING_PATH) {
-      return new Response(PING_BODY, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+      const body = `${PING_BODY}:${pingIdentity(opts.stateDir)}`;
+      return new Response(body, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
     }
 
     if (url.pathname === LIVE_RELOAD_PATH) {

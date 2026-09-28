@@ -2,10 +2,11 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { openPath } from "../../src/serve/open.ts";
-import { writePidFile } from "../../src/serve/state.ts";
+import { serve } from "../../src/serve/server.ts";
+import { readPidFile, writePidFile } from "../../src/serve/state.ts";
 import { parse } from "../../src/parser/index.ts";
 import { render } from "../../src/render/index.ts";
-import type { Ledger } from "../../src/types.ts";
+import type { Ledger, ServerHandle } from "../../src/types.ts";
 import { mkTmpDir, rmTmpDir } from "./util.ts";
 
 const dirs: string[] = [];
@@ -90,6 +91,41 @@ describe("open: a port held by another program", () => {
       expect(opened).toEqual([]);
     } finally {
       squatter.stop(true);
+    }
+  }, 20_000);
+
+  test("refuses to reuse a different mate-doc viewer's state dir on the same port", async () => {
+    const stateDirA = await tempDir("mate-doc-open-mismatch-state-a-");
+    const stateDirB = await tempDir("mate-doc-open-mismatch-state-b-");
+    const served = await tempDir("mate-doc-open-mismatch-served-");
+    writeFileSync(join(served, "index.md"), "---\ntitle: Doc\n---\n\nBody.\n");
+
+    let handle: ServerHandle | null = null;
+    try {
+      handle = await serve({
+        host: "127.0.0.1",
+        port: 0,
+        stateDir: stateDirA,
+        parse,
+        render,
+        loadLedger: (): Ledger | null => null,
+      });
+      const port = Number(new URL(handle.url).port);
+
+      const opened: string[] = [];
+      const attempt = openPath(served, {
+        stateDir: stateDirB,
+        port,
+        parse,
+        render,
+        loadLedger: (): Ledger | null => null,
+        openBrowser: (url: string) => opened.push(url),
+      });
+      await expect(attempt).rejects.toThrow(/different mate-doc viewer/);
+      expect(opened).toEqual([]);
+      expect(await readPidFile(stateDirB)).toBeNull();
+    } finally {
+      await handle?.stop();
     }
   }, 20_000);
 });
