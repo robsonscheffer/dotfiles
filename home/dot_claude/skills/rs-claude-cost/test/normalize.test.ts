@@ -116,6 +116,21 @@ describe("normalize", () => {
     expect(threads[0]!.turns[0]!.messageId).toBe("in-window");
   });
 
+  test("a session with no turns inside the window is not counted", async () => {
+    const root = makeTmpRoot("rs-cost-empty-session");
+    writeJsonl(join(root, "proj1", "session-in.jsonl"), [
+      assistantLine({ messageId: "in", timestamp: "2026-09-22T10:00:00.000Z", model: "claude-sonnet-5" }),
+    ]);
+    writeJsonl(join(root, "proj1", "session-after.jsonl"), [
+      assistantLine({ messageId: "after", timestamp: "2026-09-29T10:00:00.000Z", model: "claude-sonnet-5" }),
+    ]);
+
+    const files = findCandidateFiles(root, WEEK_START);
+    const { sessions } = await normalize(files, { startMs: WEEK_START, endMs: WEEK_END });
+
+    expect(sessions.map((s) => s.id)).toEqual(["session-in"]);
+  });
+
   test("a compaction boundary is found and flags the next turn", async () => {
     const root = makeTmpRoot("rs-cost-compaction");
     const sessionPath = join(root, "proj1", "session-d.jsonl");

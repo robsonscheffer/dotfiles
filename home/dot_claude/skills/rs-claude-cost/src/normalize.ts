@@ -372,9 +372,11 @@ export async function normalize(
     subagentsByParent.set(thread.sessionId, list);
   }
 
-  const sessions = mainThreads.map((main) =>
-    buildSession(main, subagentsByParent.get(main.id) ?? []),
-  );
+  // A file touched after the window opened can hold no turns inside it.
+  const sessions = mainThreads
+    .map((main) => ({ main, subagents: subagentsByParent.get(main.id) ?? [] }))
+    .filter(({ main, subagents }) => main.turns.length + subagents.reduce((n, t) => n + t.turns.length, 0) > 0)
+    .map(({ main, subagents }) => buildSession(main, subagents));
 
   return { threads, sessions, dataQuality: dq };
 }
