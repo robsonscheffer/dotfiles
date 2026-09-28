@@ -1,12 +1,14 @@
 #!/usr/bin/env bun
 // rs-claude-cost: a deterministic weekly Claude Code cost report.
-// No step calls a model (D1). This CLI parses flags and picks the week;
-// scanning, pricing, metrics, and rendering land in later steps against the
-// same flags.
+// No step calls a model (D1). This CLI parses flags, builds the one report
+// object (D2), and for now prints it as JSON — the terminal and HTML
+// renderers land in a later step, against the same object.
 
+import { mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { lastCompletedWeek, parseIsoWeek, type TimeZoneMode } from "./date.ts";
+import { buildReport } from "./report.ts";
 
 const HELP = `rs-claude-cost - a deterministic weekly Claude Code cost report
 
@@ -46,6 +48,14 @@ function expandHome(path: string): string {
 
 function defaultRoot(): string {
   return join(homedir(), ".claude", "projects");
+}
+
+function defaultOut(): string {
+  return join(homedir(), ".local", "state", "rs-claude-cost", "weeks");
+}
+
+function defaultPricing(): string {
+  return join(import.meta.dir, "..", "pricing.json");
 }
 
 class UsageError extends Error {}
@@ -131,13 +141,36 @@ export async function main(argv: string[]): Promise<number> {
     return 0;
   }
 
-  // Picking the week is wired up now; scanning and reporting land in the
-  // scan-and-normalize step.
-  const week = flags.week
-    ? parseIsoWeek(flags.week, flags.tz)
-    : lastCompletedWeek(new Date(), flags.tz);
-  console.log(JSON.stringify({ isoWeek: week.isoWeek }));
-  return 0;
+  const tz = flags.tz;
+  const week = flags.week ? parseIsoWeek(flags.week, tz) : lastCompletedWeek(new Date(), tz);
+  const pricingPath = flags.pricing ?? defaultPricing();
+
+  const { report, reconciled, exitCode } = await buildReport({
+    root: flags.root,
+    week,
+    tz,
+    pricingPath,
+  });
+
+  if (!reconciled) {
+    console.error(
+      "rs-claude-cost: reconciliation failed, nothing written. " +
+        "Per-session and per-kind dollars did not sum to the total.",
+    );
+    return 1;
+  }
+
+  const outDir = flags.out ?? defaultOut();
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(join(outDir, `${week.isoWeek}.json`), JSON.stringify(report, null, 2));
+
+  if (flags.json || flags.format === "json") {
+    console.log(JSON.stringify(report, null, 2));
+  } else {
+    console.log(JSON.stringify(report.totals, null, 2));
+  }
+
+  return exitCode;
 }
 
 if (import.meta.main) {

@@ -34,9 +34,21 @@ describe("cli", () => {
     expect(mode & 0o111).not.toBe(0);
   });
 
-  test("--week picks the requested ISO week", async () => {
-    const { exitCode, stdout } = await run(["--week", "2026-W39"]);
+  test("an empty transcript root produces a zeroed report and exits 0", async () => {
+    const emptyRoot = await import("./helpers.ts").then((m) => m.makeTmpRoot("rs-cost-empty"));
+    const outDir = await import("./helpers.ts").then((m) => m.makeTmpRoot("rs-cost-out"));
+    const { exitCode, stdout } = await run([
+      "--week",
+      "2026-W39",
+      "--root",
+      emptyRoot,
+      "--out",
+      outDir,
+      "--no-record",
+    ]);
     expect(exitCode).toBe(0);
-    expect(JSON.parse(stdout).isoWeek).toBe("2026-W39");
+    const totals = JSON.parse(stdout);
+    expect(totals.dollars).toBe(0);
+    expect(totals.sessions).toBe(0);
   });
 });
