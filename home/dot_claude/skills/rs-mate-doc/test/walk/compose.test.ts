@@ -141,6 +141,34 @@ describe("composeWalk", () => {
     expect(a.files["claims.yaml"]).toBe(b.files["claims.yaml"]);
   });
 
+  test("related notes render as wikilinks with no private paths, and lint passes", async () => {
+    const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
+    const md = composed.files["index.md"]!;
+    expect(md).toContain("## Related notes");
+    expect(md).toContain("[[store-teardown-order]]");
+    expect(md).toContain("[[session-provider-migration]]");
+    expect(md).not.toContain("wiki/");
+    expect(md).not.toContain("~/brain");
+
+    const dir = await tempDir();
+    try {
+      await Bun.write(join(dir, "index.md"), md);
+      await Bun.write(join(dir, "claims.yaml"), composed.files["claims.yaml"]!);
+      const doc = parse(md, "index.md");
+      const ledger = await loadLedger(dir);
+      const issues = lint([doc], ledger);
+      expect(issues.filter((i) => i.severity === "error")).toEqual([]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("omitting context renders no related-notes section", () => {
+    const inputs = { ...WALK_INPUTS, context: undefined };
+    const composed = composeWalk(FETCHED_PR, inputs, { now: NOW });
+    expect(composed.files["index.md"]).not.toContain("## Related notes");
+  });
+
   test("omitting ticket fit and comment triage renders the documented empty states, with no claims from either", () => {
     const inputs = { ...WALK_INPUTS, ticketFit: undefined, commentTriage: undefined };
     const composed = composeWalk(FETCHED_PR, inputs, { now: NOW });

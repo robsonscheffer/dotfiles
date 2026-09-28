@@ -4,7 +4,7 @@
 // ledger instead of a standalone HTML document, and rendered later by mate-doc's own renderer.
 import type { Claim, ClaimId } from "../types.ts";
 import { firstFileChange, renderDiffFence } from "./diff.ts";
-import type { AcceptanceCriterion, ComposedWalk, FetchedPr, JudgmentData, QuestionItem, RiskItem, StoryData, StoryGroup, TicketFit, WalkInputs } from "./types.ts";
+import type { AcceptanceCriterion, ComposedWalk, ContextData, FetchedPr, JudgmentData, QuestionItem, RiskItem, StoryData, StoryGroup, TicketFit, WalkInputs } from "./types.ts";
 
 const MAX_DIFF_LINES = 80;
 const CHECKED_BY = "agent:mate-doc-walk";
@@ -165,6 +165,29 @@ function buildAcClaim(pr: FetchedPr, ac: AcceptanceCriterion, ticketKey: string,
   return id;
 }
 
+// Strips a context item's path down to the bare note name (no folder, no extension) so the
+// rendered link never leaks the vault layout the brief's lint rule already forbids in prose.
+function noteNameFromPath(path: string): string {
+  const base = path.split("/").pop() ?? path;
+  return base.replace(/\.[^./]+$/, "");
+}
+
+// "Related notes" - the context step's qmd/grep hits, rendered as wikilinks per the brief. Not a
+// claim: prior notes are background the composer surfaces, not a diff/ticket statement to check.
+function renderContextSection(context: ContextData | undefined): string {
+  if (!context || context.items.length === 0) return "";
+  const lines = ["## Related notes", ""];
+  for (const item of context.items) {
+    if (typeof item === "string") {
+      lines.push(`- [[${noteNameFromPath(item)}]]`);
+    } else {
+      const snippet = item.snippet ? `: ${item.snippet}` : "";
+      lines.push(`- [[${noteNameFromPath(item.path)}]]${snippet}`);
+    }
+  }
+  return lines.join("\n");
+}
+
 function renderQuestionsSection(questions: QuestionItem[]): string {
   const lines = ["## Bring your questions", ""];
   if (questions.length === 0) {
@@ -261,6 +284,7 @@ export function composeWalk(pr: FetchedPr, inputs: WalkInputs, opts: ComposeOpti
   parts.push(renderTicketFitSection(pr, inputs.ticketFit, build, checkedAt));
   parts.push(renderQuestionsSection(inputs.questions));
   parts.push(renderRisksSection(inputs.risks));
+  parts.push(renderContextSection(inputs.context));
   parts.push(renderCommentTriageSection(inputs.commentTriage));
   parts.push(renderJudgmentSection(inputs.judgment));
 

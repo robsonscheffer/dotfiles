@@ -160,7 +160,10 @@ export const WALK_INPUTS: WalkInputs = {
   },
   context: {
     mode: "qmd",
-    items: [{ path: "store-teardown-order", score: 82, snippet: "Store teardown has to follow provider unmount or listeners leak." }],
+    items: [
+      { path: "store-teardown-order", score: 82, snippet: "Store teardown has to follow provider unmount or listeners leak." },
+      "session-provider-migration",
+    ],
   },
   ticketFit: {
     ticket_key: "ABC-12",
