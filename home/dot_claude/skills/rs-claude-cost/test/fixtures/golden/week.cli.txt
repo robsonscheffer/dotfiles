@@ -1,20 +1,29 @@
-rs-claude-cost · 2026-W39 · Sep 21 to Sep 27 · UTC time · list prices
-────────────────────────────────────────────────────────────────────────────────────────────────────
- $0.03     1 sessions   2 turns   1 active days   ▲ first week, no trend
-────────────────────────────────────────────────────────────────────────────────────────────────────
+rs-claude-cost  2026-W39 · Sep 21 to Sep 27                                   list prices · UTC time
+
+ $0.03     1 sessions · 2 turns · 1 active days
+ first week recorded
+
 WHERE IT WENT
- fresh input          ██████████████████          $0.02   75%
- Claude writing       ████                        $0.01   16%
- re-reading context   █                           $0.00    6%
- storing context 5m   █                           $0.00    4%
+ fresh input          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━     $0.02   75%
+ Claude writing       ━━━━━╸──────────────────────     $0.01   16%
+ re-reading context   ━━──────────────────────────     $0.00    6%
+ storing context 5m   ━───────────────────────────     $0.00    4%
+
 CONTEXT AND CACHE
- cache hit rate 42%   median context 12K   p90 12K
- turns above 150K cost 0% of the week
- cache breaks  0   idle 0 · model switch 0 · compaction 0 · unknown 0
+ 42% cache hit rate · median 12K · p90 12K
+ 0% of spend was in turns above 150K
+ 0 cache breaks: none
  1h cache: paid $0.00 premium, avoided $0.00 rewrites, net saved $0.00
-FINDINGS                                                                      $ / week   confidence
+
+FINDINGS                                                                  $/week  confidence
  none above threshold this week
-MODELS            actual  all on claude-haiku-4-5   all on claude-sonnet-5   all on claude-opus-5-5
- total             $0.03                    $0.02                    $0.03                    $0.06
+
+WHAT IF
+ actual           $0.03
+ Haiku 4.5        $0.02   −$0.02 (−50%)
+ Sonnet 5         $0.03   $0.00 (0%)
+ Opus 5.5         $0.06   +$0.03 (+94%)
  upper bound, not a forecast: cheaper models may need more turns; 4.7+ models count ~30% more tokens
-SINCE LAST WEEK   (no previous week recorded)
+
+SINCE LAST WEEK
+ no previous week recorded

@@ -146,6 +146,8 @@ export interface ByKindTotals {
 
 export interface ByModelTotals {
   model: string;
+  /** display label; falls back to the raw model id when pricing.json has none */
+  label: string;
   dollars: MicroDollars;
   tokens: TokenCounts;
   dollarsPerMillionTokens: number;
@@ -240,6 +242,8 @@ export interface Finding {
 
 export interface WhatifRow {
   model: string;
+  /** display label; falls back to the raw model id when pricing.json has none */
+  label: string;
   totalDollars: MicroDollars;
   mainDollars: MicroDollars;
   subagentDollars: MicroDollars;

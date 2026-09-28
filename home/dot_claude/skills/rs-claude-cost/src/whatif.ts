@@ -49,6 +49,7 @@ export function computeWhatif(threads: Thread[], table: PricingTable, actualTota
     const totalDollars = mainDollars + subagentDollars;
     rows.push({
       model: model.id,
+      label: model.label ?? model.id,
       totalDollars,
       mainDollars,
       subagentDollars,

@@ -193,7 +193,7 @@ export async function main(argv: string[]): Promise<number> {
   const outDir = flags.out ?? defaultOut();
   mkdirSync(outDir, { recursive: true });
 
-  const { report, reconciled, exitCode, hasPriorWeek } = await buildReport({
+  const { report, reconciled, exitCode, hasPriorWeek, priorWeekTotalDollars } = await buildReport({
     root: flags.root,
     week,
     tz,
@@ -232,10 +232,20 @@ export async function main(argv: string[]): Promise<number> {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   } else if (!flags.quiet) {
     const color = process.stdout.isTTY === true && !process.env.NO_COLOR;
-    console.log(renderCli(report, { color, hasPriorWeek }));
-    if (flags.format === "all" || flags.format === "html") {
-      console.log(`page: ${htmlPath}`);
-    }
+    const colortermValue = (process.env.COLORTERM ?? "").toLowerCase();
+    const colorMode = colortermValue === "truecolor" || colortermValue === "24bit" ? "truecolor" : "256";
+    const width = Math.max(80, Math.min(process.stdout.columns ?? 100, 100));
+    const pagePath = flags.format === "all" || flags.format === "html" ? htmlPath : undefined;
+    console.log(
+      renderCli(report, {
+        color,
+        hasPriorWeek,
+        priorWeekTotalDollars,
+        width,
+        colorMode: color ? colorMode : "none",
+        pagePath,
+      }),
+    );
   }
 
   if (flags.open && (flags.format === "html" || flags.format === "all")) {

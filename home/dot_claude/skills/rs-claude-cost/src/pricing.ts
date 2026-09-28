@@ -17,9 +17,16 @@ export interface ModelRates {
 
 export interface PricedModel {
   id: string;
+  label?: string;
   whatif: boolean;
   usd_per_mtok: ModelRates;
   fast_usd_per_mtok?: ModelRates;
+}
+
+/** The model's display label, falling back to its raw id when no label is set. */
+export function modelLabel(table: PricingTable, modelId: string): string {
+  const model = matchModel(table, modelId);
+  return model?.label ?? modelId;
 }
 
 export interface PricingFile {

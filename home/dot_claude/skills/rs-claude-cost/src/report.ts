@@ -16,7 +16,7 @@ import {
 import { computeCacheMetrics, computeOverhead } from "./cache.ts";
 import { evaluateRules, loadThresholds } from "./rules.ts";
 import { computeWhatif } from "./whatif.ts";
-import { buildSinceLastWeek, hasPriorWeek, recordWeek } from "./history.ts";
+import { buildSinceLastWeek, hasPriorWeek, previousWeekTotal, recordWeek } from "./history.ts";
 import type { WeekRange, TimeZoneMode } from "./date.ts";
 import type { DataQuality, Report, Thread } from "./types.ts";
 
@@ -35,6 +35,7 @@ export interface BuildReportResult {
   reconciled: boolean;
   exitCode: 0 | 1 | 2;
   hasPriorWeek: boolean;
+  priorWeekTotalDollars: number | null;
 }
 
 function allTurns(threads: Thread[]) {
@@ -57,7 +58,7 @@ export async function buildReport(options: BuildReportOptions): Promise<BuildRep
   const totals = computeTotals(threads);
   totals.sessions = sessions.length;
   const byKind = computeByKind(threads, table);
-  const byModel = computeByModel(threads);
+  const byModel = computeByModel(threads, table);
   const byThread = computeByThread(threads);
   const context = computeContext(threads, table);
   const cache = computeCacheMetrics(threads, table);
@@ -91,6 +92,7 @@ export async function buildReport(options: BuildReportOptions): Promise<BuildRep
     ? buildSinceLastWeek(options.outDir, options.week.isoWeek, options.tz, findings)
     : [];
   const priorWeek = hasPriorWeek(options.outDir, options.week.isoWeek);
+  const priorWeekTotalDollars = previousWeekTotal(options.outDir, options.week.isoWeek, options.tz);
 
   if (reconciled && !options.noRecord) {
     recordWeek(options.outDir, options.week.isoWeek, totals, findings);
@@ -158,5 +160,5 @@ export async function buildReport(options: BuildReportOptions): Promise<BuildRep
     exitCode = 2;
   }
 
-  return { report, reconciled, exitCode, hasPriorWeek: priorWeek };
+  return { report, reconciled, exitCode, hasPriorWeek: priorWeek, priorWeekTotalDollars };
 }

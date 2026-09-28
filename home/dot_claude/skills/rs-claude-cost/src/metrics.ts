@@ -79,7 +79,7 @@ export function computeByKind(
   return result;
 }
 
-export function computeByModel(threads: Thread[]): ByModelTotals[] {
+export function computeByModel(threads: Thread[], table: PricingTable): ByModelTotals[] {
   const byModel = new Map<
     string,
     { dollars: number; tokens: TokenCounts; fastDollars: number }
@@ -103,6 +103,7 @@ export function computeByModel(threads: Thread[]): ByModelTotals[] {
       const totalTokens = TOKEN_KINDS.reduce((a, k) => a + entry.tokens[k], 0);
       return {
         model,
+        label: matchModel(table, model)?.label ?? model,
         dollars: entry.dollars,
         tokens: entry.tokens,
         dollarsPerMillionTokens: totalTokens === 0 ? 0 : (entry.dollars / 1_000_000 / totalTokens) * 1_000_000,

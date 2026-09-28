@@ -117,3 +117,10 @@ export function buildSinceLastWeek(
 export function hasPriorWeek(outDir: string, isoWeek: string): boolean {
   return readJsonl<HistoryRow>(historyPath(outDir)).some((r) => r.isoWeek < isoWeek);
 }
+
+/** The immediately preceding week's total, if history.jsonl has one recorded. */
+export function previousWeekTotal(outDir: string, isoWeek: string, tz: TimeZoneMode): number | null {
+  const prevWeek = previousIsoWeek(isoWeek, tz);
+  const row = readJsonl<HistoryRow>(historyPath(outDir)).find((r) => r.isoWeek === prevWeek);
+  return row?.totalDollars ?? null;
+}

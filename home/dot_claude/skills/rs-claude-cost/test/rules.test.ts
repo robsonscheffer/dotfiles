@@ -317,19 +317,19 @@ describe("R11 1-hour cache lifetime", () => {
   });
 });
 
-test("findings sort measured, then lower_bound, then estimated, by dollars within each", async () => {
+test("findings sort measured and lower_bound together by dollars, then estimated by dollars", async () => {
   const root = makeTmpRoot("rs-cost-sort-order");
   writeJsonl(join(root, "proj", "s1.jsonl"), [
     assistantLine({ messageId: "m1", timestamp: "2026-09-22T00:00:00.000Z", model: "claude-sonnet-5", usage: BIG(200_001) }),
     assistantLine({ messageId: "m2", timestamp: "2026-09-23T00:00:01.000Z", model: "claude-sonnet-5", usage: BIG(100) }),
   ]);
   const r = await report(root);
-  const ranks: Record<string, number> = { measured: 0, lower_bound: 1, estimated: 2 };
+  const groups: Record<string, number> = { measured: 0, lower_bound: 0, estimated: 1 };
   for (let i = 1; i < r.findings.length; i += 1) {
-    const prevRank = ranks[r.findings[i - 1]!.confidence]!;
-    const currRank = ranks[r.findings[i]!.confidence]!;
-    expect(currRank).toBeGreaterThanOrEqual(prevRank);
-    if (currRank === prevRank) {
+    const prevGroup = groups[r.findings[i - 1]!.confidence]!;
+    const currGroup = groups[r.findings[i]!.confidence]!;
+    expect(currGroup).toBeGreaterThanOrEqual(prevGroup);
+    if (currGroup === prevGroup) {
       expect(r.findings[i - 1]!.dollars).toBeGreaterThanOrEqual(r.findings[i]!.dollars);
     }
   }

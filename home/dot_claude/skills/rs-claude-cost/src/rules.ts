@@ -325,8 +325,8 @@ function ruleR10(threads: Thread[], sessionById: Map<string, Session>): Finding 
     0,
   );
   const parts: string[] = [];
-  if (premiumSubagents.length > 0) parts.push(`${premiumSubagents.length} unpinned premium subagent${premiumSubagents.length === 1 ? "" : "s"}`);
-  if (unchangedRereads > 0) parts.push(`${unchangedRereads} repeat read${unchangedRereads === 1 ? "" : "s"} of an unchanged file`);
+  if (premiumSubagents.length > 0) parts.push(`${premiumSubagents.length} unpinned subagent${premiumSubagents.length === 1 ? "" : "s"}`);
+  if (unchangedRereads > 0) parts.push(`${unchangedRereads} repeat read${unchangedRereads === 1 ? "" : "s"}`);
 
   const sessionIds = premiumSubagents.map((t2) => t2.sessionId);
   return makeFinding({
@@ -357,11 +357,10 @@ function ruleR11(cache: CacheMetrics, t: Thresholds, threads: Thread[], sessionB
   });
 }
 
-const CONFIDENCE_RANK: Record<FindingConfidence, number> = {
-  measured: 0,
-  lower_bound: 1,
-  estimated: 2,
-};
+/** measured and lower_bound sort together by dollars descending; estimated sorts after, also by dollars descending. */
+function confidenceGroup(confidence: FindingConfidence): number {
+  return confidence === "estimated" ? 1 : 0;
+}
 
 export function evaluateRules(options: {
   threads: Thread[];
@@ -420,8 +419,8 @@ export function evaluateRules(options: {
   return findings
     .filter((f): f is Finding => f !== null)
     .sort((a, b) => {
-      const rankDiff = CONFIDENCE_RANK[a.confidence] - CONFIDENCE_RANK[b.confidence];
-      if (rankDiff !== 0) return rankDiff;
+      const groupDiff = confidenceGroup(a.confidence) - confidenceGroup(b.confidence);
+      if (groupDiff !== 0) return groupDiff;
       return b.dollars - a.dollars;
     });
 }

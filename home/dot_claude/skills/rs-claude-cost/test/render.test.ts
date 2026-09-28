@@ -81,6 +81,23 @@ describe("golden renders", () => {
     expect(/\x1b/.test(cli)).toBe(false);
   });
 
+  test("stays at most 45 lines and never wider than the render width, at 80 and 100 columns", async () => {
+    const { report } = await buildGoldenWeek();
+    for (const width of [80, 100]) {
+      const cli = renderCli(report, { color: false, hasPriorWeek: false, width });
+      const lines = cli.split("\n");
+      expect(lines.length).toBeLessThanOrEqual(45);
+      for (const line of lines) expect(line.length).toBeLessThanOrEqual(width);
+    }
+  });
+
+  test("model labels render, never raw ids; unlabeled models fall back to their id", async () => {
+    const { report } = await buildGoldenWeek();
+    const cli = renderCli(report, { color: false, hasPriorWeek: false });
+    expect(cli).toContain("Sonnet 5");
+    expect(cli).not.toContain("claude-sonnet-5");
+  });
+
   test("HTML matches the golden file and contains no URLs", async () => {
     const { report, exitCode } = await buildGoldenWeek();
     const html = renderHtml(report, {

@@ -237,9 +237,10 @@
     "byModelTotals": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["model", "dollars", "tokens", "dollarsPerMillionTokens", "share", "fastShare"],
+      "required": ["model", "label", "dollars", "tokens", "dollarsPerMillionTokens", "share", "fastShare"],
       "properties": {
         "model": { "type": "string" },
+        "label": { "type": "string" },
         "dollars": { "type": "integer" },
         "tokens": { "$ref": "#/$defs/tokenCounts" },
         "dollarsPerMillionTokens": { "type": "number" },
@@ -325,9 +326,10 @@
     "whatifRow": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["model", "totalDollars", "mainDollars", "subagentDollars", "deltaDollars"],
+      "required": ["model", "label", "totalDollars", "mainDollars", "subagentDollars", "deltaDollars"],
       "properties": {
         "model": { "type": "string" },
+        "label": { "type": "string" },
         "totalDollars": { "type": "integer" },
         "mainDollars": { "type": "integer" },
         "subagentDollars": { "type": "integer" },
