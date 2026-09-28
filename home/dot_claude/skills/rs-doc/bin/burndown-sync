@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# burndown-sync entry point. Resolves its own location through symlinks, then runs with bun.
+set -euo pipefail
+
+self="$(readlink -f "${BASH_SOURCE[0]}")"
+root="$(cd "$(dirname "$self")/.." && pwd)"
+
+if ! command -v bun >/dev/null 2>&1; then
+  echo "burndown-sync: bun not found. Run: $root/bin/setup" >&2
+  exit 3
+fi
+
+if [[ ! -d "$root/node_modules" ]]; then
+  echo "burndown-sync: dependencies not installed. Run: $root/bin/setup" >&2
+  exit 3
+fi
+
+exec bun "$root/src/burndown/cli.ts" "$@"

@@ -1,16 +1,31 @@
 // L5: the local viewer server. Binds loopback-only, serves only remembered
 // folders, live-reloads on file change.
 import { readFile } from "node:fs/promises";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { RenderOptions, ServeOptions, ServerHandle } from "../types.ts";
 import { contentTypeFor } from "./content-type.ts";
 import { collectFolderListing, renderFolderListing } from "./folder-view.ts";
 import { precomputeResolvedLinks } from "./link-resolve.ts";
-import { resolveSafePath } from "./security.ts";
+import { findFolderForAbsolutePath, resolveSafePath } from "./security.ts";
 import { loadFolders, type RememberedFolder } from "./state.ts";
 import { createSseHub, LIVE_RELOAD_PATH, liveReloadClientScript } from "./sse.ts";
 import { THEME_CSS, THEME_TOGGLE_SCRIPT } from "../render/theme.ts";
 import { createWatcher } from "./watch.ts";
+
+// Answers only from a mate-doc viewer, so `open` can tell it apart from whatever else holds the port.
+export const PING_PATH = "/__mate-doc/ping";
+export const PING_BODY = "mate-doc";
+
+// The ping body carries this too, so `open` can tell its own viewer apart from a different
+// mate-doc viewer (a different state dir) that happens to already hold the same port.
+export function pingIdentity(stateDir: string): string {
+  return Bun.hash(stateDir).toString(36);
+}
+
+// legacy: remove after pages migrate. The compiled Tailwind + DaisyUI stylesheet standalone
+// pages from the retired html-artifact skill still link at /style/main.css.
+const LEGACY_CSS_PATH = join(dirname(fileURLToPath(import.meta.url)), "../../assets/legacy/main.css");
 
 function notFound(): Response {
   return new Response("not found", { status: 404 });
@@ -40,6 +55,8 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
   if (opts.host !== "127.0.0.1") {
     throw new Error(`mate-doc serve: refusing to bind host "${opts.host}", loopback only.`);
   }
+
+  const legacyCss = await readFile(LEGACY_CSS_PATH, "utf8");
 
   const hub = createSseHub();
   const watcher = createWatcher(() => hub.broadcast("reload"));
@@ -90,11 +107,38 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
   async function fetchHandler(req: Request): Promise<Response> {
     const url = new URL(req.url);
 
+    if (url.pathname === PING_PATH) {
+      const body = `${PING_BODY}:${pingIdentity(opts.stateDir)}`;
+      return new Response(body, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+    }
+
     if (url.pathname === LIVE_RELOAD_PATH) {
       return hub.subscribe();
     }
 
+    // Standalone HTML artifacts (e.g. a diff artifact opened as a plain file) link here for
+    // the mate-doc theme CSS, independent of any remembered folder.
+    if (url.pathname === "/style/mate-doc.css") {
+      return new Response(THEME_CSS, { headers: { "Content-Type": "text/css; charset=utf-8" } });
+    }
+
+    // legacy: remove after pages migrate. Older standalone pages from the retired
+    // html-artifact skill still link the compiled Tailwind + DaisyUI stylesheet here.
+    if (url.pathname === "/style/main.css") {
+      return new Response(legacyCss, { headers: { "Content-Type": "text/css; charset=utf-8" } });
+    }
+
     const state = await loadFolders(opts.stateDir);
+
+    // legacy: remove after pages migrate. Old `/md?path=<absolute>` links from the retired
+    // html-artifact skill; redirect into the viewer if the path is inside a remembered folder.
+    if (url.pathname === "/md") {
+      const rawPath = url.searchParams.get("path");
+      const found = rawPath ? findFolderForAbsolutePath(state.folders, rawPath) : null;
+      if (!found) return notFound();
+      const target = `/${found.folder.alias}/${found.relPath}`;
+      return new Response(null, { status: 302, headers: { Location: target } });
+    }
 
     if (url.pathname === "/" || url.pathname === "") {
       return new Response(renderIndex(state.folders), {

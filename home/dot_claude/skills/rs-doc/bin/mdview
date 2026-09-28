@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# mdview: legacy artifact-viewer compatibility shim.
+# `mdview <path>` and `mdview --url <path>` keep working, both now delegate to `mate-doc open`.
+set -euo pipefail
+
+self="$(readlink -f "${BASH_SOURCE[0]}")"
+root="$(cd "$(dirname "$self")/.." && pwd)"
+
+exec "$root/bin/mate-doc" open "$@"

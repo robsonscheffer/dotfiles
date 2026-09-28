@@ -38,17 +38,18 @@ python3 ~/.claude/skills/draft-diff/scripts/render-md-diff.py \
 
 Left pane is a unified diff (added/removed/context, mate-DS styled). Right pane is the new
 version rendered in full via `marked.js` from a CDN, so the whole current state is readable,
-not just the delta. `<port>` comes from `~/.config/html-artifact.json` (default `52010`).
+not just the delta. `<port>` comes from `~/.config/mate-doc/config.yaml` (default `52010`).
 
 Then, every time, before opening:
 
-1. Lint: `node ~/.claude/skills/html-artifact/bin/lint-artifact.mjs <path>` must pass clean.
-   Read `~/.claude/skills/html-artifact/SKILL.md` for the actual rule set rather than
-   guessing at a fix — the linter checks for hardcoded light-mode hex values and a
-   `setTheme`/`toggleTheme` function, among others.
-2. Serve: `node ~/.claude/skills/html-artifact/bin/artifact-serve.mjs` (usually already
-   running).
-3. Open: `http://localhost:<port>/scratch/report/<slug>-diff.html`.
+1. If the draft itself is markdown, lint it first: `mate-doc lint <prev-version.md|new-version.md>`
+   must pass clean; fix violations in the draft, not in the diff artifact.
+2. The diff artifact is plain HTML (not a mate-doc doc), so it isn't linted or served through
+   `mate-doc open`; it's a self-contained file, opened directly: `open <diff-path>`.
+   It still links to `http://localhost:<port>/style/mate-doc.css` for the mate-DS stylesheet,
+   which mate-doc's viewer serves regardless of alias, so start it once if it isn't already
+   running: `mate-doc open ~/brain` (or any remembered folder) brings the viewer up detached.
+3. Open: `open ~/brain/.scratch/artifact/report/<slug>-diff.html`.
 
 **Once a diff artifact exists for a revision, never also paste the full draft in chat.**
 Point at the URL and summarize only what changed, in a sentence or two.

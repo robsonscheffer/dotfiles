@@ -35,8 +35,10 @@ WALK_TODAY=$(date +%F) python3 "${SKILL_BIN}/build-walk.py" \
   --out-root ~/brain/.scratch/artifact --force
 ```
 
-The fixture includes the ticket-fit and comment-triage sections so the audit exercises both. Then
-Lighthouse `http://localhost:52010/scratch/pr-4242-*/walk.html` **in both themes** (a snapshot
+The fixture includes the ticket-fit and comment-triage sections so the audit exercises both. Then,
+to Lighthouse it, point the mate-doc viewer at the scratch dir once (`mate-doc open
+~/brain/.scratch/artifact --alias artifacts`) and hit
+`http://localhost:52010/artifacts/pr-4242-*/walk.html` **in both themes** (a snapshot
 audit only tests whichever theme is live) — target 100 accessibility; it was 94 before the
 contrast pass, so treat a drop as a real regression. rs-walk ships its own template, stylesheet,
 fonts, index template, and linter under `assets/` and `bin/`. A walk opens as a file — no server,
@@ -206,7 +208,8 @@ with `--force`. Once lint passes (or only the template-origin violations remain)
 ## Step 6 — Update walks index
 
 `ARTIFACT_MODE=json` — append to `${ARTIFACTS_JSON}` (path is browser-relative from
-`/artifacts/index.html`; html-artifact serves `/walks/` → `wiki/walks/` separately):
+`/artifacts/index.html`; the mate-doc viewer serves `wiki/walks/` under its own remembered-folder
+alias, separate from whatever folder `${ARTIFACTS_JSON}` lives in):
 
 ```bash
 jq --arg title "#{number} — {title}" --arg created "{today}" \
