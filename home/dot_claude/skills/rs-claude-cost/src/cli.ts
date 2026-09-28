@@ -212,7 +212,7 @@ export async function main(argv: string[]): Promise<number> {
   }
 
   if (flags.json) {
-    console.log(JSON.stringify(report, null, 2));
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     return exitCode;
   }
 
@@ -229,7 +229,7 @@ export async function main(argv: string[]): Promise<number> {
   }
 
   if (flags.format === "json") {
-    console.log(JSON.stringify(report, null, 2));
+    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   } else if (!flags.quiet) {
     const color = process.stdout.isTTY === true && !process.env.NO_COLOR;
     console.log(renderCli(report, { color, hasPriorWeek }));
@@ -246,5 +246,7 @@ export async function main(argv: string[]): Promise<number> {
 }
 
 if (import.meta.main) {
-  main(process.argv.slice(2)).then((code) => process.exit(code));
+  main(process.argv.slice(2)).then((code) => {
+    process.exitCode = code;
+  });
 }

@@ -116,6 +116,21 @@ describe("normalize", () => {
     expect(threads[0]!.turns[0]!.messageId).toBe("in-window");
   });
 
+  test("usage comes from the line with the final output count, not a partial streaming one", async () => {
+    const root = makeTmpRoot("rs-cost-streaming-usage");
+    const usage = (output: number) => ({ input_tokens: 1, cache_read_input_tokens: 100, cache_creation_input_tokens: 0, output_tokens: output });
+    writeJsonl(join(root, "proj", "sess-s.jsonl"), [
+      assistantLine({ messageId: "m", timestamp: "2026-09-22T10:00:00.000Z", model: "claude-sonnet-5", usage: usage(7) }),
+      assistantLine({ messageId: "m", timestamp: "2026-09-22T10:00:01.000Z", model: "claude-sonnet-5", usage: usage(2151) }),
+    ]);
+
+    const files = findCandidateFiles(root, WEEK_START);
+    const { threads } = await normalize(files, { startMs: WEEK_START, endMs: WEEK_END });
+
+    expect(threads[0]!.turns).toHaveLength(1);
+    expect(threads[0]!.turns[0]!.tokens.output).toBe(2151);
+  });
+
   test("a session with no turns inside the window is not counted", async () => {
     const root = makeTmpRoot("rs-cost-empty-session");
     writeJsonl(join(root, "proj1", "session-in.jsonl"), [

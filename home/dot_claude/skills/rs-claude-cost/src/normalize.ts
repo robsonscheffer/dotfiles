@@ -96,12 +96,17 @@ function inWindow(timestamp: string | undefined, window: NormalizeWindow): boole
 /**
  * Build one Turn from every line that shares a message.id. Lines are in
  * file order; the first line supplies the scalar fields, all lines
- * contribute tool_use blocks.
+ * contribute tool_use blocks. Usage comes from the line with the most output
+ * tokens: subagent transcripts write a partial streaming count on early lines.
  */
 function buildTurn(threadId: string, lines: AssistantLine[]): Turn | null {
   const first = lines[0];
   if (!first?.message?.id || !first.message.model) return null;
-  const usage = first.message.usage;
+  const usage = lines.reduce<NonNullable<AssistantLine["message"]>["usage"]>((best, line) => {
+    const candidate = line.message?.usage;
+    if (!candidate) return best;
+    return (candidate.output_tokens ?? 0) >= (best?.output_tokens ?? 0) ? candidate : best;
+  }, first.message.usage);
   const timestamp = first.timestamp ?? "";
   const timestampMs = toMs(timestamp) ?? 0;
 
