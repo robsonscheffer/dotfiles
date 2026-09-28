@@ -146,7 +146,24 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
 .tiles { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
 .tile { border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; min-width: 120px; }
 .tile-value { font-size: 1.4rem; font-weight: 700; }
+.tile-delta { font-size: 0.85rem; font-weight: 600; margin-top: 0.15rem; }
+.tile-delta-good { color: var(--badge-low); }
+.tile-delta-bad { color: var(--badge-high); }
 .tile-label { color: var(--muted); font-size: 0.85rem; }
+.badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  padding: 0.05rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+.badge-good { background: var(--badge-low); border-color: var(--badge-low); color: #fff; }
+.badge-warn { background: var(--badge-med); border-color: var(--badge-med); color: #fff; }
+.badge-bad { background: var(--badge-high); border-color: var(--badge-high); color: #fff; }
+.badge-info { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.badge-neutral { background: var(--callout-bg); color: var(--fg); }
 .flow-diagram { max-width: 100%; height: auto; margin: 1rem 0; }
 .steps { padding-left: 0; list-style: none; }
 .step { display: flex; align-items: baseline; gap: 0.75rem; margin: 0.75rem 0; }

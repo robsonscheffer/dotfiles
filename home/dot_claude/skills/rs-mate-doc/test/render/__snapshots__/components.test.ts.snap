@@ -19,3 +19,15 @@ exports[`diff code fence styles added and removed lines with a file title 1`] = 
 <span class="diff-del">-removed line</span>
 <span class="diff-ctx"> context line</span></code></pre></figure>"
 `;
+
+exports[`tiles: stat delta renders a good delta when direction matches good-when 1`] = `"<div class="tiles"><div class="tile"><div class="tile-value">1,204</div><div class="tile-delta tile-delta-good" data-direction="up">▲ +12%</div><div class="tile-label">Signups</div></div></div>"`;
+
+exports[`inline badge renders the good tone 1`] = `"<span class="badge badge-good">Blocked</span>"`;
+
+exports[`inline badge renders the warn tone 1`] = `"<span class="badge badge-warn">Blocked</span>"`;
+
+exports[`inline badge renders the bad tone 1`] = `"<span class="badge badge-bad">Blocked</span>"`;
+
+exports[`inline badge renders the info tone 1`] = `"<span class="badge badge-info">Blocked</span>"`;
+
+exports[`inline badge renders the neutral tone 1`] = `"<span class="badge badge-neutral">Blocked</span>"`;

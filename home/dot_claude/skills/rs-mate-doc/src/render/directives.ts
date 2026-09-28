@@ -60,6 +60,30 @@ function renderCollide(n: DirectiveNode, ctx: Ctx): string {
   return html;
 }
 
+// A stat tile: "value" plus an optional delta with direction, e.g. "1,204 +12% up
+// good-when:up". `good-when` says which direction counts as an improvement, so tone follows
+// meaning rather than the sign of the delta; it defaults to "up" (more is better) when left off.
+interface StatDelta {
+  value: string;
+  delta: string;
+  direction: "up" | "down";
+  goodWhen: "up" | "down";
+}
+
+const STAT_DELTA_RE = /^(.*\S)\s+([+-]\S+)\s+(up|down)(?:\s+good-when:(up|down))?$/;
+
+function parseStatDelta(rest: string): StatDelta | null {
+  const m = STAT_DELTA_RE.exec(rest);
+  if (!m) return null;
+  return { value: m[1]!, delta: m[2]!, direction: m[3] as "up" | "down", goodWhen: (m[4] as "up" | "down" | undefined) ?? "up" };
+}
+
+function renderTileDelta(stat: StatDelta): string {
+  const tone = stat.direction === stat.goodWhen ? "good" : "bad";
+  const arrow = stat.direction === "up" ? "▲" : "▼";
+  return `<div class="tile-delta tile-delta-${tone}" data-direction="${escapeAttr(stat.direction)}">${arrow} ${escapeHtml(stat.delta)}</div>`;
+}
+
 function renderTiles(n: DirectiveNode, ctx: Ctx): string {
   const lines = n.raw ?? [];
   const tiles = lines
@@ -67,14 +91,17 @@ function renderTiles(n: DirectiveNode, ctx: Ctx): string {
       const idx = line.indexOf(":");
       if (idx === -1) return "";
       const label = line.slice(0, idx).trim();
-      let value = line.slice(idx + 1).trim();
-      const claimMatch = /\{(C\d+)\}/.exec(value);
+      let rest = line.slice(idx + 1).trim();
+      const claimMatch = /\{(C\d+)\}/.exec(rest);
       let claimHtml = "";
       if (claimMatch) {
-        value = value.replace(claimMatch[0], "").trim();
+        rest = rest.replace(claimMatch[0], "").trim();
         claimHtml = renderClaimMarker({ type: "claimRef", id: claimMatch[1] as `C${number}`, pos: n.pos }, ctx);
       }
-      return `<div class="tile"><div class="tile-value">${escapeHtml(value)}${claimHtml}</div><div class="tile-label">${escapeHtml(label)}</div></div>`;
+      const stat = parseStatDelta(rest);
+      const value = stat ? stat.value : rest;
+      const deltaHtml = stat ? renderTileDelta(stat) : "";
+      return `<div class="tile"><div class="tile-value">${escapeHtml(value)}${claimHtml}</div>${deltaHtml}<div class="tile-label">${escapeHtml(label)}</div></div>`;
     })
     .filter(Boolean)
     .join("");
