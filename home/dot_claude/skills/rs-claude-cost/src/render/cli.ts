@@ -3,6 +3,7 @@
 // object; it never recomputes a number).
 
 import type { Report, TokenKind } from "../types.ts";
+import { WHATIF_CAVEAT_SHORT } from "../whatif.ts";
 
 const WIDTH = 100;
 const MAX_BAR = 24;
@@ -88,7 +89,6 @@ export function renderCli(report: Report, options: RenderCliOptions): string {
   }
 
   lines.push("CONTEXT AND CACHE");
-  const totalTurns = report.context.bins.reduce((a, b) => a + b.turns, 0);
   const heavyBins = report.context.bins.filter((b) => b.label === "150k_to_300k" || b.label === "over_300k");
   const heavyDollars = heavyBins.reduce((a, b) => a + b.dollars, 0);
   const heavyShare = report.totals.dollars === 0 ? 0 : heavyDollars / report.totals.dollars;
@@ -98,7 +98,7 @@ export function renderCli(report: Report, options: RenderCliOptions): string {
     )}K   p90 ${Math.round(report.context.p90 / 1000)}K`,
   );
   lines.push(
-    ` turns above 150K cost ${pct(heavyShare)} of the week (${totalTurns} turns this week)`,
+    ` turns above 150K cost ${pct(heavyShare)} of the week`,
   );
   const byCause = report.cache.breaksByCause;
   lines.push(
@@ -111,20 +111,19 @@ export function renderCli(report: Report, options: RenderCliOptions): string {
     } ${usd(Math.abs(payoff.netDollars))}`,
   );
 
-  lines.push("FINDINGS" + " ".repeat(WIDTH - "FINDINGS".length - "$ / week   confidence".length) + "$ / week   confidence");
+  const titleWidth = WIDTH - 26;
+  lines.push("FINDINGS".padEnd(4 + titleWidth) + "$ / week".padStart(8) + "   confidence");
   if (report.findings.length === 0) {
     lines.push(" none above threshold this week");
   } else {
-    const shown = report.findings.slice(0, 6);
-    shown.forEach((f, i) => {
+    report.findings.slice(0, 6).forEach((f, i) => {
       const num = `${i + 1}`.padStart(2);
-      const title = f.title.length > 50 ? `${f.title.slice(0, 47)}...` : f.title;
+      const title = f.title.length > titleWidth ? `${f.title.slice(0, titleWidth - 3)}...` : f.title;
       lines.push(
-        ` ${num} ${title.padEnd(51)}${usd(f.dollars).padStart(8)}   ${f.confidence.replace("_", " ")}`,
+        ` ${num} ${title.padEnd(titleWidth)}${usd(f.dollars).padStart(8)}   ${f.confidence.replace("_", " ")}`,
       );
+      if (f.resumeCommand) lines.push(`    ${f.resumeCommand}`);
     });
-    const worst = shown[0]!;
-    if (worst.resumeCommand) lines.push(`    ${worst.resumeCommand}`);
   }
 
   if (report.whatif.length > 0) {
@@ -140,6 +139,7 @@ export function renderCli(report: Report, options: RenderCliOptions): string {
         usd(report.totals.dollars).padStart(24 - " total".length) +
         cols.map((c) => usd(c.totalDollars).padStart(colWidth)).join(""),
     );
+    lines.push(` ${WHATIF_CAVEAT_SHORT}`);
   }
 
   if (report.since_last_week.length > 0) {

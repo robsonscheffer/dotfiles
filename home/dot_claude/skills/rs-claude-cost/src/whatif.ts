@@ -10,6 +10,9 @@ export const WHATIF_CAVEAT =
   "produce about 30% more tokens for the same text than Sonnet 4.6 and earlier, so this sets " +
   "an upper bound on savings, not a forecast.";
 
+export const WHATIF_CAVEAT_SHORT =
+  "upper bound, not a forecast: cheaper models may need more turns; 4.7+ models count ~30% more tokens";
+
 function sumTokens(threads: Thread[], kind: "main" | "subagent"): TokenCounts {
   const tokens = emptyTokenCounts();
   for (const thread of threads) {

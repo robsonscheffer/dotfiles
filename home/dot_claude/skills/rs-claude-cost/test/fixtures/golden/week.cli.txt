@@ -9,11 +9,12 @@ WHERE IT WENT
  storing context 5m   █                           $0.00    4%
 CONTEXT AND CACHE
  cache hit rate 42%   median context 12K   p90 12K
- turns above 150K cost 0% of the week (2 turns this week)
+ turns above 150K cost 0% of the week
  cache breaks  0   idle 0 · model switch 0 · compaction 0 · unknown 0
  1h cache: paid $0.00 premium, avoided $0.00 rewrites, net saved $0.00
-FINDINGS                                                                       $ / week   confidence
+FINDINGS                                                                      $ / week   confidence
  none above threshold this week
 MODELS            actual  all on claude-haiku-4-5   all on claude-sonnet-5   all on claude-opus-5-5
  total             $0.03                    $0.02                    $0.03                    $0.06
+ upper bound, not a forecast: cheaper models may need more turns; 4.7+ models count ~30% more tokens
 SINCE LAST WEEK   (no previous week recorded)

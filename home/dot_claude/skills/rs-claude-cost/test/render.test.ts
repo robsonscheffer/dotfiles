@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv2020 from "ajv/dist/2020";
 import { buildReport } from "../src/report.ts";
@@ -65,6 +65,7 @@ describe("golden renders", () => {
   test("terminal summary matches the golden file, stays under 45 lines, at 100 columns", async () => {
     const { report } = await buildGoldenWeek();
     const cli = renderCli(report, { color: false, hasPriorWeek: false });
+    if (process.env.UPDATE_GOLDEN) writeFileSync(GOLDEN_CLI, `${cli}\n`);
     const golden = readFileSync(GOLDEN_CLI, "utf8").replace(/\n$/, "");
     expect(cli).toBe(golden);
 
