@@ -1,9 +1,10 @@
 // L5: the local viewer server. Binds loopback-only, serves only remembered
 // folders, live-reloads on file change.
-import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { readdir, readFile, stat } from "node:fs/promises";
+import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { RenderOptions, ServeOptions, ServerHandle } from "../types.ts";
+import { navForDoc, orderPages } from "../nav/index.ts";
+import type { Doc, RenderOptions, ServeOptions, ServerHandle } from "../types.ts";
 import { contentTypeFor } from "./content-type.ts";
 import { collectFolderListing, renderFolderListing } from "./folder-view.ts";
 import { precomputeResolvedLinks } from "./link-resolve.ts";
@@ -29,6 +30,37 @@ const LEGACY_CSS_PATH = join(dirname(fileURLToPath(import.meta.url)), "../../ass
 
 function notFound(): Response {
   return new Response("not found", { status: 404 });
+}
+
+// Viewer URL for a page, e.g. `/<alias>/<relative path without .md>`.
+function pageHref(folder: RememberedFolder, mdAbsPath: string): string {
+  const rel = relative(folder.path, mdAbsPath).replace(/\.md$/, "");
+  const parts = rel.split(sep).filter(Boolean).map(encodeURIComponent);
+  return `/${folder.alias}/${parts.join("/")}`;
+}
+
+// Viewer URL for a folder's own index (root folder omits the trailing segment).
+function folderHref(folder: RememberedFolder, dirAbs: string): string {
+  const rel = relative(folder.path, dirAbs);
+  if (!rel) return `/${folder.alias}/`;
+  const parts = rel.split(sep).filter(Boolean).map(encodeURIComponent);
+  return `/${folder.alias}/${parts.join("/")}`;
+}
+
+function breadcrumbsFor(
+  folder: RememberedFolder,
+  docDir: string,
+  doc: Doc,
+): { title: string; href: string }[] {
+  return [
+    { title: folder.alias, href: folderHref(folder, docDir) },
+    { title: doc.frontmatter.title ?? "", href: pageHref(folder, doc.path) },
+  ];
+}
+
+interface FolderPagesCache {
+  newest: number;
+  docs: Doc[];
 }
 
 function renderIndex(folders: RememberedFolder[]): string {
@@ -61,6 +93,7 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
   const hub = createSseHub();
   const watcher = createWatcher(() => hub.broadcast("reload"));
   const watchedFolders = new Set<string>();
+  const folderPagesCache = new Map<string, FolderPagesCache>();
 
   function ensureWatched(folder: RememberedFolder): void {
     if (watchedFolders.has(folder.path)) return;
@@ -68,20 +101,56 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
     watcher.addFolder(folder.path);
   }
 
+  // Sibling markdown pages directly inside dirAbs (not recursive into subfolders), cached
+  // per folder keyed on the newest mtime among the directory itself and its .md files: a new
+  // page or a directory entry change bumps the directory's own mtime, a changed `tour` or
+  // title bumps the file's mtime, either invalidates the cache.
+  async function loadFolderPages(dirAbs: string): Promise<Doc[]> {
+    const entries = await readdir(dirAbs, { withFileTypes: true });
+    const mdPaths = entries
+      .filter((e) => e.isFile() && e.name.endsWith(".md") && !e.name.startsWith("."))
+      .map((e) => join(dirAbs, e.name));
+
+    const dirStat = await stat(dirAbs);
+    const fileStats = await Promise.all(mdPaths.map((p) => stat(p)));
+    const newest = fileStats.reduce((max, s) => Math.max(max, s.mtimeMs), dirStat.mtimeMs);
+
+    const cached = folderPagesCache.get(dirAbs);
+    if (cached && cached.newest === newest) return cached.docs;
+
+    const docs = await Promise.all(
+      mdPaths.map(async (p) => opts.parse(await readFile(p, "utf8"), p)),
+    );
+    folderPagesCache.set(dirAbs, { newest, docs });
+    return docs;
+  }
+
   async function serveDoc(
     folder: RememberedFolder,
     abs: string,
     urlPath: string,
   ): Promise<Response> {
-    const src = await readFile(abs, "utf8");
-    const doc = opts.parse(src, abs);
     const docDir = dirname(abs);
+    const siblingDocs = await loadFolderPages(docDir);
+    const doc = siblingDocs.find((d) => d.path === abs) ?? opts.parse(await readFile(abs, "utf8"), abs);
+
     const ledger = opts.loadLedger(docDir);
     const folders = (await loadFolders(opts.stateDir)).folders;
     const resolved = await precomputeResolvedLinks(folders, abs, doc);
+
+    const pages = orderPages(siblingDocs, docDir);
+    const nav = navForDoc(
+      pages,
+      doc,
+      docDir,
+      (p) => pageHref(folder, p.path),
+      breadcrumbsFor(folder, docDir, doc),
+    );
+
     const renderOptions: RenderOptions = {
       theme: "auto",
       liveReload: LIVE_RELOAD_PATH,
+      nav,
       resolveLink: (node) => resolved.get(node) ?? null,
     };
     const html = opts.render(doc, ledger, renderOptions);
