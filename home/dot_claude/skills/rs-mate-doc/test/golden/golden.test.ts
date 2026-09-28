@@ -329,6 +329,29 @@ describe("golden: draft-doc", () => {
 });
 
 // ---------------------------------------------------------------------------------------------
+// dashboard shape: the `mate-doc new --shape dashboard` skeleton, straight from src/shapes/,
+// parses, renders every new component (stat delta, inline badge), and lints clean.
+
+describe("golden: dashboard shape skeleton", () => {
+  test("parses, renders the stat and badge components, and lints clean", async () => {
+    const path = fileURLToPath(new URL("../../src/shapes/dashboard/index.md", import.meta.url));
+    const src = await readFile(path, "utf8");
+    const doc = parse(src, path);
+    expect(doc.errors).toHaveLength(0);
+
+    const html = render(doc, null, { theme: "auto" });
+    assertRenderInvariants(html);
+    expect(html).toContain('class="tiles"');
+    expect(html).toContain('class="badge badge-bad"');
+    expect(html).toContain('class="badge badge-good"');
+    expect(html).toContain('class="badge badge-warn"');
+
+    const issues = lint([doc], null);
+    expect(errorsOf(issues)).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
 // Ledger hash is exercised indirectly by gate's official-demotion tests elsewhere; a light
 // sanity check here that hashing this suite's docs/ledgers never throws for the golden fixtures.
 
