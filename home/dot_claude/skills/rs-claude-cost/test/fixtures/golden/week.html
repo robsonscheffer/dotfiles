@@ -64,40 +64,100 @@
   --series-5: #d55181;
 }
 * { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body {
   margin: 0;
   background: var(--page-plane);
   color: var(--text-primary);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
-.page { max-width: 900px; margin: 0 auto; padding: 24px; }
-h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
-h2 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; }
-.subtitle { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
+.page { max-width: 1080px; margin: 0 auto; padding: 0 24px 48px; }
+.tabular { font-variant-numeric: tabular-nums; }
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--page-plane);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  margin: 0 -24px 24px;
+}
+.topbar h1 { font-size: 22px; font-weight: 600; margin: 0; white-space: nowrap; }
+.topbar .meta { color: var(--text-secondary); font-size: 13px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.topbar nav { display: flex; gap: 14px; font-size: 12px; margin-left: 8px; }
+.topbar nav a { color: var(--text-secondary); text-decoration: none; }
+.topbar nav a:hover { color: var(--text-primary); }
+.topbar .spacer { flex: 1; }
+.chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.chip-pass { color: var(--status-good); border-color: var(--status-good); }
+.chip-warn { color: var(--status-serious); border-color: var(--status-serious); }
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+  font-size: 12px;
+}
+.segmented button {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  cursor: pointer;
+  font: inherit;
+}
+.segmented button[aria-pressed="true"] { background: var(--surface-1); color: var(--text-primary); font-weight: 600; }
+section { margin: 32px 0; }
+h2.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  margin: 0 0 10px;
+}
 .card {
   background: var(--surface-1);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 16px;
-  margin-bottom: 16px;
 }
-.stat-row { display: flex; gap: 24px; flex-wrap: wrap; }
-.stat-tile .label { font-size: 12px; color: var(--text-secondary); }
-.stat-tile .value { font-size: 24px; font-weight: 600; }
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.kpi-tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+.kpi-tile .value { font-size: 24px; font-weight: 600; }
+.kpi-tile .label { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.kpi-tile .caption { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.headline-row { display: grid; grid-template-columns: 2.4fr 1fr; gap: 8px; align-items: stretch; margin-bottom: 32px; }
+.top-finding { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.top-finding .kicker { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); }
+.top-finding .title { font-size: 14px; font-weight: 600; }
+.top-finding .dollars { font-size: 18px; font-weight: 600; }
+.top-finding .action { font-size: 12px; color: var(--text-secondary); }
+.mini-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.mini-tile { border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; }
+.mini-tile .value { font-size: 16px; font-weight: 600; }
+.mini-tile .label { font-size: 11px; color: var(--text-secondary); }
 table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--gridline); }
-th { color: var(--text-secondary); font-weight: 500; }
-.axis-label { font-size: 11px; fill: var(--text-secondary); font-family: system-ui, sans-serif; }
-.chip {
-  font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-}
-details.table-toggle summary { cursor: pointer; color: var(--text-secondary); font-size: 12px; margin-top: 8px; }
-.chart { display: block; width: 100%; height: auto; }
-.session-chart { margin-bottom: 8px; }
+th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--gridline); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+th { color: var(--text-secondary); font-weight: 500; font-size: 12px; }
+.axis-label { font-size: 10px; fill: var(--text-secondary); font-family: system-ui, sans-serif; }
+details.table-toggle summary { cursor: pointer; color: var(--text-secondary); font-size: 12px; margin-top: 8px; list-style: none; }
+details.table-toggle summary::-webkit-details-marker { display: none; }
+details.table-toggle summary::before { content: "\25B8  "; }
+details.table-toggle[open] summary::before { content: "\25BE  "; }
+.chart { display: block; }
 .warning-banner {
   background: var(--status-warning);
   color: #0b0b0b;
@@ -106,75 +166,226 @@ details.table-toggle summary { cursor: pointer; color: var(--text-secondary); fo
   font-size: 13px;
   margin-bottom: 16px;
 }
-.theme-toggle {
-  float: right;
-  font-size: 12px;
+footer { color: var(--text-muted); font-size: 12px; margin-top: 32px; }
+code { background: var(--gridline); padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; margin: 10px 0 0; color: var(--text-secondary); }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.legend-value { color: var(--text-primary); }
+.swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.hatch { background-image: repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 5px); }
+
+/* Where it went: 24px stacked HTML bar */
+.stack-bar { display: flex; height: 24px; border-radius: 4px; overflow: hidden; gap: 2px; }
+.stack-seg { display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; min-width: 2px; }
+.stack-seg .seg-label { padding: 0 6px; white-space: nowrap; overflow: hidden; }
+
+/* Models: horizontal bar rows */
+.hbar-row { display: grid; grid-template-columns: 160px 1fr 70px 46px; gap: 10px; align-items: center; padding: 3px 0; font-size: 13px; }
+.hbar-track { height: 20px; background: var(--gridline); border-radius: 4px; overflow: hidden; }
+.hbar-fill { height: 100%; border-radius: 4px; background: var(--series-1); }
+.hbar-value { text-align: right; font-variant-numeric: tabular-nums; }
+.hbar-share { text-align: right; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+/* Context histogram: HTML/CSS bars, fixed 180px plot */
+.histogram { position: relative; height: 180px; display: flex; align-items: flex-end; gap: 16px; padding-top: 20px; border-top: 1px solid var(--gridline); }
+.histogram::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  border-top: 1px solid var(--gridline);
+}
+.hist-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.hist-value { font-size: 11px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.hist-bar { width: 100%; max-width: 72px; border-radius: 4px 4px 0 0; background: var(--series-1); }
+.hist-bar.heavy { background: var(--series-2); }
+.hist-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; text-align: center; }
+.hist-annotation { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
+
+/* Findings */
+.finding-row { display: grid; grid-template-columns: 20px minmax(0,1.6fr) minmax(0,1.2fr) 70px 90px 50px; gap: 10px; align-items: center; padding: 7px 0; font-size: 13px; border-bottom: 1px solid var(--gridline); }
+.finding-rank { color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.finding-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.finding-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.finding-action { font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.finding-track { height: 10px; background: var(--gridline); border-radius: 3px; overflow: hidden; }
+.finding-bar { height: 100%; min-width: 2px; border-radius: 3px; background: var(--series-4); color: var(--series-4); }
+.finding-value { white-space: nowrap; font-variant-numeric: tabular-nums; text-align: right; }
+.finding-sessions { text-align: right; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+/* What-if */
+.whatif-bar { height: 8px; background: var(--series-1); border-radius: 3px; display: inline-block; vertical-align: middle; margin-left: 8px; }
+.delta-up { color: var(--status-serious); }
+.delta-down { color: var(--status-good); }
+
+/* Sessions */
+.session-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+.session-card .session-header { font-size: 13px; margin-bottom: 6px; color: var(--text-secondary); }
+.session-card .session-header strong { color: var(--text-primary); }
+.resume-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.resume-cmd { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.copy-btn {
+  font-size: 11px;
   border: 1px solid var(--border);
   background: var(--surface-1);
   color: var(--text-primary);
   border-radius: 6px;
-  padding: 4px 10px;
+  padding: 3px 8px;
   cursor: pointer;
 }
-footer { color: var(--text-muted); font-size: 12px; margin-top: 32px; }
-code { background: var(--gridline); padding: 1px 4px; border-radius: 3px; }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; margin: 8px 0; color: var(--text-secondary); }
-.legend-item { display: inline-flex; align-items: center; gap: 6px; }
-.legend-value { color: var(--text-primary); }
-.swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-.finding-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) 170px; gap: 12px; align-items: center; padding: 5px 0; font-size: 13px; }
-.finding-track { height: 14px; }
-.finding-bar { height: 100%; min-width: 2px; border-radius: 0 4px 4px 0; background: var(--series-4); }
-.finding-estimated { background: repeating-linear-gradient(45deg, var(--series-4) 0 3px, transparent 3px 6px); border: 1px solid var(--series-4); }
-.finding-value { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.copy-btn[data-copied="true"] { color: var(--status-good); border-color: var(--status-good); }
+
+/* Tooltip */
+#tooltip {
+  position: fixed;
+  z-index: 100;
+  pointer-events: none;
+  background: var(--text-primary);
+  color: var(--page-plane);
+  font-size: 12px;
+  padding: 5px 8px;
+  border-radius: 5px;
+  display: none;
+  white-space: nowrap;
+}
+:root[data-theme="dark"] #tooltip { background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border); }
 </style>
 </head>
 <body>
-<div class="viz-root page">
-<button class="theme-toggle" onclick="var r=document.documentElement,t=r.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');r.setAttribute('data-theme',t==='dark'?'light':'dark')">Toggle theme</button>
-<h1>rs-claude-cost &middot; 2026-W39</h1>
-<div class="subtitle">Sep 21 to Sep 27 &middot; UTC time &middot; list prices, local data, not shared</div>
+<div class="viz-root">
+<div class="topbar"><h1>rs-claude-cost</h1><div class="meta"><span>2026-W39</span><span>Sep 21 to Sep 27</span><span class="chip">list prices · local only</span></div><nav><a href="#where">Where</a><a href="#context">Context</a><a href="#models">Models</a><a href="#sessions">Sessions</a><a href="#findings">Findings</a><a href="#whatif">What-if</a></nav><div class="spacer"></div><div class="segmented" role="group" aria-label="Theme"><button type="button" data-mode="auto" aria-pressed="true">Auto</button><button type="button" data-mode="light" aria-pressed="false">Light</button><button type="button" data-mode="dark" aria-pressed="false">Dark</button></div></div>
+<div class="page">
 
-<div class="card">
-  <div class="stat-row">
-    <div class="stat-tile"><div class="label">Total</div><div class="value">$0.03</div></div>
-    <div class="stat-tile"><div class="label">Sessions</div><div class="value">1</div></div>
-    <div class="stat-tile"><div class="label">Turns</div><div class="value">2</div></div>
-    <div class="stat-tile"><div class="label">Active days</div><div class="value">1</div></div>
+<div class="headline-row">
+  <div class="kpi-row">
+    <div class="kpi-tile"><div class="value tabular">$0.03</div><div class="label">Total</div><div class="caption">list price, not spend</div></div>
+    <div class="kpi-tile"><div class="value tabular">1</div><div class="label">Sessions</div><div class="caption">resumed sessions count once</div></div>
+    <div class="kpi-tile"><div class="value tabular">2</div><div class="label">Turns</div><div class="caption">one assistant reply each</div></div>
+    <div class="kpi-tile"><div class="value tabular">1</div><div class="label">Active days</div><div class="caption">of 7 this week</div></div>
   </div>
+  <div class="top-finding"><div class="kicker">Top finding</div><div class="title">None above threshold</div></div>
 </div>
 
-<h2>Where it went</h2>
-<div class="card"><svg class="chart" viewBox="0 0 640 60" role="img" aria-label="Where the money went, by token kind"><rect x="0.0" y="0" width="477.3" height="60" fill="var(--series-1)" rx="4"><title>fresh input: $0.02 (75%)</title></rect><rect x="479.3" y="0" width="33.9" height="60" fill="var(--series-2)" rx="4"><title>re-reading context: $0.00 (6%)</title></rect><rect x="515.2" y="0" width="23.0" height="60" fill="var(--series-3)" rx="4"><title>storing context 5m: $0.00 (4%)</title></rect><rect x="540.2" y="0" width="97.8" height="60" fill="var(--series-5)" rx="4"><title>Claude writing: $0.01 (16%)</title></rect></svg><div class="legend"><span class="legend-item"><span class="swatch" style="background:var(--series-1)"></span>fresh input <span class="legend-value">$0.02 · 75%</span></span><span class="legend-item"><span class="swatch" style="background:var(--series-2)"></span>re-reading context <span class="legend-value">$0.00 · 6%</span></span><span class="legend-item"><span class="swatch" style="background:var(--series-3)"></span>storing context 5m <span class="legend-value">$0.00 · 4%</span></span><span class="legend-item"><span class="swatch" style="background:var(--series-5)"></span>Claude writing <span class="legend-value">$0.01 · 16%</span></span></div><details class="table-toggle"><summary>show table</summary><table><thead><tr><th>Kind</th><th>Dollars</th><th>Share</th></tr></thead><tbody><tr><td>fresh input</td><td>$0.02</td><td>75%</td></tr><tr><td>re-reading context</td><td>$0.00</td><td>6%</td></tr><tr><td>storing context 5m</td><td>$0.00</td><td>4%</td></tr><tr><td>storing context 1h</td><td>$0.00</td><td>0%</td></tr><tr><td>Claude writing</td><td>$0.01</td><td>16%</td></tr></tbody></table></details></div>
+<section id="where">
+  <h2 class="section-title">Where it went</h2>
+  <div class="card"><div class="stack-bar" role="img" aria-label="Where the money went, by token kind"><div class="stack-seg hit" style="width:74.88%;background:var(--series-1)" data-tip="fresh input: $0.02 (75%)" tabindex="0"><span class="seg-label">fresh input · $0.02</span><title>fresh input: $0.02 (75%)</title></div><div class="stack-seg hit" style="width:15.60%;background:var(--series-5)" data-tip="Claude writing: $0.01 (16%)" tabindex="0"><span class="seg-label">Claude writing · $0.01</span><title>Claude writing: $0.01 (16%)</title></div><div class="stack-seg hit" style="width:5.62%;background:var(--series-2)" data-tip="re-reading context: $0.00 (6%)" tabindex="0"><title>re-reading context: $0.00 (6%)</title></div><div class="stack-seg hit" style="width:3.90%;background:var(--series-3)" data-tip="storing context 5m: $0.00 (4%)" tabindex="0"><title>storing context 5m: $0.00 (4%)</title></div></div><div class="legend"><span class="legend-item"><span class="swatch" style="background:var(--series-1)"></span>fresh input <span class="legend-value">$0.02 · 75%</span></span><span class="legend-item"><span class="swatch" style="background:var(--series-5)"></span>Claude writing <span class="legend-value">$0.01 · 16%</span></span><span class="legend-item"><span class="swatch" style="background:var(--series-2)"></span>re-reading context <span class="legend-value">$0.00 · 6%</span></span><span class="legend-item"><span class="swatch" style="background:var(--series-3)"></span>storing context 5m <span class="legend-value">$0.00 · 4%</span></span></div><details class="table-toggle"><summary>show table</summary><table><thead><tr><th>Kind</th><th class="num">Dollars</th><th class="num">Share</th></tr></thead><tbody><tr><td>fresh input</td><td class="num">$0.02</td><td class="num">75%</td></tr><tr><td>re-reading context</td><td class="num">$0.00</td><td class="num">6%</td></tr><tr><td>storing context 5m</td><td class="num">$0.00</td><td class="num">4%</td></tr><tr><td>storing context 1h</td><td class="num">$0.00</td><td class="num">0%</td></tr><tr><td>Claude writing</td><td class="num">$0.01</td><td class="num">16%</td></tr></tbody></table></details></div>
+</section>
 
-<h2>Context and cache</h2>
-<div class="card">
-  <div class="stat-row">
-    <div class="stat-tile"><div class="label">Cache hit rate</div><div class="value">42%</div></div>
-    <div class="stat-tile"><div class="label">Median context</div><div class="value">12K</div></div>
-    <div class="stat-tile"><div class="label">p90 context</div><div class="value">12K</div></div>
+<section id="context">
+  <h2 class="section-title">Context and cache</h2>
+  <div class="card">
+    <div class="mini-tiles">
+      <div class="mini-tile"><div class="value tabular">42%</div><div class="label">Cache hit rate</div></div>
+      <div class="mini-tile"><div class="value tabular">12K</div><div class="label">Median context</div></div>
+      <div class="mini-tile"><div class="value tabular">12K</div><div class="label">p90 context</div></div>
+      <div class="mini-tile"><div class="value tabular">0%</div><div class="label">Share above 150K</div></div>
+    </div>
+    <div class="histogram"><div class="hist-col"><div class="hist-value">$0.03</div><div class="hist-bar hit" style="height:100.0%" data-tip="under 50k: $0.03, 2 turns" tabindex="0"><title>under_50k: $0.03, 2 turns</title></div><div class="hist-label">under 50k</div></div><div class="hist-col"><div class="hist-value">$0.00</div><div class="hist-bar hit" style="height:0.0%" data-tip="50k to 150k: $0.00, 0 turns" tabindex="0"><title>50k_to_150k: $0.00, 0 turns</title></div><div class="hist-label">50k to 150k</div></div><div class="hist-col"><div class="hist-value">$0.00</div><div class="hist-bar hit heavy" style="height:0.0%" data-tip="150k to 300k: $0.00, 0 turns" tabindex="0"><title>150k_to_300k: $0.00, 0 turns</title></div><div class="hist-label">150k to 300k</div></div><div class="hist-col"><div class="hist-value">$0.00</div><div class="hist-bar hit heavy" style="height:0.0%" data-tip="over 300k: $0.00, 0 turns" tabindex="0"><title>over_300k: $0.00, 0 turns</title></div><div class="hist-label">over 300k</div></div></div><div class="hist-annotation">0% of spend above 150K</div><details class="table-toggle"><summary>show table</summary><table><thead><tr><th>Bin</th><th class="num">Turns</th><th class="num">Dollars</th></tr></thead><tbody><tr><td>under_50k</td><td class="num">2</td><td class="num">$0.03</td></tr><tr><td>50k_to_150k</td><td class="num">0</td><td class="num">$0.00</td></tr><tr><td>150k_to_300k</td><td class="num">0</td><td class="num">$0.00</td></tr><tr><td>over_300k</td><td class="num">0</td><td class="num">$0.00</td></tr></tbody></table></details>
+    <div class="mini-tiles" style="margin-top:12px">
+      <div class="mini-tile"><div class="value tabular">$0.00</div><div class="label">1h premium paid</div></div>
+      <div class="mini-tile"><div class="value tabular">$0.00</div><div class="label">Rewrites avoided</div></div>
+      <div class="mini-tile"><div class="value tabular">$0.00</div><div class="label">Net saved</div></div>
+    </div>
   </div>
-  <svg class="chart" viewBox="0 0 640 160" role="img" aria-label="Cost by context size"><rect x="0.0" y="20.0" width="148.0" height="120.0" fill="var(--series-2)" rx="4"><title>under_50k: $0.03, 2 turns</title></rect><text x="74.0" y="16.0" text-anchor="middle" class="axis-label">$0.03</text><text x="74.0" y="156" text-anchor="middle" class="axis-label">under 50k</text><rect x="164.0" y="140.0" width="148.0" height="0.0" fill="var(--series-2)" rx="4"><title>50k_to_150k: $0.00, 0 turns</title></rect><text x="238.0" y="136.0" text-anchor="middle" class="axis-label">$0.00</text><text x="238.0" y="156" text-anchor="middle" class="axis-label">50k to 150k</text><rect x="328.0" y="140.0" width="148.0" height="0.0" fill="var(--series-2)" rx="4"><title>150k_to_300k: $0.00, 0 turns</title></rect><text x="402.0" y="136.0" text-anchor="middle" class="axis-label">$0.00</text><text x="402.0" y="156" text-anchor="middle" class="axis-label">150k to 300k</text><rect x="492.0" y="140.0" width="148.0" height="0.0" fill="var(--series-2)" rx="4"><title>over_300k: $0.00, 0 turns</title></rect><text x="566.0" y="136.0" text-anchor="middle" class="axis-label">$0.00</text><text x="566.0" y="156" text-anchor="middle" class="axis-label">over 300k</text></svg><details class="table-toggle"><summary>show table</summary><table><thead><tr><th>Bin</th><th>Turns</th><th>Dollars</th></tr></thead><tbody><tr><td>under_50k</td><td>2</td><td>$0.03</td></tr><tr><td>50k_to_150k</td><td>0</td><td>$0.00</td></tr><tr><td>150k_to_300k</td><td>0</td><td>$0.00</td></tr><tr><td>over_300k</td><td>0</td><td>$0.00</td></tr></tbody></table></details>
-  <p class="subtitle">1h cache: paid $0.00 premium, avoided $0.00 rewrites, net saved $0.00.</p>
-</div>
+</section>
 
-<h2>Models</h2>
-<div class="card"><svg class="chart" viewBox="0 0 640 28" role="img" aria-label="Dollars by model"><text x="0" y="18" class="axis-label">claude-sonnet-5</text><rect x="150" y="4" width="370.0" height="20" fill="var(--series-1)" rx="4"><title>claude-sonnet-5: $0.03 (100%)</title></rect><text x="528.0" y="18" class="axis-label">$0.03 · 100%</text></svg><details class="table-toggle"><summary>show table</summary><table><thead><tr><th>Model</th><th>Dollars</th><th>Share</th></tr></thead><tbody><tr><td>claude-sonnet-5</td><td>$0.03</td><td>100%</td></tr></tbody></table></details></div>
+<section id="models">
+  <h2 class="section-title">Models</h2>
+  <div class="card"><div class="hbar-row hit" data-tip="Sonnet 5: $0.03 (100%)" tabindex="0"><div class="hbar-label">Sonnet 5</div><div class="hbar-track"><div class="hbar-fill" style="width:100.0%"></div></div><div class="hbar-value tabular">$0.03</div><div class="hbar-share tabular">100%</div><title>Sonnet 5: $0.03 (100%)</title></div><details class="table-toggle"><summary>show table</summary><table><thead><tr><th>Model</th><th class="num">Dollars</th><th class="num">Share</th></tr></thead><tbody><tr><td>Sonnet 5</td><td class="num">$0.03</td><td class="num">100%</td></tr></tbody></table></details></div>
+</section>
 
-<h2>Sessions</h2><p class="subtitle">Context size per turn for the top sessions. Dots mark cache breaks; vertical lines mark compactions.</p><div class="legend"><span class="legend-item"><span class="swatch" style="background:var(--status-good)"></span>compaction</span><span class="legend-item"><span class="swatch" style="background:var(--status-warning)"></span>likely model switch</span><span class="legend-item"><span class="swatch" style="background:var(--status-serious)"></span>likely idle expiry</span><span class="legend-item"><span class="swatch" style="background:var(--status-critical)"></span>unknown cause</span></div><div class="card"><h2>example-project · $0.03 · 2 turns</h2><svg class="chart session-chart" viewBox="0 0 640 120" role="img" aria-label="Context size over turns for example-project"><text x="10" y="12" class="axis-label">peak 12K tokens</text><polyline points="10.0,10.0 630.0,23.0" fill="none" stroke="var(--series-1)" stroke-width="2"/></svg><p class="subtitle"><code>claude --resume session-golden</code></p></div>
+<section id="sessions">
+  <h2 class="section-title">Sessions</h2>
+  <p class="caption" style="color:var(--text-secondary);font-size:13px;margin:0 0 8px">Context size per turn for the top 1 sessions. Dots mark cache breaks; vertical lines mark compactions; the dashed line marks 150K.</p><div class="session-grid"><div class="card session-card"><div class="session-header"><strong>example-project</strong> · Sep 22 · 0.1h span · <span class="tabular">$0.03</span> · 2 turns</div><svg class="chart session-chart" width="100%" height="140" viewBox="0 0 460 140" role="img" aria-label="Context size over turns for example-project, session 1"><polyline points="32.0,18.0 450.0,32.6" fill="none" stroke="var(--series-1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><text x="2" y="133.0" class="axis-label">0</text><text x="2" y="21.0" class="axis-label">12K</text></svg><div class="resume-row"><code class="resume-cmd">claude --resume session-golden</code><button type="button" class="copy-btn" data-copy="claude --resume session-golden">Copy</button></div></div></div>
+</section>
 
-<div class="card"><h2>Findings</h2><p>None above threshold this week.</p></div>
+<section id="findings">
+  <h2 class="section-title">Findings</h2>
+  <div class="card"><p>None above threshold this week.</p></div>
+</section>
 
-<div class="card"><h2>What-if</h2><table><thead><tr><th>Model</th><th>Total</th><th>Main</th><th>Subagents</th><th>Delta vs actual</th></tr></thead><tbody><tr><td>claude-haiku-4-5</td><td>$0.02</td><td>$0.02</td><td>$0.00</td><td>-$0.02</td></tr><tr><td>claude-sonnet-5</td><td>$0.03</td><td>$0.03</td><td>$0.00</td><td>$0.00</td></tr><tr><td>claude-opus-5-5</td><td>$0.06</td><td>$0.06</td><td>$0.00</td><td>$0.03</td></tr><tr><td>claude-fable-5-1</td><td>$0.15</td><td>$0.15</td><td>$0.00</td><td>$0.12</td></tr></tbody></table><p class="subtitle">This table reprices this week's exact tokens on each model; it is not a prediction. The same tokens on a cheaper model may need more turns, and Claude 4.7 and later models produce about 30% more tokens for the same text than Sonnet 4.6 and earlier, so this sets an upper bound on savings, not a forecast.</p></div>
+<section id="whatif">
+  <h2 class="section-title">What-if</h2>
+  <div class="card"><table><thead><tr><th>Model</th><th class="num">Total</th><th></th><th class="num">Delta vs actual</th></tr></thead><tbody><tr><td>actual</td><td class="num">$0.03</td><td class="num"><span class="whatif-bar" style="width:12.5px"></span></td><td class="num">—</td></tr><tr><td>Haiku 4.5</td><td class="num">$0.02<span class="whatif-bar" style="width:6.3px"></span></td><td></td><td class="num delta-down">−$0.02 (-50%)</td></tr><tr><td>Sonnet 5</td><td class="num">$0.03<span class="whatif-bar" style="width:12.5px"></span></td><td></td><td class="num ">$0.00 (0%)</td></tr><tr><td>Opus 5.5</td><td class="num">$0.06<span class="whatif-bar" style="width:24.4px"></span></td><td></td><td class="num delta-up">+$0.03 (+94%)</td></tr><tr><td>Fable 5.1</td><td class="num">$0.15<span class="whatif-bar" style="width:60.0px"></span></td><td></td><td class="num delta-up">+$0.12 (+379%)</td></tr></tbody></table><p class="caption" style="color:var(--text-secondary);font-size:12px;margin-top:8px">This table reprices this week's exact tokens on each model; it is not a prediction. The same tokens on a cheaper model may need more turns, and Claude 4.7 and later models produce about 30% more tokens for the same text than Sonnet 4.6 and earlier, so this sets an upper bound on savings, not a forecast.</p></div>
+</section>
 
-<div class="card"><h2>Since last week</h2><p>No previous week recorded.</p></div>
+<section id="since">
+  <h2 class="section-title">Since last week</h2>
+  <div class="card"><p>No previous week recorded.</p></div>
+</section>
 
-<div class="card"><h2>Data quality</h2><table><tbody><tr><td>Files read</td><td>1</td></tr><tr><td>Files failed</td><td>0</td></tr><tr><td>Duplicate lines dropped</td><td>0</td></tr><tr><td>Reconciliation</td><td>pass</td></tr><tr><td>Claude Code versions</td><td>2.1.242</td></tr></tbody></table></div>
+<section id="quality">
+  <details class="table-toggle"><summary>Data quality <span class="chip chip-pass">pass</span></summary><table><tbody><tr><td>Files read</td><td class="num">1</td></tr><tr><td>Files failed</td><td class="num">0</td></tr><tr><td>Duplicate lines dropped</td><td class="num">0</td></tr><tr><td>Reconciliation</td><td class="num">pass</td></tr><tr><td>Claude Code versions</td><td>2.1.242</td></tr></tbody></table></details>
+</section>
 
 <footer>
   List prices, local data, not shared. Pricing as of 2026-09-28.
   Rebuild with <code>rs-claude-cost --week 2026-W39 --tz UTC</code>.
 </footer>
 </div>
+</div>
+<div id="tooltip"></div>
+<script>
+(function () {
+  var stored = null;
+  try { stored = localStorage.getItem("rs-claude-cost-theme"); } catch (e) {}
+  var mode = stored || "auto";
+  function apply(mode) {
+    var root = document.documentElement;
+    if (mode === "auto") root.removeAttribute("data-theme");
+    else root.setAttribute("data-theme", mode);
+    document.querySelectorAll(".segmented button").forEach(function (btn) {
+      btn.setAttribute("aria-pressed", String(btn.getAttribute("data-mode") === mode));
+    });
+  }
+  apply(mode);
+  document.querySelectorAll(".segmented button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var m = btn.getAttribute("data-mode") || "auto";
+      try { localStorage.setItem("rs-claude-cost-theme", m); } catch (e) {}
+      apply(m);
+    });
+  });
+})();
+</script>
+<script>
+(function () {
+  var tip = document.getElementById("tooltip");
+  if (!tip) return;
+  function show(el, x, y) {
+    var text = el.getAttribute("data-tip");
+    if (!text) return;
+    tip.textContent = text;
+    tip.style.display = "block";
+    tip.style.left = (x + 12) + "px";
+    tip.style.top = (y + 12) + "px";
+  }
+  function hide() {
+    tip.style.display = "none";
+  }
+  document.querySelectorAll("[data-tip]").forEach(function (el) {
+    el.addEventListener("pointermove", function (e) {
+      show(el, e.clientX, e.clientY);
+    });
+    el.addEventListener("pointerleave", hide);
+    el.addEventListener("focus", function () {
+      var rect = el.getBoundingClientRect();
+      show(el, rect.left, rect.top);
+    });
+    el.addEventListener("blur", hide);
+  });
+  document.querySelectorAll(".copy-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var text = btn.getAttribute("data-copy") || "";
+      if (navigator.clipboard) navigator.clipboard.writeText(text);
+      btn.setAttribute("data-copied", "true");
+      btn.textContent = "Copied";
+      setTimeout(function () {
+        btn.removeAttribute("data-copied");
+        btn.textContent = "Copy";
+      }, 1500);
+    });
+  });
+})();
+</script>
 </body>
 </html>
