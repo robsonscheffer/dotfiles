@@ -101,6 +101,7 @@ export const PR_META = {
   title: "feat(apps/portal): remove the global store and boot the app storeless",
   author: { login: "sam" },
   headRefName: "refactor/portal-storeless",
+  headRefOid: "9c1f3a7d2e4b6c8091a2b3c4d5e6f7081920a3b4",
   baseRefName: "main",
   additions: 612,
   deletions: 1043,

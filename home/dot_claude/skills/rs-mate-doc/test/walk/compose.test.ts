@@ -164,6 +164,19 @@ describe("composeWalk", () => {
     }
   });
 
+  test("every code ref resolves against the PR head commit, not a pull-request revision", () => {
+    const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
+    const claims = claimsFromYaml(composed.files["claims.yaml"]!);
+    const codeClaims = claims.filter((c) => c.evidence?.kind === "code");
+    expect(codeClaims.length).toBeGreaterThan(0);
+    for (const c of codeClaims) {
+      if (c.evidence?.kind !== "code") continue;
+      expect(c.evidence.ref).toMatch(/@[0-9a-f]{7,40}:/);
+      expect(c.evidence.ref).not.toContain("@pr");
+      expect(c.ttl_days).toBe(14);
+    }
+  });
+
   test("is deterministic for the same inputs and now", () => {
     const a = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
     const b = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });

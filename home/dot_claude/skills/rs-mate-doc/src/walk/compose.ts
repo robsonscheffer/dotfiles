@@ -8,6 +8,7 @@ import type { AcceptanceCriterion, ComposedWalk, ContextData, FetchedPr, Judgmen
 
 const MAX_DIFF_LINES = 80;
 const CHECKED_BY = "agent:mate-doc-walk";
+const CODE_REF_TTL_DAYS = 14;
 const TICKET_TAG_RE = /[A-Z]+-\d+/g;
 const BOLD_RE = /\*\*(.+?)\*\*/g;
 
@@ -95,7 +96,7 @@ function buildGroupClaim(pr: FetchedPr, group: StoryGroup, build: ClaimBuild, ch
   for (const file of group.files) {
     const change = firstFileChange(pr.diff, file);
     if (change.found && change.excerpt) {
-      const ref = `${pr.repo}@pr${pr.meta.number}:${file}:${change.line ?? 1}`;
+      const ref = `${pr.repo}@${pr.meta.headRefOid}:${file}:${change.line ?? 1}`;
       claim = {
         id,
         claim: group.framing,
@@ -103,6 +104,7 @@ function buildGroupClaim(pr: FetchedPr, group: StoryGroup, build: ClaimBuild, ch
         evidence: { kind: "code", ref, excerpt: change.excerpt, needs: "gh" },
         checked_by: CHECKED_BY,
         checked_at: checkedAt,
+        ttl_days: CODE_REF_TTL_DAYS,
       };
       break;
     }
