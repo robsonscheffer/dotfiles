@@ -23,7 +23,7 @@ async function buildGoldenWeek() {
       messageId: "m1",
       timestamp: "2026-09-22T10:00:00.000Z",
       model: "claude-sonnet-5",
-      cwd: "/Users/robson.scheffer/example-project",
+      cwd: "/home/dev/example-project",
       gitBranch: "main",
       version: "2.1.242",
       usage: {
@@ -37,7 +37,7 @@ async function buildGoldenWeek() {
       messageId: "m2",
       timestamp: "2026-09-22T10:05:00.000Z",
       model: "claude-sonnet-5",
-      cwd: "/Users/robson.scheffer/example-project",
+      cwd: "/home/dev/example-project",
       gitBranch: "main",
       version: "2.1.242",
       usage: {
