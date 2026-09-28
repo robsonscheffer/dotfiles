@@ -5,7 +5,7 @@ summary: One-time steps to run on the live machine after the html-artifact-retir
 ---
 
 This PR removes the `html-artifact` skill from the dotfiles repo and moves everything that used
-it onto `mate-doc` (the `rs-doc` skill). The dotfiles change itself is safe to merge without
+it onto `mate-doc` (the `rs-mate-doc` skill). The dotfiles change itself is safe to merge without
 touching the live machine; the old LaunchAgent keeps serving on its old port until you run
 these steps. Do them in order, on the machine, after the PR is on `main`.
 
@@ -31,12 +31,12 @@ chezmoi apply
 `.chezmoiremove` entry for `.claude/skills/html-artifact` is what removes the live copy.
 
 **Verify:** `test -d ~/.claude/skills/html-artifact && echo "still present" || echo "gone"`
-prints `gone`; `test -x ~/.claude/skills/rs-doc/bin/mate-doc && echo ok`.
+prints `gone`; `test -x ~/.claude/skills/rs-mate-doc/bin/mate-doc && echo ok`.
 
 ## 3. Set up mate-doc
 
 ```sh
-~/.claude/skills/rs-doc/bin/setup
+~/.claude/skills/rs-mate-doc/bin/setup
 ```
 
 The viewer's default port is now 52010, the one html-artifact freed in step 1. If you exported

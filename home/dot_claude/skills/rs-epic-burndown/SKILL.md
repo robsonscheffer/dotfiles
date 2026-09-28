@@ -9,7 +9,7 @@ End-to-end workflow for taking a locked design spec and turning it into a mate-s
 
 Cross-references:
 
-- **REQUIRED SUB-SKILL:** none. The dashboard is a plain markdown doc; `mate-doc` supplies its rendering (`:::tiles`, tables, theme) and `rs-doc/bin/burndown-sync` computes its data.
+- **REQUIRED SUB-SKILL:** none. The dashboard is a plain markdown doc; `mate-doc` supplies its rendering (`:::tiles`, tables, theme) and `rs-mate-doc/bin/burndown-sync` computes its data.
 - Related: `create-mate-ticket` for single-ticket creation (this skill orchestrates many).
 
 ## When to use
@@ -104,7 +104,7 @@ Legal `(status, needs)` pairs only — anything else fails lint. Common pairs fo
 
 ## `sync` mode — rebuild dashboard
 
-Run the `burndown-sync` CLI (ships with the `rs-doc` skill, alongside `mate-doc`):
+Run the `burndown-sync` CLI (ships with the `rs-mate-doc` skill, alongside `mate-doc`):
 
 ```sh
 burndown-sync \

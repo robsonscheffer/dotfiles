@@ -28,7 +28,7 @@ allowed-tools:
 
 ## Before anything
 
-Run `mate-doc --help`. If the command is missing or says bun is not found, run the setup script (`~/.local/bin/mate-doc setup`, or `bin/setup` in the rs-doc skill folder of the dotfiles repo) and tell Robson what it did. Do not install bun another way: the dotfiles pin it in mise.
+Run `mate-doc --help`. If the command is missing or says bun is not found, run the setup script (`~/.local/bin/mate-doc setup`, or `bin/setup` in the rs-mate-doc skill folder of the dotfiles repo) and tell Robson what it did. Do not install bun another way: the dotfiles pin it in mise.
 
 ## The line you do not cross
 
