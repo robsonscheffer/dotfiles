@@ -129,3 +129,64 @@ describe("open: a port held by another program", () => {
     }
   }, 20_000);
 });
+
+describe("open: a stale pid file on the wrong port", () => {
+  test("stops its own viewer and starts fresh when the configured port changed", async () => {
+    const stateDir = await tempDir("mate-doc-open-stale-port-state-");
+    const served = await tempDir("mate-doc-open-stale-port-served-");
+    writeFileSync(join(served, "index.md"), "---\ntitle: Doc\n---\n\nBody.\n");
+
+    // A free port, grabbed and released, then handed to a real detached child process (not this
+    // test process) so the fix's process.kill() has something real to terminate.
+    const probe = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response("") });
+    const oldPort = probe.port!;
+    probe.stop(true);
+
+    const scriptPath = new URL("../../src/serve/detached-server.ts", import.meta.url).pathname;
+    const child = Bun.spawn({
+      cmd: [process.execPath, scriptPath, "--port", String(oldPort), "--state-dir", stateDir],
+      stdin: "ignore",
+      stdout: "ignore",
+      stderr: "ignore",
+    });
+    const oldUrl = `http://127.0.0.1:${oldPort}`;
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+      try {
+        if ((await fetch(`${oldUrl}/`)).ok) break;
+      } catch {
+        // not up yet
+      }
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    await writePidFile(stateDir, { pid: child.pid, port: oldPort, url: oldUrl });
+
+    let handle: ServerHandle | null = null;
+    try {
+      const result = await openPath(served, {
+        stateDir,
+        port: 0,
+        parse,
+        render,
+        loadLedger: (): Ledger | null => null,
+        openBrowser: () => {},
+      });
+      handle = result.handle;
+
+      // The stale pid entry (still pointing at oldPort) is gone; a fresh one was written.
+      const pidInfo = await readPidFile(stateDir);
+      expect(pidInfo?.port).not.toBe(oldPort);
+
+      // The old child was stopped, not just abandoned.
+      const stillUp = await fetch(oldUrl).catch(() => null);
+      expect(stillUp).toBeNull();
+    } finally {
+      await handle?.stop();
+      try {
+        child.kill();
+      } catch {
+        // already gone
+      }
+    }
+  }, 20_000);
+});

@@ -47,7 +47,19 @@ The viewer's default port is now 52010, the one html-artifact freed in step 1. I
 `command -v burndown-sync` and `command -v mdview` all resolve (open a new shell first if
 `~/.local/bin` was just added to `PATH`).
 
-## 4. Point the viewer at your existing artifact folder, keeping the old URLs alive
+## 4. Stop any running viewer before pointing it at a folder
+
+```sh
+mate-doc stop 2>/dev/null || true
+```
+
+If `mate-doc stop` doesn't exist yet, stop it by hand instead: read the pid from
+`~/.local/state/mate-doc/server.pid` and `kill` it, then remove that file.
+
+**Verify:** `lsof -i :52010` prints nothing, confirming the port is free before step 5 starts
+a viewer on it.
+
+## 5. Point the viewer at your existing artifact folder, keeping the old URLs alive
 
 ```sh
 mate-doc open <brain>/wiki/artifact --alias artifacts
@@ -57,7 +69,7 @@ mate-doc open <brain>/wiki/artifact --alias artifacts
 `.html` page under that folder) returns `200`. Existing bookmarks and skill instructions that
 say `http://localhost:52010/artifacts/...` keep resolving.
 
-## 5. Remove the old config file
+## 6. Remove the old config file
 
 ```sh
 rm -f ~/.config/html-artifact.json
@@ -67,9 +79,21 @@ rm -f ~/.config/html-artifact.json
 `gone`. mate-doc's own config lives separately at `~/.config/mate-doc/config.yaml` (written by
 step 3) and is untouched by this.
 
-## After all five
+## After all six
 
 Confirm the viewer survives a reboot by checking it comes back up the next time something calls
 `mate-doc open`. It spawns detached and writes a pid file under
 `~/.local/state/mate-doc/server.pid`. There's no LaunchAgent for it, by design: `mate-doc open`
 self-starts the viewer on demand.
+
+## Migrate legacy pages, then drop the legacy CSS
+
+The viewer still carries a compatibility layer for pages written by the tool it replaced: an
+old stylesheet URL, and an old query-string link format. Once nothing depends on either, remove
+them.
+
+1. List pages still linking the old stylesheet or the old link format:
+   `rg -l 'localhost:52010/(style/main.css|md\?path)' <artifact dir>`.
+2. Migrate each page to the current markdown-plus-ledger format, one set of pages per commit.
+3. When the list from step 1 is empty: delete the legacy assets directory, the legacy
+   stylesheet route, the old query-string link redirect, and their tests.

@@ -6,6 +6,7 @@ import type { Parse, Render, ServerHandle, Ledger } from "../types.ts";
 import { PING_BODY, PING_PATH, pingIdentity, serve } from "./server.ts";
 import {
   addFolder,
+  clearPidFile,
   isPidAlive,
   readPidFile,
   writePidFile,
@@ -82,6 +83,18 @@ async function waitForServer(
   return "timeout";
 }
 
+// A single, non-retrying ping: used to decide whether an already-running process for this
+// state dir is really this state dir's own viewer before we kill it.
+async function pingOnce(url: string, stateDir: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${url}${PING_PATH}`);
+    if (!res.ok) return false;
+    return (await res.text()) === `${PING_BODY}:${pingIdentity(stateDir)}`;
+  } catch {
+    return false;
+  }
+}
+
 // Starts (or reuses) a server for the given state dir, then opens the
 // browser at the page for `target`. A non-null handle means this call fell back to running
 // the server in-process (the detach path failed) and the caller owns that handle's lifecycle;
@@ -103,9 +116,24 @@ export async function openPath(
   const folderPath = isDir ? abs : dirname(abs);
   const folder = await addFolder(deps.stateDir, folderPath, alias);
 
-  const pidInfo = await readPidFile(deps.stateDir);
+  let pidInfo = await readPidFile(deps.stateDir);
   let handle: ServerHandle | null = null;
   let baseUrl: string;
+
+  // A viewer left running on a port that no longer matches the configured one (for example
+  // after MATE_DOC_PORT changed). Stop it, but only once we've confirmed by ping that it
+  // really is this state dir's own viewer, not some other process that reused the pid.
+  if (pidInfo && pidInfo.port !== deps.port && isPidAlive(pidInfo.pid)) {
+    if (await pingOnce(pidInfo.url, deps.stateDir)) {
+      try {
+        process.kill(pidInfo.pid, "SIGTERM");
+      } catch {
+        // already gone
+      }
+    }
+    await clearPidFile(deps.stateDir);
+    pidInfo = null;
+  }
 
   if (pidInfo && isPidAlive(pidInfo.pid)) {
     baseUrl = pidInfo.url;
