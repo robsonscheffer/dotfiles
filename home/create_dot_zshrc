@@ -1,0 +1,2 @@
+# Machine-owned: chezmoi writes this only when it does not exist yet. Installers may append.
+[[ -f ~/.config/zsh/personal.zsh ]] && source ~/.config/zsh/personal.zsh
