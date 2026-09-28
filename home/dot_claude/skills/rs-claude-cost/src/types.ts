@@ -187,6 +187,11 @@ export interface PayoffSummary {
   notNeeded: number;
   saved: number;
   expired: number;
+  /** Extra paid for writing 1h instead of 5m, on every 1h write. */
+  premiumPaid: MicroDollars;
+  /** On a 5 to 60 minute gap, the next turn's cache read would have been a 5m rewrite. */
+  rewritesAvoided: MicroDollars;
+  /** premiumPaid minus rewritesAvoided. Positive means 1h cost more than 5m would have. */
   netDollars: MicroDollars;
 }
 

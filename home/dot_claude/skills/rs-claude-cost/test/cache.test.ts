@@ -156,6 +156,10 @@ describe("1-hour payoff", () => {
     expect(payoff.notNeeded).toBe(1);
     expect(payoff.saved).toBe(0);
     expect(payoff.expired).toBe(0);
+    // 20K tokens x ($4 - $2.50) per MTok on Sonnet 5
+    expect(payoff.premiumPaid).toBe(30_000);
+    expect(payoff.rewritesAvoided).toBe(0);
+    expect(payoff.netDollars).toBe(30_000);
   });
 
   test("a 1-hour write reused after 30 minutes saved a rewrite", async () => {
@@ -177,6 +181,9 @@ describe("1-hour payoff", () => {
     const { threads, table } = await buildThreads(root);
     const payoff = computePayoff(threads, table);
     expect(payoff.saved).toBe(1);
+    // avoided a 5m rewrite: 20K x ($2.50 - $0.20) = $0.046, net 0.030 - 0.046
+    expect(payoff.rewritesAvoided).toBe(46_000);
+    expect(payoff.netDollars).toBe(-16_000);
   });
 
   test("a 1-hour write reused after 90 minutes expired unused", async () => {
@@ -198,5 +205,7 @@ describe("1-hour payoff", () => {
     const { threads, table } = await buildThreads(root);
     const payoff = computePayoff(threads, table);
     expect(payoff.expired).toBe(1);
+    // only the 1h premium is wasted, not the whole write
+    expect(payoff.netDollars).toBe(30_000);
   });
 });

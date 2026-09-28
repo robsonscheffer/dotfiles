@@ -90,39 +90,41 @@ export function detectCacheBreaks(threads: Thread[], table: PricingTable): Cache
 export type PayoffOutcome = "not_needed" | "saved" | "expired";
 
 export function computePayoff(threads: Thread[], table: PricingTable): PayoffSummary {
-  const summary: PayoffSummary = { notNeeded: 0, saved: 0, expired: 0, netDollars: 0 };
+  const summary: PayoffSummary = {
+    notNeeded: 0,
+    saved: 0,
+    expired: 0,
+    premiumPaid: 0,
+    rewritesAvoided: 0,
+    netDollars: 0,
+  };
 
   for (const thread of threads) {
     for (let i = 0; i < thread.turns.length; i += 1) {
       const turn = thread.turns[i]!;
-      if (turn.tokens.cache_write_1h <= 0) continue;
+      const tokens = turn.tokens.cache_write_1h;
+      if (tokens <= 0) continue;
       const next = thread.turns[i + 1];
       const model = matchModel(table, turn.model);
       const rates = model && ((turn.speed === "fast" && model.fast_usd_per_mtok) || model.usd_per_mtok);
+      const gapMs = next ? next.timestampMs - turn.timestampMs : Number.POSITIVE_INFINITY;
 
-      if (!next) {
-        summary.expired += 1;
-        if (rates) summary.netDollars += Math.round(turn.tokens.cache_write_1h * rates.cache_write_1h);
-        continue;
-      }
+      if (rates) summary.premiumPaid += Math.round(tokens * (rates.cache_write_1h - rates.cache_write_5m));
 
-      const gapMs = next.timestampMs - turn.timestampMs;
       if (gapMs < FIVE_MINUTES_MS) {
         summary.notNeeded += 1;
-        if (rates) {
-          summary.netDollars += Math.round(
-            turn.tokens.cache_write_1h * (rates.cache_write_1h - rates.cache_write_5m),
-          );
-        }
       } else if (gapMs <= ONE_HOUR_MS) {
         summary.saved += 1;
+        if (rates && next) {
+          summary.rewritesAvoided += Math.round(next.tokens.cache_read * (rates.cache_write_5m - rates.cache_read));
+        }
       } else {
         summary.expired += 1;
-        if (rates) summary.netDollars += Math.round(turn.tokens.cache_write_1h * rates.cache_write_1h);
       }
     }
   }
 
+  summary.netDollars = summary.premiumPaid - summary.rewritesAvoided;
   return summary;
 }
 
