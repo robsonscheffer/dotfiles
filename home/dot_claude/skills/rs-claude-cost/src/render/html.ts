@@ -105,8 +105,8 @@ body {
   flex-wrap: wrap;
   background: var(--page-plane);
   border-bottom: 1px solid var(--border);
-  padding: 12px 24px;
-  margin: 0 -24px 24px;
+  padding: 12px max(24px, calc((100% - 1032px) / 2));
+  margin: 0 0 24px;
 }
 .topbar h1 { font-size: 22px; font-weight: 600; margin: 0; white-space: nowrap; }
 .topbar .meta { color: var(--text-secondary); font-size: 13px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -216,23 +216,23 @@ code { background: var(--gridline); padding: 1px 4px; border-radius: 3px; font-s
   left: 0; right: 0; top: 50%;
   border-top: 1px solid var(--gridline);
 }
-.hist-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.hist-col { position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
 .hist-value { font-size: 11px; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
-.hist-bar { width: 100%; max-width: 72px; border-radius: 4px 4px 0 0; background: var(--series-1); }
+.hist-bar { width: 100%; max-width: 72px; border-radius: 4px 4px 0 0; background: var(--baseline); }
 .hist-bar.heavy { background: var(--series-2); }
 .hist-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; text-align: center; }
 .hist-annotation { font-size: 12px; color: var(--text-secondary); margin-top: 8px; }
 
 /* Findings */
-.finding-row { display: grid; grid-template-columns: 20px minmax(0,1.6fr) minmax(0,1.2fr) 70px 90px 50px; gap: 10px; align-items: center; padding: 7px 0; font-size: 13px; border-bottom: 1px solid var(--gridline); }
+.finding-row { display: grid; grid-template-columns: 20px minmax(0,1.8fr) minmax(0,1fr) 70px 90px 72px; gap: 10px; align-items: center; padding: 7px 0; font-size: 13px; border-bottom: 1px solid var(--gridline); }
 .finding-rank { color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .finding-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .finding-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.finding-action { font-size: 12px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.finding-action { font-size: 12px; color: var(--text-secondary); }
 .finding-track { height: 10px; background: var(--gridline); border-radius: 3px; overflow: hidden; }
 .finding-bar { height: 100%; min-width: 2px; border-radius: 3px; background: var(--series-4); color: var(--series-4); }
 .finding-value { white-space: nowrap; font-variant-numeric: tabular-nums; text-align: right; }
-.finding-sessions { text-align: right; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.finding-sessions { white-space: nowrap; text-align: right; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
 
 /* What-if */
 .whatif-bar { height: 8px; background: var(--series-1); border-radius: 3px; display: inline-block; vertical-align: middle; margin-left: 8px; }
@@ -491,7 +491,7 @@ function findingsList(report: Report): string {
         `<title>${usd(f.dollars)} (${conf})</title></div>` +
         `<div class="finding-value">${usd(f.dollars)}</div>` +
         `<div class="chip">${escapeXml(conf)}</div>` +
-        `<div class="finding-sessions">${f.sessionIds.length} sess.</div>` +
+        `<div class="finding-sessions">${f.sessionIds.length} session${f.sessionIds.length === 1 ? "" : "s"}</div>` +
         `</div>`
       );
     })
@@ -651,8 +651,8 @@ ${warningBanner}
 <div class="headline-row">
   <div class="kpi-row">
     ${statTile("Total", usd(report.totals.dollars), "list price, not spend")}
-    ${statTile("Sessions", String(report.totals.sessions), "resumed sessions count once")}
-    ${statTile("Turns", String(totalTurns), "one assistant reply each")}
+    ${statTile("Sessions", report.totals.sessions.toLocaleString("en-US"), "resumed sessions count once")}
+    ${statTile("Turns", totalTurns.toLocaleString("en-US"), "one assistant reply each")}
     ${statTile("Active days", String(report.window.activeDays), `of 7 this week`)}
   </div>
   ${topFindingCallout(report)}

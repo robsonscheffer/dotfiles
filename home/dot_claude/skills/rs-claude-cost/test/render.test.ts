@@ -98,6 +98,13 @@ describe("golden renders", () => {
     expect(cli).not.toContain("claude-sonnet-5");
   });
 
+  test("an unknown model shows a warning banner in the terminal", async () => {
+    const { report } = await buildGoldenWeek();
+    report.pricing.unknownModels = ["claude-future-9"];
+    const cli = renderCli(report, { color: false, hasPriorWeek: false });
+    expect(cli.split("\n")[1]).toContain("warning: unknown model(s): claude-future-9");
+  });
+
   test("HTML matches the golden file and contains no URLs", async () => {
     const { report, exitCode } = await buildGoldenWeek();
     const html = renderHtml(report, {

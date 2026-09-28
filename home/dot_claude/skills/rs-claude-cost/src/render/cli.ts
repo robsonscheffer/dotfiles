@@ -65,6 +65,7 @@ const ANSI = {
   bold: "\x1b[1m",
   dim: "\x1b[2m",
   italic: "\x1b[3m",
+  yellow: "\x1b[33m",
 };
 
 function paint(color: boolean, code: string, text: string): string {
@@ -137,7 +138,13 @@ export function renderCli(report: Report, options: RenderCliOptions): string {
   const right = dim(`list prices · ${tzLabel} time`);
   const rightPlain = `list prices · ${tzLabel} time`;
   const gap = Math.max(1, width - left.length - rightPlain.length);
-  sections.push([`${left}${" ".repeat(gap)}${right}`]);
+  const header = [`${left}${" ".repeat(gap)}${right}`];
+  const warnings: string[] = [];
+  if (report.pricing.stale) warnings.push("pricing file is stale");
+  if (report.pricing.unknownModels.length > 0) warnings.push(`unknown model(s): ${report.pricing.unknownModels.join(", ")}`);
+  if (report.data_quality.filesFailed.length > 0) warnings.push(`${report.data_quality.filesFailed.length} file(s) failed to read`);
+  if (warnings.length > 0) header.push(paint(color, ANSI.yellow, truncate(` warning: ${warnings.join("; ")}`, width)));
+  sections.push(header);
 
   // -- headline --------------------------------------------------------------
   const headline: string[] = [];
