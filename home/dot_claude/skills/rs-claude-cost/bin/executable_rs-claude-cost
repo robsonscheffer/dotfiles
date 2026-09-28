@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# rs-claude-cost entry point. Resolves its own location through symlinks, then runs the CLI with bun.
+set -euo pipefail
+
+self="$(readlink -f "${BASH_SOURCE[0]}")"
+root="$(cd "$(dirname "$self")/.." && pwd)"
+
+if ! command -v bun >/dev/null 2>&1; then
+  echo "rs-claude-cost: bun not found." >&2
+  exit 3
+fi
+
+if [[ ! -d "$root/node_modules" ]]; then
+  echo "rs-claude-cost: dependencies not installed. Run: (cd $root && bun install)" >&2
+  exit 3
+fi
+
+exec bun "$root/src/cli.ts" "$@"

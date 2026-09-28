@@ -1,0 +1,13 @@
+{
+  "r1_context_tokens": 150000,
+  "r2_span_hours": 24,
+  "r2_turns": 300,
+  "r3_peak_context_tokens": 200000,
+  "r4_idle_breaks_min": 2,
+  "r5_model_switch_breaks_min": 1,
+  "r6_unknown_breaks_min": 3,
+  "r7_prompt_growth_tokens": 20000,
+  "r8_thinking_share_max": 0.1,
+  "r9_catalog_share_max": 0.15,
+  "r11_cache_1h_net_dollars_micro": 1000000
+}

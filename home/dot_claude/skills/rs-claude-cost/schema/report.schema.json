@@ -1,0 +1,352 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dotfiles.local/rs-claude-cost/report.schema.json",
+  "title": "rs-claude-cost report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "window",
+    "pricing",
+    "totals",
+    "by_kind",
+    "by_model",
+    "by_thread",
+    "context",
+    "cache",
+    "overhead",
+    "sessions",
+    "findings",
+    "whatif",
+    "since_last_week",
+    "data_quality"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end", "tz", "isoWeek", "activeDays", "missingDays"],
+      "properties": {
+        "start": { "type": "string" },
+        "end": { "type": "string" },
+        "tz": { "type": "string" },
+        "isoWeek": { "type": "string" },
+        "activeDays": { "type": "integer", "minimum": 0 },
+        "missingDays": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "pricing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "as_of", "ageDays", "stale", "unknownModels", "unpricedTokens"],
+      "properties": {
+        "file": { "type": "string" },
+        "as_of": { "type": "string" },
+        "ageDays": { "type": "integer" },
+        "stale": { "type": "boolean" },
+        "unknownModels": { "type": "array", "items": { "type": "string" } },
+        "unpricedTokens": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "totals": { "$ref": "#/$defs/totals" },
+    "by_kind": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "cache_read", "cache_write_5m", "cache_write_1h", "output"],
+      "properties": {
+        "input": { "$ref": "#/$defs/byKindTotals" },
+        "cache_read": { "$ref": "#/$defs/byKindTotals" },
+        "cache_write_5m": { "$ref": "#/$defs/byKindTotals" },
+        "cache_write_1h": { "$ref": "#/$defs/byKindTotals" },
+        "output": { "$ref": "#/$defs/byKindTotals" }
+      }
+    },
+    "by_model": { "type": "array", "items": { "$ref": "#/$defs/byModelTotals" } },
+    "by_thread": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mainDollars", "subagentDollars", "subagentsByType"],
+      "properties": {
+        "mainDollars": { "type": "integer" },
+        "subagentDollars": { "type": "integer" },
+        "subagentsByType": { "type": "object", "additionalProperties": { "type": "integer" } }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bins", "median", "p90", "max", "excessContextCost"],
+      "properties": {
+        "bins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label", "turns", "dollars"],
+            "properties": {
+              "label": { "enum": ["under_50k", "50k_to_150k", "150k_to_300k", "over_300k"] },
+              "turns": { "type": "integer", "minimum": 0 },
+              "dollars": { "type": "integer" }
+            }
+          }
+        },
+        "median": { "type": "number" },
+        "p90": { "type": "number" },
+        "max": { "type": "number" },
+        "excessContextCost": { "type": "integer" }
+      }
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hitRate", "breaks", "breaksByCause", "payoff"],
+      "properties": {
+        "hitRate": { "type": "number" },
+        "breaks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["threadId", "timestamp", "cause", "countedAsWaste", "dollars"],
+            "properties": {
+              "threadId": { "type": "string" },
+              "timestamp": { "type": "string" },
+              "cause": { "enum": ["compaction", "model_switch", "idle_expiry", "unknown"] },
+              "countedAsWaste": { "type": "boolean" },
+              "dollars": { "type": "integer" }
+            }
+          }
+        },
+        "breaksByCause": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["compaction", "model_switch", "idle_expiry", "unknown"],
+          "properties": {
+            "compaction": { "type": "integer" },
+            "model_switch": { "type": "integer" },
+            "idle_expiry": { "type": "integer" },
+            "unknown": { "type": "integer" }
+          }
+        },
+        "payoff": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["notNeeded", "saved", "expired", "premiumPaid", "rewritesAvoided", "netDollars", "byThread"],
+          "properties": {
+            "notNeeded": { "type": "integer" },
+            "saved": { "type": "integer" },
+            "expired": { "type": "integer" },
+            "premiumPaid": { "type": "integer" },
+            "rewritesAvoided": { "type": "integer" },
+            "netDollars": { "type": "integer" },
+            "byThread": { "type": "object", "additionalProperties": { "type": "integer" } }
+          }
+        }
+      }
+    },
+    "overhead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "firstTurnPromptSizeMedian",
+        "catalogSizeBytes",
+        "catalogSkillCount",
+        "catalogTokensEstimate",
+        "catalogCostEstimate"
+      ],
+      "properties": {
+        "firstTurnPromptSizeMedian": { "type": "number" },
+        "catalogSizeBytes": { "type": "number" },
+        "catalogSkillCount": { "type": "integer" },
+        "catalogTokensEstimate": { "type": "number" },
+        "catalogCostEstimate": { "type": "integer" }
+      }
+    },
+    "sessions": { "type": "array", "items": { "$ref": "#/$defs/session" } },
+    "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+    "whatif": { "type": "array", "items": { "$ref": "#/$defs/whatifRow" } },
+    "since_last_week": { "type": "array", "items": { "$ref": "#/$defs/sinceLastWeekRow" } },
+    "data_quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesRead",
+        "filesFailed",
+        "duplicateLinesDropped",
+        "unknownRecordTypes",
+        "claudeCodeVersions",
+        "unknownModels",
+        "unpricedTokens",
+        "pricingStale",
+        "pricingAsOf",
+        "pricingAgeDays",
+        "inferenceGeoValues",
+        "reconciliation"
+      ],
+      "properties": {
+        "filesRead": { "type": "integer", "minimum": 0 },
+        "filesFailed": { "type": "array", "items": { "type": "string" } },
+        "duplicateLinesDropped": { "type": "integer", "minimum": 0 },
+        "unknownRecordTypes": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "claudeCodeVersions": { "type": "array", "items": { "type": "string" } },
+        "unknownModels": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "unpricedTokens": { "type": "integer", "minimum": 0 },
+        "pricingStale": { "type": "boolean" },
+        "pricingAsOf": { "type": "string" },
+        "pricingAgeDays": { "type": "integer" },
+        "inferenceGeoValues": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "reconciliation": { "enum": ["pass", "fail", "not_run"] }
+      }
+    }
+  },
+  "$defs": {
+    "tokenCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "cache_read", "cache_write_5m", "cache_write_1h", "output"],
+      "properties": {
+        "input": { "type": "integer", "minimum": 0 },
+        "cache_read": { "type": "integer", "minimum": 0 },
+        "cache_write_5m": { "type": "integer", "minimum": 0 },
+        "cache_write_1h": { "type": "integer", "minimum": 0 },
+        "output": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dollars", "requests", "turns", "sessions", "tokens"],
+      "properties": {
+        "dollars": { "type": "integer" },
+        "requests": { "type": "integer", "minimum": 0 },
+        "turns": { "type": "integer", "minimum": 0 },
+        "sessions": { "type": "integer", "minimum": 0 },
+        "tokens": { "$ref": "#/$defs/tokenCounts" }
+      }
+    },
+    "byKindTotals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dollars", "share"],
+      "properties": {
+        "dollars": { "type": "integer" },
+        "share": { "type": "number" }
+      }
+    },
+    "byModelTotals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "label", "dollars", "tokens", "dollarsPerMillionTokens", "share", "fastShare"],
+      "properties": {
+        "model": { "type": "string" },
+        "label": { "type": "string" },
+        "dollars": { "type": "integer" },
+        "tokens": { "$ref": "#/$defs/tokenCounts" },
+        "dollarsPerMillionTokens": { "type": "number" },
+        "share": { "type": "number" },
+        "fastShare": { "type": "number" }
+      }
+    },
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "project",
+        "firstTimestampMs",
+        "lastTimestampMs",
+        "spanHours",
+        "daysTouched",
+        "turns",
+        "peakContext",
+        "compactions",
+        "mainThreadId",
+        "subagentThreadIds",
+        "resumeCommand",
+        "contextSeries",
+        "cacheBreaks"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "project": { "type": "string" },
+        "branch": { "type": "string" },
+        "firstTimestampMs": { "type": "number" },
+        "lastTimestampMs": { "type": "number" },
+        "spanHours": { "type": "number" },
+        "daysTouched": { "type": "integer", "minimum": 0 },
+        "turns": { "type": "integer", "minimum": 0 },
+        "peakContext": { "type": "number" },
+        "compactions": { "type": "integer", "minimum": 0 },
+        "mainThreadId": { "type": "string" },
+        "subagentThreadIds": { "type": "array", "items": { "type": "string" } },
+        "resumeCommand": { "type": "string" },
+        "mainDollars": { "type": "integer" },
+        "subagentDollars": { "type": "integer" },
+        "contextSeries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["promptSize", "compactedSincePrevious"],
+            "properties": {
+              "promptSize": { "type": "number" },
+              "compactedSincePrevious": { "type": "boolean" }
+            }
+          }
+        },
+        "cacheBreaks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["turnIndex", "cause"],
+            "properties": {
+              "turnIndex": { "type": "integer" },
+              "cause": { "enum": ["compaction", "model_switch", "idle_expiry", "unknown"] }
+            }
+          }
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule", "title", "dollars", "confidence", "sessionIds", "action", "resumeCommand"],
+      "properties": {
+        "rule": { "type": "string" },
+        "title": { "type": "string" },
+        "dollars": { "type": "integer" },
+        "confidence": { "enum": ["measured", "lower_bound", "estimated"] },
+        "sessionIds": { "type": "array", "items": { "type": "string" } },
+        "action": { "type": "string" },
+        "resumeCommand": { "type": "string" }
+      }
+    },
+    "whatifRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "label", "totalDollars", "mainDollars", "subagentDollars", "deltaDollars"],
+      "properties": {
+        "model": { "type": "string" },
+        "label": { "type": "string" },
+        "totalDollars": { "type": "integer" },
+        "mainDollars": { "type": "integer" },
+        "subagentDollars": { "type": "integer" },
+        "deltaDollars": { "type": "integer" }
+      }
+    },
+    "sinceLastWeekRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rule", "title", "metricThen", "metricNow", "direction"],
+      "properties": {
+        "rule": { "type": "string" },
+        "title": { "type": "string" },
+        "metricThen": { "type": "integer" },
+        "metricNow": { "type": "integer" },
+        "direction": { "enum": ["up", "down", "same"] }
+      }
+    }
+  }
+}
