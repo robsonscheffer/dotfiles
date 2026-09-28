@@ -97,6 +97,7 @@ export function computePayoff(threads: Thread[], table: PricingTable): PayoffSum
     premiumPaid: 0,
     rewritesAvoided: 0,
     netDollars: 0,
+    byThread: {},
   };
 
   for (const thread of threads) {
@@ -109,18 +110,24 @@ export function computePayoff(threads: Thread[], table: PricingTable): PayoffSum
       const rates = model && ((turn.speed === "fast" && model.fast_usd_per_mtok) || model.usd_per_mtok);
       const gapMs = next ? next.timestampMs - turn.timestampMs : Number.POSITIVE_INFINITY;
 
-      if (rates) summary.premiumPaid += Math.round(tokens * (rates.cache_write_1h - rates.cache_write_5m));
+      let premium = 0;
+      let rewriteAvoided = 0;
+      if (rates) premium = Math.round(tokens * (rates.cache_write_1h - rates.cache_write_5m));
+      summary.premiumPaid += premium;
 
       if (gapMs < FIVE_MINUTES_MS) {
         summary.notNeeded += 1;
       } else if (gapMs <= ONE_HOUR_MS) {
         summary.saved += 1;
         if (rates && next) {
-          summary.rewritesAvoided += Math.round(next.tokens.cache_read * (rates.cache_write_5m - rates.cache_read));
+          rewriteAvoided = Math.round(next.tokens.cache_read * (rates.cache_write_5m - rates.cache_read));
+          summary.rewritesAvoided += rewriteAvoided;
         }
       } else {
         summary.expired += 1;
       }
+
+      summary.byThread[thread.id] = (summary.byThread[thread.id] ?? 0) + premium - rewriteAvoided;
     }
   }
 

@@ -14,20 +14,27 @@ import {
   reconcile,
 } from "./metrics.ts";
 import { computeCacheMetrics, computeOverhead } from "./cache.ts";
-import type { WeekRange } from "./date.ts";
+import { evaluateRules, loadThresholds } from "./rules.ts";
+import { computeWhatif } from "./whatif.ts";
+import { buildSinceLastWeek, hasPriorWeek, recordWeek } from "./history.ts";
+import type { WeekRange, TimeZoneMode } from "./date.ts";
 import type { DataQuality, Report, Thread } from "./types.ts";
 
 export interface BuildReportOptions {
   root: string;
   week: WeekRange;
-  tz: string;
+  tz: TimeZoneMode;
   pricingPath: string;
+  thresholdsPath: string;
+  outDir: string;
+  noRecord: boolean;
 }
 
 export interface BuildReportResult {
   report: Report;
   reconciled: boolean;
   exitCode: 0 | 1 | 2;
+  hasPriorWeek: boolean;
 }
 
 function allTurns(threads: Thread[]) {
@@ -57,6 +64,26 @@ export async function buildReport(options: BuildReportOptions): Promise<BuildRep
   const overhead = computeOverhead(threads, sessions, table);
 
   const reconciled = reconcile({ totals, byKind, sessions, byThread });
+
+  const thresholds = loadThresholds(options.thresholdsPath);
+  const findings = evaluateRules({
+    threads,
+    sessions,
+    context,
+    cache,
+    overhead,
+    table,
+    thresholds,
+  });
+  const whatif = computeWhatif(threads, table, totals.dollars);
+  const sinceLastWeek = reconciled
+    ? buildSinceLastWeek(options.outDir, options.week.isoWeek, options.tz, findings)
+    : [];
+  const priorWeek = hasPriorWeek(options.outDir, options.week.isoWeek);
+
+  if (reconciled && !options.noRecord) {
+    recordWeek(options.outDir, options.week.isoWeek, totals, findings);
+  }
 
   const dataQuality: DataQuality = {
     filesRead: dq.filesRead,
@@ -103,9 +130,9 @@ export async function buildReport(options: BuildReportOptions): Promise<BuildRep
     cache,
     overhead,
     sessions,
-    findings: [],
-    whatif: [],
-    since_last_week: [],
+    findings,
+    whatif,
+    since_last_week: sinceLastWeek,
     data_quality: dataQuality,
   };
 
@@ -120,5 +147,5 @@ export async function buildReport(options: BuildReportOptions): Promise<BuildRep
     exitCode = 2;
   }
 
-  return { report, reconciled, exitCode };
+  return { report, reconciled, exitCode, hasPriorWeek: priorWeek };
 }

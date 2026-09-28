@@ -22,6 +22,7 @@ Options:
   --open                Open the HTML page when done
   --out <dir>           Where to write the week's files (default: state dir)
   --pricing <file>       Alternate price table
+  --thresholds <file>    Alternate thresholds table
   --root <dir>            Alternate transcript root (default: ~/.claude/projects)
   --no-record            Do not touch history or findings
   --help                 Show this help
@@ -37,6 +38,7 @@ interface Flags {
   open: boolean;
   out?: string;
   pricing?: string;
+  thresholds?: string;
   root: string;
   noRecord: boolean;
   help: boolean;
@@ -56,6 +58,10 @@ function defaultOut(): string {
 
 function defaultPricing(): string {
   return join(import.meta.dir, "..", "pricing.json");
+}
+
+function defaultThresholds(): string {
+  return join(import.meta.dir, "..", "thresholds.json");
 }
 
 class UsageError extends Error {}
@@ -109,6 +115,9 @@ function parseArgs(argv: string[]): Flags {
       case "--pricing":
         flags.pricing = expandHome(argv[++i] ?? "");
         break;
+      case "--thresholds":
+        flags.thresholds = expandHome(argv[++i] ?? "");
+        break;
       case "--root":
         flags.root = expandHome(argv[++i] ?? "");
         break;
@@ -144,12 +153,18 @@ export async function main(argv: string[]): Promise<number> {
   const tz = flags.tz;
   const week = flags.week ? parseIsoWeek(flags.week, tz) : lastCompletedWeek(new Date(), tz);
   const pricingPath = flags.pricing ?? defaultPricing();
+  const thresholdsPath = flags.thresholds ?? defaultThresholds();
+  const outDir = flags.out ?? defaultOut();
+  mkdirSync(outDir, { recursive: true });
 
   const { report, reconciled, exitCode } = await buildReport({
     root: flags.root,
     week,
     tz,
     pricingPath,
+    thresholdsPath,
+    outDir,
+    noRecord: flags.noRecord,
   });
 
   if (!reconciled) {
@@ -160,8 +175,6 @@ export async function main(argv: string[]): Promise<number> {
     return 1;
   }
 
-  const outDir = flags.out ?? defaultOut();
-  mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, `${week.isoWeek}.json`), JSON.stringify(report, null, 2));
 
   if (flags.json || flags.format === "json") {

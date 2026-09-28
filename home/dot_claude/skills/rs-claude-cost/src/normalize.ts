@@ -73,6 +73,9 @@ interface AssistantLine {
         ephemeral_1h_input_tokens?: number;
         ephemeral_5m_input_tokens?: number;
       };
+      output_tokens_details?: {
+        thinking_tokens?: number;
+      };
     };
     content?: AssistantLineContentBlock[];
   };
@@ -143,6 +146,7 @@ function buildTurn(threadId: string, lines: AssistantLine[]): Turn | null {
     compactedSincePrevious: false,
     toolUses,
     images: [],
+    thinkingTokens: usage?.output_tokens_details?.thinking_tokens ?? 0,
   };
 }
 

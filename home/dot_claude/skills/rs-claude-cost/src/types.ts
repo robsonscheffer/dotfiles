@@ -61,6 +61,8 @@ export interface Turn {
   /** filled in by pricing.ts */
   dollars?: MicroDollars;
   priced?: boolean;
+  /** usage.output_tokens_details.thinking_tokens, for R8's thinking share */
+  thinkingTokens?: number;
 }
 
 export type EventType = "compaction" | "skill_listing";
@@ -193,6 +195,8 @@ export interface PayoffSummary {
   rewritesAvoided: MicroDollars;
   /** premiumPaid minus rewritesAvoided. Positive means 1h cost more than 5m would have. */
   netDollars: MicroDollars;
+  /** netDollars attributed per thread, for R11's evidence sessions. */
+  byThread: Record<string, MicroDollars>;
 }
 
 export interface CacheMetrics {
@@ -216,6 +220,36 @@ export interface Totals {
   turns: number;
   sessions: number;
   tokens: TokenCounts;
+}
+
+export type FindingConfidence = "measured" | "lower_bound" | "estimated";
+
+export interface Finding {
+  rule: string;
+  title: string;
+  dollars: MicroDollars;
+  confidence: FindingConfidence;
+  sessionIds: string[];
+  action: string;
+  resumeCommand: string;
+}
+
+export interface WhatifRow {
+  model: string;
+  totalDollars: MicroDollars;
+  mainDollars: MicroDollars;
+  subagentDollars: MicroDollars;
+  deltaDollars: MicroDollars;
+}
+
+export type SinceLastWeekDirection = "up" | "down" | "same";
+
+export interface SinceLastWeekRow {
+  rule: string;
+  title: string;
+  metricThen: MicroDollars;
+  metricNow: MicroDollars;
+  direction: SinceLastWeekDirection;
 }
 
 export interface Report {
@@ -244,8 +278,8 @@ export interface Report {
   cache: CacheMetrics;
   overhead: OverheadMetrics;
   sessions: Session[];
-  findings: unknown[];
-  whatif: unknown[];
-  since_last_week: unknown[];
+  findings: Finding[];
+  whatif: WhatifRow[];
+  since_last_week: SinceLastWeekRow[];
   data_quality: DataQuality;
 }
