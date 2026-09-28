@@ -8,7 +8,7 @@ import { contentTypeFor } from "./content-type.ts";
 import { collectFolderListing, renderFolderListing } from "./folder-view.ts";
 import { precomputeResolvedLinks } from "./link-resolve.ts";
 import { findFolderForAbsolutePath, resolveSafePath } from "./security.ts";
-import { loadFolders, type RememberedFolder } from "./state.ts";
+import { loadFolders, realOrSelf, type RememberedFolder } from "./state.ts";
 import { createSseHub, LIVE_RELOAD_PATH, liveReloadClientScript } from "./sse.ts";
 import { THEME_CSS, THEME_TOGGLE_SCRIPT } from "../render/theme.ts";
 import { createWatcher } from "./watch.ts";
@@ -20,7 +20,7 @@ export const PING_BODY = "mate-doc";
 // The ping body carries this too, so `open` can tell its own viewer apart from a different
 // mate-doc viewer (a different state dir) that happens to already hold the same port.
 export function pingIdentity(stateDir: string): string {
-  return Bun.hash(stateDir).toString(36);
+  return Bun.hash(realOrSelf(stateDir)).toString(36);
 }
 
 // legacy: remove after pages migrate. The compiled Tailwind + DaisyUI stylesheet standalone
@@ -136,7 +136,8 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
       const rawPath = url.searchParams.get("path");
       const found = rawPath ? findFolderForAbsolutePath(state.folders, rawPath) : null;
       if (!found) return notFound();
-      const target = `/${found.folder.alias}/${found.relPath}`;
+      const encodedRelPath = found.relPath.split("/").map(encodeURIComponent).join("/");
+      const target = `/${encodeURIComponent(found.folder.alias)}/${encodedRelPath}`;
       return new Response(null, { status: 302, headers: { Location: target } });
     }
 

@@ -44,7 +44,7 @@ export async function saveFolders(stateDir: string, state: FoldersState): Promis
   await writeFile(foldersFile(stateDir), JSON.stringify(state, null, 2));
 }
 
-function realOrSelf(p: string): string {
+export function realOrSelf(p: string): string {
   try {
     return realpathSync(p);
   } catch {
