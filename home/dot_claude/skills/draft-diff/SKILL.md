@@ -46,7 +46,7 @@ Then, every time, before opening:
    must pass clean; fix violations in the draft, not in the diff artifact.
 2. The diff artifact is plain HTML (not a mate-doc doc), so it isn't linted or served through
    `mate-doc open`; it's a self-contained file, opened directly: `open <diff-path>`.
-   It still links to `http://localhost:<port>/style/main.css` for the mate-DS stylesheet,
+   It still links to `http://localhost:<port>/style/mate-doc.css` for the mate-DS stylesheet,
    which mate-doc's viewer serves regardless of alias, so start it once if it isn't already
    running: `mate-doc open ~/brain` (or any remembered folder) brings the viewer up detached.
 3. Open: `open ~/brain/.scratch/artifact/report/<slug>-diff.html`.

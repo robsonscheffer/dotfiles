@@ -118,7 +118,7 @@ describe("serve: static .html artifacts", () => {
     expect(res.status).toBe(404);
   });
 
-  test("serves /style/main.css for a standalone artifact's stylesheet link", async () => {
+  test("serves /style/main.css as the legacy stylesheet for old standalone artifacts", async () => {
     const stateDir = await mkTmpDir("mate-doc-html-style-state-");
     handle = await serve({
       host: "127.0.0.1",
@@ -131,5 +131,66 @@ describe("serve: static .html artifacts", () => {
     const res = await fetch(`${handle.url}/style/main.css`);
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toContain("text/css");
+    expect(await res.text()).toContain(".badge");
+  });
+
+  test("serves /style/mate-doc.css as the current theme stylesheet", async () => {
+    const stateDir = await mkTmpDir("mate-doc-html-theme-style-state-");
+    handle = await serve({
+      host: "127.0.0.1",
+      port: 0,
+      stateDir,
+      parse: stubParse,
+      render: stubRenderPlain,
+      loadLedger: nullLedger,
+    });
+    const res = await fetch(`${handle.url}/style/mate-doc.css`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/css");
+    expect(await res.text()).toContain("--accent");
+  });
+
+  test("legacy /md?path= redirects into the viewer when the path is inside a remembered folder", async () => {
+    const stateDir = await mkTmpDir("mate-doc-md-legacy-state-");
+    const served = await mkTmpDir("mate-doc-md-legacy-served-");
+    await mkdir(join(served, "notes"), { recursive: true });
+    await writeFile(join(served, "notes", "index.md"), "# hi");
+
+    const entry = await addFolder(stateDir, served);
+    handle = await serve({
+      host: "127.0.0.1",
+      port: 0,
+      stateDir,
+      parse: stubParse,
+      render: stubRenderPlain,
+      loadLedger: nullLedger,
+    });
+
+    const absPath = join(served, "notes", "index.md");
+    const res = await fetch(`${handle.url}/md?path=${encodeURIComponent(absPath)}`, {
+      redirect: "manual",
+    });
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe(`/${entry.alias}/notes/index.md`);
+  });
+
+  test("legacy /md?path= 404s when the path is outside any remembered folder", async () => {
+    const stateDir = await mkTmpDir("mate-doc-md-legacy-outside-state-");
+    const outside = await mkTmpDir("mate-doc-md-legacy-outside-");
+    await writeFile(join(outside, "secret.md"), "# secret");
+
+    handle = await serve({
+      host: "127.0.0.1",
+      port: 0,
+      stateDir,
+      parse: stubParse,
+      render: stubRenderPlain,
+      loadLedger: nullLedger,
+    });
+
+    const res = await fetch(`${handle.url}/md?path=${encodeURIComponent(join(outside, "secret.md"))}`, {
+      redirect: "manual",
+    });
+    expect(res.status).toBe(404);
   });
 });
