@@ -118,6 +118,10 @@ export interface Session {
   /** filled in once pricing has run */
   mainDollars?: MicroDollars;
   subagentDollars?: MicroDollars;
+  /** one entry per main-thread turn, in order, for the HTML session chart */
+  contextSeries: { promptSize: number; compactedSincePrevious: boolean }[];
+  /** cache breaks in the main thread, by index into contextSeries */
+  cacheBreaks: { turnIndex: number; cause: CacheBreakCause }[];
 }
 
 export interface DataQuality {

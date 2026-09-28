@@ -7,8 +7,12 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import process from "node:process";
 import { lastCompletedWeek, parseIsoWeek, type TimeZoneMode } from "./date.ts";
 import { buildReport } from "./report.ts";
+import { renderCli } from "./render/cli.ts";
+import { renderHtml } from "./render/html.ts";
+import { WHATIF_CAVEAT } from "./whatif.ts";
 
 const HELP = `rs-claude-cost - a deterministic weekly Claude Code cost report
 
@@ -25,6 +29,7 @@ Options:
   --thresholds <file>    Alternate thresholds table
   --root <dir>            Alternate transcript root (default: ~/.claude/projects)
   --no-record            Do not touch history or findings
+  --quiet                Do not print the terminal summary
   --help                 Show this help
 
 Exit codes: 0 clean, 2 written with warnings, 1 failed reconciliation, 64 bad usage.
@@ -41,6 +46,7 @@ interface Flags {
   thresholds?: string;
   root: string;
   noRecord: boolean;
+  quiet: boolean;
   help: boolean;
 }
 
@@ -74,6 +80,7 @@ function parseArgs(argv: string[]): Flags {
     open: false,
     root: defaultRoot(),
     noRecord: false,
+    quiet: false,
     help: false,
   };
 
@@ -124,6 +131,9 @@ function parseArgs(argv: string[]): Flags {
       case "--no-record":
         flags.noRecord = true;
         break;
+      case "--quiet":
+        flags.quiet = true;
+        break;
       default:
         throw new UsageError(`unknown flag: ${arg}`);
     }
@@ -157,7 +167,7 @@ export async function main(argv: string[]): Promise<number> {
   const outDir = flags.out ?? defaultOut();
   mkdirSync(outDir, { recursive: true });
 
-  const { report, reconciled, exitCode } = await buildReport({
+  const { report, reconciled, exitCode, hasPriorWeek } = await buildReport({
     root: flags.root,
     week,
     tz,
@@ -175,12 +185,35 @@ export async function main(argv: string[]): Promise<number> {
     return 1;
   }
 
-  writeFileSync(join(outDir, `${week.isoWeek}.json`), JSON.stringify(report, null, 2));
-
-  if (flags.json || flags.format === "json") {
+  if (flags.json) {
     console.log(JSON.stringify(report, null, 2));
-  } else {
-    console.log(JSON.stringify(report.totals, null, 2));
+    return exitCode;
+  }
+
+  const jsonPath = join(outDir, `${week.isoWeek}.json`);
+  const htmlPath = join(outDir, `${week.isoWeek}.html`);
+  const rebuildCommand = `rs-claude-cost --week ${week.isoWeek} --tz ${tz}`;
+
+  if (flags.format === "cli" || flags.format === "json" || flags.format === "all") {
+    writeFileSync(jsonPath, JSON.stringify(report, null, 2));
+  }
+  if (flags.format === "html" || flags.format === "all") {
+    const html = renderHtml(report, { caveat: WHATIF_CAVEAT, rebuildCommand, exitCode });
+    writeFileSync(htmlPath, html);
+  }
+
+  if (flags.format === "json") {
+    console.log(JSON.stringify(report, null, 2));
+  } else if (!flags.quiet) {
+    const color = process.stdout.isTTY === true && !process.env.NO_COLOR;
+    console.log(renderCli(report, { color, hasPriorWeek }));
+    if (flags.format === "all" || flags.format === "html") {
+      console.log(`page: ${htmlPath}`);
+    }
+  }
+
+  if (flags.open && (flags.format === "html" || flags.format === "all")) {
+    Bun.spawn(["open", htmlPath]);
   }
 
   return exitCode;

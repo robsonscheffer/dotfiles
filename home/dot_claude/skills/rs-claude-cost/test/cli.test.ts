@@ -45,10 +45,45 @@ describe("cli", () => {
       "--out",
       outDir,
       "--no-record",
+      "--json",
     ]);
     expect(exitCode).toBe(0);
-    const totals = JSON.parse(stdout);
-    expect(totals.dollars).toBe(0);
-    expect(totals.sessions).toBe(0);
+    const report = JSON.parse(stdout);
+    expect(report.totals.dollars).toBe(0);
+    expect(report.totals.sessions).toBe(0);
+  });
+
+  test("the default terminal summary prints without --json and stays under 45 lines", async () => {
+    const emptyRoot = await import("./helpers.ts").then((m) => m.makeTmpRoot("rs-cost-empty-cli"));
+    const outDir = await import("./helpers.ts").then((m) => m.makeTmpRoot("rs-cost-out-cli"));
+    const { exitCode, stdout } = await run([
+      "--week",
+      "2026-W39",
+      "--root",
+      emptyRoot,
+      "--out",
+      outDir,
+      "--no-record",
+    ]);
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain("rs-claude-cost");
+    expect(stdout.split("\n").length).toBeLessThanOrEqual(45);
+  });
+
+  test("--quiet suppresses the terminal summary", async () => {
+    const emptyRoot = await import("./helpers.ts").then((m) => m.makeTmpRoot("rs-cost-empty-quiet"));
+    const outDir = await import("./helpers.ts").then((m) => m.makeTmpRoot("rs-cost-out-quiet"));
+    const { exitCode, stdout } = await run([
+      "--week",
+      "2026-W39",
+      "--root",
+      emptyRoot,
+      "--out",
+      outDir,
+      "--no-record",
+      "--quiet",
+    ]);
+    expect(exitCode).toBe(0);
+    expect(stdout.trim()).toBe("");
   });
 });

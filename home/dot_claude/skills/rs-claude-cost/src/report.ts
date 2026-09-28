@@ -65,6 +65,17 @@ export async function buildReport(options: BuildReportOptions): Promise<BuildRep
 
   const reconciled = reconcile({ totals, byKind, sessions, byThread });
 
+  const threadById = new Map(threads.map((t) => [t.id, t]));
+  for (const session of sessions) {
+    const main = threadById.get(session.mainThreadId);
+    if (!main) continue;
+    for (const b of cache.breaks) {
+      if (b.threadId !== session.mainThreadId) continue;
+      const turnIndex = main.turns.findIndex((t) => t.timestamp === b.timestamp);
+      if (turnIndex >= 0) session.cacheBreaks.push({ turnIndex, cause: b.cause });
+    }
+  }
+
   const thresholds = loadThresholds(options.thresholdsPath);
   const findings = evaluateRules({
     threads,

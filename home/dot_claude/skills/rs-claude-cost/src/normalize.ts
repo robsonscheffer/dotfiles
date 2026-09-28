@@ -337,6 +337,11 @@ function buildSession(mainThread: Thread, subagentThreads: Thread[]): Session {
     mainThreadId: mainThread.id,
     subagentThreadIds: subagentThreads.map((t) => t.id),
     resumeCommand: `claude --resume ${mainThread.id}`,
+    contextSeries: turns.map((t) => ({
+      promptSize: t.promptSize,
+      compactedSincePrevious: t.compactedSincePrevious,
+    })),
+    cacheBreaks: [],
   };
 }
 
