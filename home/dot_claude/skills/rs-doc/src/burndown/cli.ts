@@ -4,9 +4,10 @@
 // the markdown, mirroring the old artifact-serving skill's burndown-sync (same --repo/--prefix/
 // --epic/--out inputs and outputs), minus the HTML templating step it used to own.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { basename } from "node:path";
+import { basename, join } from "node:path";
 import { computeStats, parseEpicPhases, scanTickets } from "./scan.ts";
 import { renderBurndownMarkdown } from "./render.ts";
+import { addFolder, defaultStateDir } from "../serve/state.ts";
 
 function arg(argv: string[], name: string, fallback: string | null = null): string | null {
   const i = argv.indexOf(`--${name}`);
@@ -36,7 +37,7 @@ Optional:
 `);
 }
 
-export function main(argv: string[]): number {
+export async function main(argv: string[]): Promise<number> {
   const repo = expand(arg(argv, "repo"));
   const prefix = arg(argv, "prefix");
   const epic = expand(arg(argv, "epic"));
@@ -82,6 +83,10 @@ export function main(argv: string[]): number {
 
   writeFileSync(out, markdown);
 
+  // The dashboard's ticket links only resolve through the viewer if the tickets folder
+  // is remembered too, same as the dashboard's own folder.
+  await addFolder(defaultStateDir(), join(repo, "docs", "plans"));
+
   process.stdout.write(`wrote ${out}\n`);
   process.stdout.write(`  tickets: ${tickets.length}\n`);
   const stats = computeStats(tickets);
@@ -99,5 +104,5 @@ export function main(argv: string[]): number {
 }
 
 if (import.meta.main) {
-  process.exit(main(process.argv.slice(2)));
+  main(process.argv.slice(2)).then((code) => process.exit(code));
 }
