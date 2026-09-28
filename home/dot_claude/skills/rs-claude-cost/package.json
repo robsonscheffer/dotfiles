@@ -1,0 +1,22 @@
+{
+  "name": "rs-claude-cost",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A deterministic weekly Claude Code cost report from local transcripts.",
+  "bin": {
+    "rs-claude-cost": "bin/executable_rs-claude-cost"
+  },
+  "engines": {
+    "bun": ">=1.3.14"
+  },
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.2"
+  }
+}
