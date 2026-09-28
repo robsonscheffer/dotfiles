@@ -59,7 +59,7 @@ describe("burndown-sync CLI", () => {
     expect(code).toBe(0);
     expect(existsSync(out)).toBe(true);
     const content = await readFile(out, "utf8");
-    expect(content).toContain("title: Canvas rebuild");
+    expect(content).toContain('title: "Canvas rebuild"');
     expect(content).toContain("## Phase 0 · Groundwork (0/1)");
     expect(content).toContain("First thing");
   });

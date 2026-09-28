@@ -57,9 +57,9 @@ export function renderBurndownMarkdown(input: RenderBurndownInput): string {
 
   const frontmatter = [
     "---",
-    `title: ${input.epicTitle}`,
+    `title: ${JSON.stringify(input.epicTitle)}`,
     "type: dashboard",
-    `summary: Burndown for ${input.epicTitle}.`,
+    `summary: ${JSON.stringify(`Burndown for ${input.epicTitle}.`)}`,
     `created: ${input.generatedDate}`,
     `updated: ${input.generatedDate}`,
     "---",

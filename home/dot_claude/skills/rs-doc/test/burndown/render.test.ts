@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
+import { extractFrontmatter } from "../../src/parser/frontmatter.ts";
 import { renderBurndownMarkdown } from "../../src/burndown/render.ts";
 import type { Ticket } from "../../src/burndown/scan.ts";
 
@@ -36,7 +37,7 @@ describe("burndown: renderBurndownMarkdown", () => {
       phaseTitles: { 0: "Groundwork" },
     });
 
-    expect(md).toContain("title: Canvas rebuild");
+    expect(md).toContain('title: "Canvas rebuild"');
     expect(md).toContain("type: dashboard");
     expect(md).toContain(":::tiles");
     expect(md).toContain("Total: 3");
@@ -46,6 +47,22 @@ describe("burndown: renderBurndownMarkdown", () => {
     expect(md).toContain("## Unphased (0/1)");
     expect(md).toContain("[CANVAS-001](../plans/done/CANVAS-001-first/README.md)");
     expect(md).toContain("[epic](../epics/canvas.md)");
+  });
+
+  test("quotes an epic title with a colon and a hash so the frontmatter round-trips exactly", () => {
+    const epicTitle = "Epic: Canvas v2: Editor #1";
+    const md = renderBurndownMarkdown({
+      outPath: "/repo/docs/dashboards/canvas-epic.md",
+      epicTitle,
+      epicPath: "/repo/docs/epics/canvas.md",
+      generatedDate: "2026-09-25",
+      tickets: [],
+      phaseTitles: {},
+    });
+
+    const { frontmatter } = extractFrontmatter(md);
+    expect(frontmatter.title).toBe(epicTitle);
+    expect(frontmatter.summary).toBe(`Burndown for ${epicTitle}.`);
   });
 
   test("escapes pipe characters in ticket titles so the table doesn't break", () => {
