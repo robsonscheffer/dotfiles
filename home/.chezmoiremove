@@ -1,2 +1,13 @@
 .claude/skills/html-artifact
 .claude/skills/m4b-burndown
+.claude/skills/rs-doc/src
+.claude/skills/rs-doc/test
+.claude/skills/rs-doc/bin
+.claude/skills/rs-doc/schema
+.claude/skills/rs-doc/assets
+.claude/skills/rs-doc/docs
+.claude/skills/rs-doc/package.json
+.claude/skills/rs-doc/bun.lock
+.claude/skills/rs-doc/tsconfig.json
+.claude/skills/rs-doc/.gitignore
+.claude/skills/rs-doc/node_modules

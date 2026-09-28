@@ -54,8 +54,17 @@ async function trySpawnDetached(deps: OpenDeps): Promise<SpawnOutcome> {
   child.unref();
   const url = `http://127.0.0.1:${deps.port}`;
   const outcome = await waitForServer(url, deps.stateDir);
-  if (outcome === "mismatch") return { kind: "mismatch" };
-  if (outcome === "timeout") return { kind: "no-server" };
+  // On a port collision the OS may let both processes bind (e.g. SO_REUSEPORT), so a mismatch
+  // or a ping that never answers doesn't mean our own spawn failed to start: kill it rather
+  // than leaving it running unreferenced.
+  if (outcome === "mismatch" || outcome === "timeout") {
+    try {
+      child.kill();
+    } catch {
+      // already gone
+    }
+    return outcome === "mismatch" ? { kind: "mismatch" } : { kind: "no-server" };
+  }
   await writePidFile(deps.stateDir, { pid: child.pid, port: deps.port, url });
   return { kind: "up", url };
 }

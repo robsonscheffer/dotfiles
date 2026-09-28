@@ -1,6 +1,6 @@
 # claims.yaml reference
 
-The ledger sits next to the pages, one per doc folder. The schema lives at `schema/claims.schema.json` in the rs-doc skill folder; `mate-doc lint` validates against it.
+The ledger sits next to the pages, one per doc folder. The schema lives at `schema/claims.schema.json` in the rs-mate-doc skill folder; `mate-doc lint` validates against it.
 
 ```yaml
 claims:

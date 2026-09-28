@@ -180,6 +180,16 @@ describe("open: a stale pid file on the wrong port", () => {
       // The old child was stopped, not just abandoned.
       const stillUp = await fetch(oldUrl).catch(() => null);
       expect(stillUp).toBeNull();
+
+      // openPath detached its own fresh server (handle is null on that path): stop it via the
+      // pid it just wrote, the same way a real caller would on shutdown.
+      if (pidInfo && pidInfo.pid !== process.pid) {
+        try {
+          process.kill(pidInfo.pid, "SIGTERM");
+        } catch {
+          // already gone
+        }
+      }
     } finally {
       await handle?.stop();
       try {

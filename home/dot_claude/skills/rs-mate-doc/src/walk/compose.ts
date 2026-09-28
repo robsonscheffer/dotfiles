@@ -4,10 +4,11 @@
 // ledger instead of a standalone HTML document, and rendered later by mate-doc's own renderer.
 import type { Claim, ClaimId } from "../types.ts";
 import { firstFileChange, renderDiffFence } from "./diff.ts";
-import type { AcceptanceCriterion, ComposedWalk, FetchedPr, JudgmentData, QuestionItem, RiskItem, StoryData, StoryGroup, TicketFit, WalkInputs } from "./types.ts";
+import type { AcceptanceCriterion, ComposedWalk, ContextData, FetchedPr, JudgmentData, QuestionItem, RiskItem, StoryData, StoryGroup, TicketFit, WalkInputs } from "./types.ts";
 
 const MAX_DIFF_LINES = 80;
 const CHECKED_BY = "agent:mate-doc-walk";
+const CODE_REF_TTL_DAYS = 14;
 const TICKET_TAG_RE = /[A-Z]+-\d+/g;
 const BOLD_RE = /\*\*(.+?)\*\*/g;
 
@@ -95,7 +96,7 @@ function buildGroupClaim(pr: FetchedPr, group: StoryGroup, build: ClaimBuild, ch
   for (const file of group.files) {
     const change = firstFileChange(pr.diff, file);
     if (change.found && change.excerpt) {
-      const ref = `${pr.repo}@pr${pr.meta.number}:${file}:${change.line ?? 1}`;
+      const ref = `${pr.repo}@${pr.meta.headRefOid}:${file}:${change.line ?? 1}`;
       claim = {
         id,
         claim: group.framing,
@@ -103,6 +104,7 @@ function buildGroupClaim(pr: FetchedPr, group: StoryGroup, build: ClaimBuild, ch
         evidence: { kind: "code", ref, excerpt: change.excerpt, needs: "gh" },
         checked_by: CHECKED_BY,
         checked_at: checkedAt,
+        ttl_days: CODE_REF_TTL_DAYS,
       };
       break;
     }
@@ -163,6 +165,29 @@ function buildAcClaim(pr: FetchedPr, ac: AcceptanceCriterion, ticketKey: string,
     : { id, claim: ac.criterion, status: "not_verified", owner: pr.meta.author.login };
   build.claims.push(claim);
   return id;
+}
+
+// Strips a context item's path down to the bare note name (no folder, no extension) so the
+// rendered link never leaks the vault layout the brief's lint rule already forbids in prose.
+function noteNameFromPath(path: string): string {
+  const base = path.split("/").pop() ?? path;
+  return base.replace(/\.[^./]+$/, "");
+}
+
+// "Related notes" - the context step's qmd/grep hits, rendered as wikilinks per the brief. Not a
+// claim: prior notes are background the composer surfaces, not a diff/ticket statement to check.
+function renderContextSection(context: ContextData | undefined): string {
+  if (!context || context.items.length === 0) return "";
+  const lines = ["## Related notes", ""];
+  for (const item of context.items) {
+    if (typeof item === "string") {
+      lines.push(`- [[${noteNameFromPath(item)}]]`);
+    } else {
+      const snippet = item.snippet ? `: ${item.snippet}` : "";
+      lines.push(`- [[${noteNameFromPath(item.path)}]]${snippet}`);
+    }
+  }
+  return lines.join("\n");
 }
 
 function renderQuestionsSection(questions: QuestionItem[]): string {
@@ -237,9 +262,36 @@ function renderJudgmentSection(j: JudgmentData): string {
   ].join("\n");
 }
 
+// Block-style scalar, quoted whenever the value isn't a bare-safe token, so lines stay easy for
+// applyVerdictToYaml's line-oriented editor to find and replace later.
+function yamlBlockScalar(value: string | number): string {
+  if (typeof value === "number") return String(value);
+  return yamlString(value);
+}
+
+// One claim per list item, one key per line, matching the shape `mate-doc verdict` edits
+// (src/commands/verdict.ts: "- id: Cn" then two-space-deeper keys). renderClaimsYaml used to
+// emit each claim as a single JSON object on one line; verdict's line-oriented editor can only
+// find and patch a claim written this way.
+function renderClaimBlock(claim: Claim): string {
+  const lines = [`  - id: ${claim.id}`, `    claim: ${yamlBlockScalar(claim.claim)}`, `    status: ${claim.status}`];
+  if (claim.evidence) {
+    lines.push("    evidence:");
+    for (const [key, value] of Object.entries(claim.evidence)) {
+      lines.push(`      ${key}: ${yamlBlockScalar(value as string | number)}`);
+    }
+  }
+  if (claim.verdict) lines.push(`    verdict: ${claim.verdict}`);
+  if (claim.checked_by) lines.push(`    checked_by: ${yamlBlockScalar(claim.checked_by)}`);
+  if (claim.checked_at) lines.push(`    checked_at: ${claim.checked_at}`);
+  if (claim.ttl_days !== undefined) lines.push(`    ttl_days: ${claim.ttl_days}`);
+  if (claim.owner) lines.push(`    owner: ${yamlBlockScalar(claim.owner)}`);
+  return lines.join("\n");
+}
+
 function renderClaimsYaml(claims: Claim[]): string {
   if (claims.length === 0) return "claims: []\n";
-  return "claims:\n" + claims.map((c) => "  - " + JSON.stringify(c)).join("\n") + "\n";
+  return "claims:\n" + claims.map(renderClaimBlock).join("\n") + "\n";
 }
 
 export interface ComposeOptions {
@@ -261,6 +313,7 @@ export function composeWalk(pr: FetchedPr, inputs: WalkInputs, opts: ComposeOpti
   parts.push(renderTicketFitSection(pr, inputs.ticketFit, build, checkedAt));
   parts.push(renderQuestionsSection(inputs.questions));
   parts.push(renderRisksSection(inputs.risks));
+  parts.push(renderContextSection(inputs.context));
   parts.push(renderCommentTriageSection(inputs.commentTriage));
   parts.push(renderJudgmentSection(inputs.judgment));
 

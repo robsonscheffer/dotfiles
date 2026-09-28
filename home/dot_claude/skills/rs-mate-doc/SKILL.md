@@ -28,7 +28,7 @@ allowed-tools:
 
 ## Before anything
 
-Run `mate-doc --help`. If the command is missing or says bun is not found, run the setup script (`~/.local/bin/mate-doc setup`, or `bin/setup` in the rs-doc skill folder of the dotfiles repo) and tell Robson what it did. Do not install bun another way: the dotfiles pin it in mise.
+Run `mate-doc --help`. If the command is missing or says bun is not found, run the setup script (`~/.local/bin/mate-doc setup`, or `bin/setup` in the rs-mate-doc skill folder of the dotfiles repo) and tell Robson what it did. Do not install bun another way: the dotfiles pin it in mise.
 
 ## The line you do not cross
 
@@ -105,10 +105,9 @@ mate-doc lint <walk-dir> && mate-doc open <walk-dir>
 
 The walk does not submit a GitHub review. rs-walk still owns that.
 
-Two known gaps in the composed `claims.yaml`, until the walk code is fixed:
+Code refs cite the PR's head commit SHA (`<repo>@<sha>:<file>:<line>`), so `mate-doc audit` can resolve them with `git` or `gh`, and carry a `ttl_days` since the head can move.
 
-- It is written one JSON object per claim, and `verdict` only edits block-style YAML (`- id: C1` then one key per line). Rewrite it to block style with the same fields before running `verdict`.
-- Code refs use `@pr<N>` as the rev, which neither `git` nor `gh` can resolve. Replace it with the PR's head SHA (`gh pr view <N> --json headRefOid`) or, for a merged PR, the merge commit, and give the claim a `ttl_days`.
+When `context.json` has items, the composed doc gets a "Related notes" section rendering each as a wikilink (no vault path, just the note name).
 
 ## Reporting back
 
