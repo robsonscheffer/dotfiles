@@ -216,8 +216,9 @@ export interface Doc {
 // ---------------------------------------------------------------------------------------------
 // Ledger: claims.yaml
 
-export type ClaimStatus = "verified" | "inferred" | "not_verified";
-export type Verdict = "supports" | "overstates" | "contradicts" | "unrelated";
+// "proposed": the author has evidence and wants a verdict from a verifier or a person.
+export type ClaimStatus = "verified" | "inferred" | "proposed" | "not_verified";
+export type Verdict = "supports" | "overstates" | "contradicts" | "unrelated" | "uncheckable"; // uncheckable: not a statement evidence can settle
 export type Capability = "git" | "gh" | "snow" | "http" | `mcp:${string}`;
 
 export interface CodeEvidence {
@@ -261,12 +262,15 @@ export interface Claim {
   verdict?: Verdict; // LLM judgment, recorded with `mate-doc verdict`
   checked_by?: string; // "agent:<name>" or a person
   checked_at?: string; // ISO date
+  verdict_reason?: string;
+  verdict_hash?: string; // claimHash of the claim and evidence the verdict judged
   ttl_days?: number;
   owner?: string; // required when not_verified: who to ask
 }
 
 export interface Ledger {
   path: string;
+  author?: string; // who wrote the doc, e.g. "agent:claude" or "human:Alex"
   claims: Claim[];
 }
 

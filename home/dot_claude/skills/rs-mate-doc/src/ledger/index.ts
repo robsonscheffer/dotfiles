@@ -19,9 +19,11 @@ export async function loadLedger(docDir: string): Promise<Ledger | null> {
   const file = Bun.file(path);
   if (!(await file.exists())) return null;
   const text = await file.text();
-  const parsed = Bun.YAML.parse(text) as { claims?: Claim[] } | null | undefined;
+  const parsed = Bun.YAML.parse(text) as { author?: string; claims?: Claim[] } | null | undefined;
   const claims = parsed?.claims ?? [];
-  return { path, claims };
+  const ledger: Ledger = { path, claims };
+  if (typeof parsed?.author === "string") ledger.author = parsed.author;
+  return ledger;
 }
 
 export interface LedgerValidation {
@@ -31,8 +33,16 @@ export interface LedgerValidation {
 
 // Validate a ledger's claims against schema/claims.schema.json.
 export function validateLedger(ledger: Ledger): LedgerValidation {
-  const ok = validateSchema({ claims: ledger.claims });
+  const ok = validateSchema(ledger.author === undefined ? { claims: ledger.claims } : { author: ledger.author, claims: ledger.claims });
   return { valid: ok, errors: ok ? [] : (validateSchema.errors ?? []) };
+}
+
+// sha256 hex of the claim text and its evidence only. Status, verdict, and checked fields are
+// left out because recording a verdict changes them. A verdict is bound to this hash.
+export function claimHash(claim: Pick<Claim, "claim" | "evidence">): string {
+  return createHash("sha256")
+    .update(canonicalize({ claim: claim.claim, evidence: claim.evidence ?? null }))
+    .digest("hex");
 }
 
 // Deterministic JSON: object keys sorted recursively, arrays kept in order.
@@ -65,7 +75,7 @@ function strippedFrontmatter(fm: Frontmatter): Record<string, unknown> {
 // Claim fields that record *when the claim was last checked*, not what it claims. Re-running a
 // check (a fresh verdict, a new checked_at) is the world catching up, not a content change, and
 // must not make an approved doc look different underneath its approval.
-const STRIPPED_CLAIM_KEYS = ["verdict", "checked_by", "checked_at"] as const;
+const STRIPPED_CLAIM_KEYS = ["verdict", "verdict_reason", "verdict_hash", "checked_by", "checked_at"] as const;
 
 function strippedClaim(claim: Claim): Record<string, unknown> {
   const copy: Record<string, unknown> = { ...claim };

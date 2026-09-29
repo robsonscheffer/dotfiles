@@ -6,6 +6,7 @@
   "required": ["claims"],
   "additionalProperties": false,
   "properties": {
+    "author": { "type": "string", "minLength": 1 },
     "claims": {
       "type": "array",
       "items": { "$ref": "#/$defs/claim" }
@@ -27,10 +28,12 @@
       "properties": {
         "id": { "type": "string", "pattern": "^C[0-9]+$" },
         "claim": { "type": "string", "minLength": 1 },
-        "status": { "enum": ["verified", "inferred", "not_verified"] },
+        "status": { "enum": ["verified", "inferred", "proposed", "not_verified"] },
         "evidence": { "$ref": "#/$defs/evidence" },
-        "verdict": { "enum": ["supports", "overstates", "contradicts", "unrelated"] },
-        "checked_by": { "type": "string", "minLength": 1 },
+        "verdict": { "enum": ["supports", "overstates", "contradicts", "unrelated", "uncheckable"] },
+        "verdict_reason": { "type": "string", "minLength": 1 },
+        "verdict_hash": { "type": "string", "minLength": 1 },
+        "checked_by": { "type": "string", "pattern": "^(verifier|human|agent):.+" },
         "checked_at": { "$ref": "#/$defs/isoDate" },
         "ttl_days": { "type": "integer", "minimum": 0 },
         "owner": { "type": "string", "minLength": 1 }
@@ -41,8 +44,12 @@
           "then": { "required": ["owner"] }
         },
         {
-          "if": { "properties": { "status": { "enum": ["verified", "inferred"] } } },
+          "if": { "properties": { "status": { "const": "verified" } } },
           "then": { "required": ["evidence", "checked_by", "checked_at"] }
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["proposed", "inferred"] } } },
+          "then": { "required": ["evidence"] }
         }
       ]
     },

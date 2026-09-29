@@ -91,3 +91,35 @@ describe("cli dispatch", () => {
     expect(await main(["--help"])).toBe(EXIT.ok);
   });
 });
+
+describe("claim integrity schema", () => {
+  const proposed = {
+    id: "C9",
+    claim: "Widgets ship on Monday.",
+    status: "proposed",
+    evidence: { kind: "link", url: "https://example.com/acme/widgets/ABC-12", excerpt: "ships Monday", needs: "http" },
+  };
+
+  test("accepts a proposed claim with evidence and no checked_by", () => {
+    expect(validate({ claims: [proposed] })).toBe(true);
+  });
+
+  test("rejects a proposed claim without evidence", () => {
+    const { evidence: _evidence, ...bare } = proposed;
+    expect(validate({ claims: [bare] })).toBe(false);
+  });
+
+  test("accepts a top-level author", () => {
+    expect(validate({ author: "human:Alex", claims: [proposed] })).toBe(true);
+  });
+
+  test("accepts verdict uncheckable with reason and hash", () => {
+    const claim = { ...proposed, verdict: "uncheckable", verdict_reason: "opinion", verdict_hash: "abc" };
+    expect(validate({ claims: [claim] })).toBe(true);
+  });
+
+  test("rejects a checked_by without a known prefix", () => {
+    expect(validate({ claims: [{ ...proposed, checked_by: "claude" }] })).toBe(false);
+    expect(validate({ claims: [{ ...proposed, checked_by: "verifier:sonnet" }] })).toBe(true);
+  });
+});
