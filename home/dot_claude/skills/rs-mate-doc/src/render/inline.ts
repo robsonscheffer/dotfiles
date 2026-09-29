@@ -109,8 +109,8 @@ export function sourceLinkFor(ev: Evidence): string {
 
 // Inline badge: ":badge[label]{tone=bad}". Tones: good, warn, bad, info, neutral (default).
 // An unknown tone falls back to neutral rather than failing the render.
-const BADGE_RE = /:badge\[([^\]]*)\](?:\{([^}]*)\})?/g;
-const BADGE_TONES = new Set(["good", "warn", "bad", "info", "neutral"]);
+export const BADGE_RE = /:badge\[([^\]]*)\](?:\{([^}]*)\})?/g;
+export const BADGE_TONES = new Set(["good", "warn", "bad", "info", "neutral"]);
 
 function renderBadge(label: string, attrs: string | undefined): string {
   const toneMatch = attrs ? /tone\s*=\s*([a-zA-Z]+)/.exec(attrs) : null;

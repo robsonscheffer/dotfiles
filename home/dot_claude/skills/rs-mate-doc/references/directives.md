@@ -4,7 +4,7 @@ A directive is a fenced block: `:::name args` on its own line, content, then `::
 
 Inline: `:badge[label]{tone=bad}` renders a small rounded label. Tones: `good`, `warn`, `bad`,
 `info`, `neutral` (default when omitted or unrecognized). Works anywhere inline text does,
-including inside a table cell.
+including inside a table cell. Lint warns on a `tone` outside that set (`badge-tone`).
 
 ```markdown
 Rollout is :badge[Blocked]{tone=bad} pending the flag flip.

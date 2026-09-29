@@ -328,7 +328,8 @@ export type LintRule =
   | "pii-in-excerpt"
   | "unknown-directive"
   | "parse-error"
-  | "unclaimed-fact"; // warn only, see Q-e
+  | "unclaimed-fact" // warn only, see Q-e
+  | "badge-tone"; // warn only, unknown badge tone falls back to neutral at render time
 
 export interface LintIssue {
   rule: LintRule;
