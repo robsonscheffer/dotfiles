@@ -70,6 +70,23 @@ function renderFrontmatter(pr: FetchedPr, inputs: WalkInputs, updated: string): 
   return lines.join("\n");
 }
 
+// The sticky rail panel (WRN lane, render/directives.ts's :::rail): a compact PR summary that
+// stays visible while scrolling, separate from the fuller header prose below it.
+function renderRailSection(pr: FetchedPr, inputs: WalkInputs, ticketFit: TicketFit | undefined): string {
+  const m = pr.meta;
+  const lines = [
+    ":::rail",
+    `Author: ${m.author.login}`,
+    `PR: [#${m.number}](${m.url})`,
+    `Branch: ${m.headRefName}`,
+  ];
+  if (ticketFit) lines.push(`Ticket: ${ticketFit.ticket_key}`);
+  lines.push(`Comments: ${inputs.commentTriage?.length ?? 0}`);
+  lines.push(`Risks: ${inputs.risks.length}`);
+  lines.push(":::");
+  return lines.join("\n");
+}
+
 function renderHeader(pr: FetchedPr): string {
   const m = pr.meta;
   return [
@@ -309,7 +326,7 @@ export function composeWalk(pr: FetchedPr, inputs: WalkInputs, opts: ComposeOpti
   const checkedAt = now.toISOString().slice(0, 10);
   const build: ClaimBuild = { claims: [], nextId: 1 };
 
-  const parts: string[] = [renderHeader(pr), renderStorySection(inputs.story)];
+  const parts: string[] = [renderRailSection(pr, inputs, inputs.ticketFit), renderHeader(pr), renderStorySection(inputs.story)];
 
   inputs.story.groups.forEach((group, gi) => {
     const claimId = buildGroupClaim(pr, group, build, checkedAt);

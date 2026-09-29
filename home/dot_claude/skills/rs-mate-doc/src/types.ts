@@ -55,11 +55,12 @@ export const DIRECTIVES = [
   "decide",
   "risks",
   "notverified",
+  "rail",
 ] as const;
 export type DirectiveName = (typeof DIRECTIVES)[number];
 
 // Directives whose body is kept as raw lines instead of parsed markdown.
-export const RAW_DIRECTIVES: readonly DirectiveName[] = ["flow", "tiles"];
+export const RAW_DIRECTIVES: readonly DirectiveName[] = ["flow", "tiles", "rail"];
 
 export type ClaimId = `C${number}`;
 

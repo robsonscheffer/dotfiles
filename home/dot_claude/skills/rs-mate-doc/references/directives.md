@@ -28,6 +28,10 @@ Rollout is :badge[Blocked]{tone=bad} pending the flag flip.
 | `decide <person>` | the decision someone must make, and by when | prose |
 | `risks` | risks with likelihood and owner | a markdown table |
 | `notverified` | the list of open claims | leave empty; it fills itself |
+| `rail` | a sticky side panel (a spec's status, a walk's PR summary) | one `Key: value` per line |
+
+A `rail` sits above the table of contents in the page's side column, or inline at the top on
+narrow screens. Values may hold a markdown link (`[text](url)`) and/or a badge, nothing else.
 
 A `tiles` line can carry a delta: `Label: value +12% up good-when:up`. `up`/`down` is the
 delta's own direction; `good-when` says which direction is the improvement, so color follows
@@ -67,6 +71,12 @@ support -> orders: issue refund
 Should the refund window change from 14 to 30 days for annual plans?
 :::
 
+:::rail
+Author: Priya
+PR: [#42](https://example.com/acme/console/pull/42)
+Status: :badge[On track]{tone=good}
+:::
+
 ## Open claims
 
 :::notverified
@@ -88,3 +98,6 @@ tour:                  # guide/brief only: reading order of pages
 ```
 
 Leave `status`, `approved_by`, `approved_at`, and `ledger_hash` alone beyond `draft`; `approve` writes them.
+
+`notes: true` turns on a per-section notes box under each `h2`: a reader's text saves to their
+own browser only, never into the page file, plus a copy/download toolbar at the top of the page.
