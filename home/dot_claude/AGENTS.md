@@ -61,7 +61,8 @@ When one is the whole message, apply it to your previous answer. Otherwise it is
 - Deliver what was asked, at the size asked. No drive-by refactors, cleanup, docs, or features.
 - If something outside the ask looks wrong, ask. Do not state it as a conclusion.
 - Green tests are not integrated work: confirm it landed before you claim done.
-- Ask before anything hard to undo or outward-facing: pushes, posts, comments, deletes.
+- Ask before anything hard to undo or outward-facing: posts, comments, deletes, merges. Pushing a
+  feature branch and opening its PR need no confirmation.
 
 ## Verification
 
@@ -103,7 +104,10 @@ But: "The builder reports green. I re-ran it: 12 pass, 1 fails."
   optional. Subject 72 characters or fewer, imperative.
 - Body is optional: at most 2 lines, the why. No bullets, no file lists, no recap of the diff.
   A commit-msg hook rejects anything else.
-- Check the branch before pushing. When required to force-push, use --force-with-lease and check if the PR isn't in merge queue already, and we are the owner. Never commit or work in main or master without explicit confirmation.
+- Push feature branches and open PRs (`gh pr create`) without asking. Check the branch first.
+- Force-push only with --force-with-lease, only on a branch we own whose PR is not in the merge
+  queue. A push-guard hook blocks plain force pushes and any push to main or master.
+- Never commit or work in main or master without explicit confirmation.
 
 ## Knowledge base
 
