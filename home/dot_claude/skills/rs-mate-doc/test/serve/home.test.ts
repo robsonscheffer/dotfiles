@@ -182,3 +182,12 @@ describe("collectHomeEntries: cache", () => {
     expect(parseCalls).toBe(2);
   });
 });
+
+describe("serve: home status colors", () => {
+  test("the stale label uses the dark-safe text token, not the raw badge fill color", async () => {
+    const { renderHome } = await import("../../src/serve/home.ts");
+    const html = renderHome([]);
+    expect(html).toContain(".status-stale { border-color: var(--badge-high-text); color: var(--badge-high-text); }");
+    expect(html).not.toContain(".status-stale { border-color: var(--badge-high);");
+  });
+});

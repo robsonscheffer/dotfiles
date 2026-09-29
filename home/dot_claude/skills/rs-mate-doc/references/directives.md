@@ -26,12 +26,27 @@ Rollout is :badge[Blocked]{tone=bad} pending the flag flip.
 | `tabs` | parallel variants (per platform, per team) | each `## Tab name` heading starts a tab |
 | `flow` | who talks to whom, in order | `a -> b: label` per line, rendered as SVG |
 | `decide <person>` | the decision someone must make, and by when | prose |
-| `risks` | risks with likelihood and owner | a markdown table |
+| `risks` | risks with likelihood and owner | a markdown table, one row per risk |
 | `notverified` | the list of open claims | leave empty; it fills itself |
 | `rail` | a sticky side panel (a spec's status, a walk's PR summary) | one `Key: value` per line |
+| `reveal <label>` | content worth hiding until asked for | prose, behind a button; print shows it expanded |
+| `checks` | acceptance criteria or a status check list | one `status \| item \| evidence` per line |
+| `timeline` | a sequence of dated events | one `date \| text` per line |
+| `progress <done/total> [label]` | how far a rollout or checklist has gotten | no body |
 
 A `rail` sits above the table of contents in the page's side column, or inline at the top on
 narrow screens. Values may hold a markdown link (`[text](url)`) and/or a badge, nothing else.
+
+A `risks` row is any cell whose text is exactly `HIGH`, `MED`, or `LOW`; that row renders as a
+card with a colored left border and a badge, instead of a plain table cell, so severity reads
+at a glance without a legend.
+
+A `checks` status is `met`, `partial`, `not-met`, or `n/a`, mapped to the same badge tones as
+`:badge`: `met`=good, `partial`=warn, `not-met`=bad, `n/a`=neutral.
+
+`progress` is a block directive, not the inline `:badge`-style syntax, so it can sit on its own
+line as a standalone bar with an accessible label (`role="progressbar"`, `aria-valuenow`,
+`aria-valuemax`) rather than being squeezed into running prose.
 
 A `tiles` line can carry a delta: `Label: value +12% up good-when:up`. `up`/`down` is the
 delta's own direction; `good-when` says which direction is the improvement, so color follows
@@ -77,11 +92,44 @@ PR: [#42](https://example.com/acme/console/pull/42)
 Status: :badge[On track]{tone=good}
 :::
 
+:::reveal Show reviewer notes
+Priya flagged the 30-day window as a bigger accounting change than it looks.
+:::
+
+:::checks
+met | Refund window is documented for partners | C2
+partial | Retry idempotency covered |
+not-met | Guest order count reconciled |
+:::
+
+:::timeline
+2026-08-01 | Refund window proposal opened
+2026-09-10 | Still awaiting sign-off
+:::
+
+:::progress 3/4 Reference guide review
+:::
+
 ## Open claims
 
 :::notverified
 :::
 ```
+
+## Diff fences
+
+A fenced code block with info string `diff` colors `+`/`-` lines and takes two optional keys:
+`file=<path>` for a file header, `start=<line>` to number added, removed, and context lines
+from that line. Either can appear alone.
+
+````markdown
+```diff file=src/analytics/label.ts start=40
+ function label(el) {
+-  return el.dataset.name
++  return el.closest('[data-analytics-name]')?.dataset.analyticsName
+ }
+```
+````
 
 ## Frontmatter
 

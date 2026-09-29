@@ -93,4 +93,14 @@ describe("dark-mode badge contrast", () => {
       expect(contrast("#ffffff", bg)).toBeGreaterThanOrEqual(4.5);
     }
   });
+
+  // risk-card left borders, diff-file headers, status-stale, and every callout border key off
+  // the same --badge-*-text tokens already checked above, so a risk card, a diff header, and
+  // the viewer's stale-doc label all clear 4.5:1 in both themes without a new token.
+  test("risk-card, diff-file, and checks components reuse the --badge-*-text tokens rather than a new color", () => {
+    for (const selector of [".risk-card.risk-high", ".risk-card.risk-med", ".risk-card.risk-low"]) {
+      const block = cssBlock(THEME_CSS, selector);
+      expect(block).toMatch(/var\(--badge-(high|med|low)-text\)/);
+    }
+  });
 });

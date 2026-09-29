@@ -263,10 +263,56 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
 .cards { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
 .card { border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; text-decoration: none; flex: 1 1 200px; }
 .decide-owner { font-weight: 600; margin: 0.5rem 0 0; }
+.reveal { border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 0.9rem; margin: 1rem 0; }
+.reveal > summary { cursor: pointer; font-weight: 600; }
+.reveal-body { margin-top: 0.6rem; }
+.checks { width: 100%; }
+.timeline { list-style: none; margin: 1rem 0; padding-left: 1.25rem; border-left: 2px solid var(--border); }
+.timeline-item { position: relative; margin: 0 0 1rem; }
+.timeline-item:last-child { margin-bottom: 0; }
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -1.5rem;
+  top: 0.3rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.timeline-date { display: block; font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.timeline-text { margin-top: 0.1rem; }
+.progress { display: flex; align-items: center; gap: 0.6rem; margin: 1rem 0; }
+.progress-track {
+  flex: 1 1 auto;
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--callout-bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.progress-fill { height: 100%; background: var(--accent); }
+.progress-label { font-size: 0.85rem; color: var(--muted); white-space: nowrap; }
 .risk-badge { font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 3px; color: #fff; }
 .risk-badge.risk-high { background: var(--badge-high); }
 .risk-badge.risk-med { background: var(--badge-med); }
 .risk-badge.risk-low { background: var(--badge-low); }
+.risk-cards { display: flex; flex-direction: column; gap: 0.6rem; margin: 1rem 0; }
+.risk-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1rem;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: 4px;
+  padding: 0.6rem 0.9rem;
+}
+.risk-card.risk-high { border-left-color: var(--badge-high-text); }
+.risk-card.risk-med { border-left-color: var(--badge-med-text); }
+.risk-card.risk-low { border-left-color: var(--badge-low-text); }
+.risk-field { display: flex; align-items: baseline; gap: 0.3rem; }
+.risk-field-label { color: var(--muted); font-size: 0.8rem; }
 .not-verified-list { list-style: none; padding: 0; }
 .not-verified-list li { border-bottom: 1px solid var(--border); padding: 0.4rem 0; }
 .claim-owner { color: var(--muted); }
@@ -276,9 +322,17 @@ pre { background: var(--code-bg); border-radius: 6px; padding: 0.75rem 1rem; ove
 figure.code-block { margin: 1rem 0; }
 figure.code-block figcaption { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
 code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.diff-file {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding: 0.4rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+}
 .diff .diff-add { color: var(--badge-low-text); display: block; }
 .diff .diff-del { color: var(--badge-high-text); display: block; }
 .diff .diff-ctx { color: var(--fg); display: block; }
+.diff .diff-num { display: inline-block; width: 2rem; text-align: right; margin-right: 0.6rem; color: var(--muted); user-select: none; }
 .hljs-comment, .hljs-quote { color: var(--code-comment); }
 .hljs-keyword, .hljs-selector-tag, .hljs-literal { color: var(--code-keyword); }
 .hljs-string, .hljs-attr { color: var(--code-string); }

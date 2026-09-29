@@ -1,4 +1,4 @@
-import type { Block, DirectiveNode, TableNode } from "../types.ts";
+import type { Block, DirectiveNode, Inline, TableNode } from "../types.ts";
 import type { Ctx } from "./ctx.ts";
 import { nextId } from "./ctx.ts";
 import { buildFlowSvg } from "./flow.ts";
@@ -9,7 +9,7 @@ import { escapeAttr, escapeHtml, plainTextOf } from "./util.ts";
 // block.ts calls into here for directive nodes; renderCallout/renderRisks etc. call back into
 // block.ts for ordinary children. Both modules only reach across at call time, after both are
 // fully initialized, so the circular import is safe.
-import { renderBlock, renderBlocks, renderTable } from "./block.ts";
+import { renderBlock, renderBlocks } from "./block.ts";
 
 export function renderDirective(n: DirectiveNode, ctx: Ctx): string {
   if (!n.known) {
@@ -43,6 +43,14 @@ export function renderDirective(n: DirectiveNode, ctx: Ctx): string {
       return renderNotVerified(ctx);
     case "rail":
       return renderRail(n);
+    case "reveal":
+      return renderReveal(n, ctx);
+    case "checks":
+      return renderChecks(n);
+    case "timeline":
+      return renderTimeline(n);
+    case "progress":
+      return renderProgress(n);
     default:
       return `<div class="directive-unhandled">${escapeHtml(n.name)}</div>`;
   }
@@ -201,8 +209,51 @@ function renderDecide(n: DirectiveNode, ctx: Ctx): string {
 }
 
 function renderRisks(n: DirectiveNode, ctx: Ctx): string {
-  const body = n.children.map((child) => (child.type === "table" ? renderTable(child as TableNode, ctx, true) : renderBlock(child, ctx))).join("");
+  const body = n.children.map((child) => (child.type === "table" ? renderRiskTable(child as TableNode, ctx) : renderBlock(child, ctx))).join("");
   return `<div class="risks">${body}</div>`;
+}
+
+type RiskSeverity = "high" | "med" | "low";
+
+function riskSeverityOf(cell: Inline[]): RiskSeverity | null {
+  const text = plainTextOf(cell).trim().toUpperCase();
+  if (text === "HIGH" || text === "MED" || text === "LOW") return text.toLowerCase() as RiskSeverity;
+  return null;
+}
+
+// One card per row, a colored left border for its severity plus the same badge chip risks
+// already used in a plain table, in both themes at 4.5:1 (border and badge both key off the
+// dark-safe --badge-*-text tokens, same as callout borders elsewhere on the page).
+function renderRiskTable(t: TableNode, ctx: Ctx): string {
+  const cards = t.rows
+    .map((row) => {
+      let severity: RiskSeverity | null = null;
+      let severityIdx = -1;
+      row.forEach((cell, i) => {
+        if (severity) return;
+        const s = riskSeverityOf(cell);
+        if (s) {
+          severity = s;
+          severityIdx = i;
+        }
+      });
+      const fields = row
+        .map((cell, i) => {
+          if (i === severityIdx && severity) {
+            return `<span class="risk-badge risk-${severity}">${escapeHtml(severity.toUpperCase())}</span>`;
+          }
+          const label = t.head[i] ? plainTextOf(t.head[i]!).trim() : "";
+          const html = renderInline(cell, ctx);
+          return label
+            ? `<span class="risk-field"><span class="risk-field-label">${escapeHtml(label)}</span>${html}</span>`
+            : `<span class="risk-field">${html}</span>`;
+        })
+        .join("");
+      const cls = severity ? `risk-card risk-${severity}` : "risk-card";
+      return `<div class="${cls}">${fields}</div>`;
+    })
+    .join("");
+  return `<div class="risk-cards">${cards}</div>`;
 }
 
 // A rail is a raw key: value block, like tiles, but rendered as a standalone sticky side
@@ -268,6 +319,73 @@ function renderRail(n: DirectiveNode): string {
     .filter(Boolean)
     .join("");
   return `<aside class="rail" aria-label="Summary"><dl class="rail-list">${rows}</dl></aside>`;
+}
+
+// A label line plus content hidden behind a button: <details>/<summary> so it still works with
+// scripts off, and print already forces every collapsed <details> open (see theme.ts).
+function renderReveal(n: DirectiveNode, ctx: Ctx): string {
+  const label = n.args.length ? n.args.join(" ") : "Show more";
+  const body = renderBlocks(n.children, ctx);
+  return `<details class="reveal"><summary>${escapeHtml(label)}</summary><div class="reveal-body">${body}</div></details>`;
+}
+
+const CHECK_TONES: Record<string, string> = { met: "good", partial: "warn", "not-met": "bad", "n/a": "neutral" };
+const CHECK_LABELS: Record<string, string> = { met: "Met", partial: "Partial", "not-met": "Not met", "n/a": "N/A" };
+
+// Lines of "status | item | evidence"; status maps to the same badge tones the inline
+// `:badge` syntax already uses (met=good, partial=warn, not-met=bad, n/a=neutral).
+function renderChecks(n: DirectiveNode): string {
+  const rows = (n.raw ?? [])
+    .map((line) => {
+      const parts = line.split("|").map((p) => p.trim());
+      const status = parts[0]?.toLowerCase();
+      const item = parts[1];
+      const evidence = parts[2] ?? "";
+      if (!status || !item) return "";
+      const tone = CHECK_TONES[status] ?? "neutral";
+      const label = CHECK_LABELS[status] ?? parts[0]!;
+      return (
+        `<tr><td><span class="badge badge-${tone}">${escapeHtml(label)}</span></td>` +
+        `<td>${escapeHtml(item)}</td><td>${escapeHtml(evidence)}</td></tr>`
+      );
+    })
+    .filter(Boolean)
+    .join("");
+  return `<table class="checks"><thead><tr><th>Status</th><th>Item</th><th>Evidence</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// One "date | text" line per entry, oldest first, rendered as a vertical list.
+function renderTimeline(n: DirectiveNode): string {
+  const items = (n.raw ?? [])
+    .map((line) => {
+      const idx = line.indexOf("|");
+      if (idx === -1) return "";
+      const date = line.slice(0, idx).trim();
+      const body = line.slice(idx + 1).trim();
+      if (!date && !body) return "";
+      return `<li class="timeline-item"><time class="timeline-date">${escapeHtml(date)}</time><div class="timeline-text">${escapeHtml(body)}</div></li>`;
+    })
+    .filter(Boolean)
+    .join("");
+  return `<ol class="timeline">${items}</ol>`;
+}
+
+// Block form, not inline `:progress[...]`: inline badge syntax lives in render/inline.ts, a
+// file this lane does not own, so the new syntax stays in the directive layer it does own.
+// First arg is "done/total", the rest is the label: ":::progress 7/12 Rollout complete".
+function renderProgress(n: DirectiveNode): string {
+  const frac = n.args[0] ?? "0/1";
+  const m = /^(\d+)\/(\d+)$/.exec(frac);
+  const value = m ? Number(m[1]) : 0;
+  const max = m && Number(m[2]) > 0 ? Number(m[2]) : 1;
+  const pct = Math.max(0, Math.min(100, Math.round((value / max) * 100)));
+  const label = n.args.slice(1).join(" ") || `${value}/${max}`;
+  return (
+    `<div class="progress" role="progressbar" aria-valuenow="${value}" aria-valuemin="0" ` +
+    `aria-valuemax="${max}" aria-label="${escapeAttr(label)}">` +
+    `<div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>` +
+    `<span class="progress-label">${escapeHtml(label)} (${value}/${max})</span></div>`
+  );
 }
 
 function renderNotVerified(ctx: Ctx): string {
