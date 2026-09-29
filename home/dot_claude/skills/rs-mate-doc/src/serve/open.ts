@@ -9,6 +9,7 @@ import {
   clearPidFile,
   isPidAlive,
   readPidFile,
+  realOrSelf,
   writePidFile,
   type RememberedFolder,
 } from "./state.ts";
@@ -104,6 +105,53 @@ async function pingOnce(url: string, stateDir: string): Promise<boolean> {
   }
 }
 
+// The pid listening on `port`, if lsof can tell. Unix only; null anywhere lsof is missing.
+function listenerPid(port: number): number | null {
+  try {
+    const out = Bun.spawnSync({
+      cmd: ["lsof", "-nP", "-t", `-iTCP:${port}`, "-sTCP:LISTEN"],
+      stdout: "pipe",
+      stderr: "ignore",
+    });
+    const pid = Number(out.stdout.toString().trim().split("\n")[0]);
+    return Number.isInteger(pid) && pid > 0 ? pid : null;
+  } catch {
+    return null;
+  }
+}
+
+// A viewer for this same state dir that this install can't recognise: started by an older
+// mate-doc (no ping identity) or from another checkout, with its pid file lost. It holds the
+// port forever and every `open` fails. Stop it, but only when its command line proves it is a
+// mate-doc detached server for this exact state dir. Returns true once the port is free.
+async function stopStaleViewer(port: number, stateDir: string): Promise<boolean> {
+  const pid = listenerPid(port);
+  if (pid === null || pid === process.pid) return false;
+  let command: string;
+  try {
+    const out = Bun.spawnSync({ cmd: ["ps", "-o", "command=", "-p", String(pid)], stdout: "pipe" });
+    command = out.stdout.toString().trim();
+  } catch {
+    return false;
+  }
+  const dirs = new Set([stateDir, realOrSelf(stateDir)]);
+  const ours =
+    command.includes("detached-server.ts") &&
+    [...dirs].some((dir) => command.endsWith(`--state-dir ${dir}`));
+  if (!ours) return false;
+  try {
+    process.kill(pid, "SIGTERM");
+  } catch {
+    return false;
+  }
+  const deadline = Date.now() + 3000;
+  while (Date.now() < deadline) {
+    if (!isPidAlive(pid)) return true;
+    await new Promise((resolve_) => setTimeout(resolve_, 50));
+  }
+  return false;
+}
+
 // Starts (or reuses) a server for the given state dir, then opens the
 // browser at the page for `target`. A non-null handle means this call fell back to running
 // the server in-process (the detach path failed) and the caller owns that handle's lifecycle;
@@ -147,6 +195,7 @@ export async function openPath(
   if (pidInfo && isPidAlive(pidInfo.pid)) {
     baseUrl = pidInfo.url;
   } else {
+    await stopStaleViewer(deps.port, deps.stateDir);
     const spawned = await trySpawnDetached(deps);
     if (spawned.kind === "up") {
       baseUrl = spawned.url;
