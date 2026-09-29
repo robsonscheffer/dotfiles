@@ -74,6 +74,95 @@ describe("serve: folder nav", () => {
     expect(aHtml).not.toContain('class="next"');
   });
 
+  test("tour entries written as file names with .md, no index, still order the nav", async () => {
+    const stateDir = await mkTmpDir("mate-doc-nav-mdform-state-");
+    const served = await mkTmpDir("mate-doc-nav-mdform-served-");
+    await writeFile(
+      join(served, "index.md"),
+      "---\ntitle: Index\ntour: [b.md, a.md]\n---\nbody",
+    );
+    await writeFile(join(served, "a.md"), "---\ntitle: A\n---\nbody");
+    await writeFile(join(served, "b.md"), "---\ntitle: B\n---\nbody");
+
+    const entry = await addFolder(stateDir, served);
+    handle = await serve({
+      host: "127.0.0.1",
+      port: 0,
+      stateDir,
+      parse: parseWithTour,
+      render: stubRenderNav,
+      loadLedger: nullLedger,
+    });
+
+    const res = await fetch(`${handle.url}/${entry.alias}/index`);
+    const html = await res.text();
+    expect(html).toContain(
+      `<li class="current"><a href="/${entry.alias}/index">Index</a></li>` +
+        `<li class=""><a href="/${entry.alias}/b">B</a></li>` +
+        `<li class=""><a href="/${entry.alias}/a">A</a></li>`,
+    );
+  });
+
+  test("mixed tour form (bare key and .md) and a page missing from the tour", async () => {
+    const stateDir = await mkTmpDir("mate-doc-nav-mixed-state-");
+    const served = await mkTmpDir("mate-doc-nav-mixed-served-");
+    await writeFile(
+      join(served, "index.md"),
+      "---\ntitle: Index\ntour: [b.md, a]\n---\nbody",
+    );
+    await writeFile(join(served, "a.md"), "---\ntitle: A\n---\nbody");
+    await writeFile(join(served, "b.md"), "---\ntitle: B\n---\nbody");
+    await writeFile(join(served, "c.md"), "---\ntitle: C\n---\nbody");
+
+    const entry = await addFolder(stateDir, served);
+    handle = await serve({
+      host: "127.0.0.1",
+      port: 0,
+      stateDir,
+      parse: parseWithTour,
+      render: stubRenderNav,
+      loadLedger: nullLedger,
+    });
+
+    const res = await fetch(`${handle.url}/${entry.alias}/index`);
+    const html = await res.text();
+    // index is not listed in the tour, so it goes first; b, a follow in tour order; c is
+    // missing from the tour so it is appended after, alphabetically.
+    expect(html).toContain(
+      `<li class="current"><a href="/${entry.alias}/index">Index</a></li>` +
+        `<li class=""><a href="/${entry.alias}/b">B</a></li>` +
+        `<li class=""><a href="/${entry.alias}/a">A</a></li>` +
+        `<li class=""><a href="/${entry.alias}/c">C</a></li>`,
+    );
+  });
+
+  test("an unknown tour entry is ignored, known pages still ordered", async () => {
+    const stateDir = await mkTmpDir("mate-doc-nav-unknown-state-");
+    const served = await mkTmpDir("mate-doc-nav-unknown-served-");
+    await writeFile(
+      join(served, "index.md"),
+      "---\ntitle: Index\ntour: [index, ghost.md, a]\n---\nbody",
+    );
+    await writeFile(join(served, "a.md"), "---\ntitle: A\n---\nbody");
+
+    const entry = await addFolder(stateDir, served);
+    handle = await serve({
+      host: "127.0.0.1",
+      port: 0,
+      stateDir,
+      parse: parseWithTour,
+      render: stubRenderNav,
+      loadLedger: nullLedger,
+    });
+
+    const res = await fetch(`${handle.url}/${entry.alias}/index`);
+    const html = await res.text();
+    expect(html).toContain(
+      `<li class="current"><a href="/${entry.alias}/index">Index</a></li>` +
+        `<li class=""><a href="/${entry.alias}/a">A</a></li>`,
+    );
+  });
+
   test("breadcrumbs link the folder alias then show the page title", async () => {
     const stateDir = await mkTmpDir("mate-doc-nav-crumb-state-");
     const served = await mkTmpDir("mate-doc-nav-crumb-served-");

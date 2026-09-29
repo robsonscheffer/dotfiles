@@ -140,8 +140,8 @@ summary: One line a reader sees in listings.
 status: draft          # draft until a person runs approve
 shape: guide           # plain | guide | brief | dashboard
 tour:                  # guide/brief only: reading order of pages
-  - index
-  - how-to-refund
+  - index               # bare key or "index.md" both work
+  - how-to-refund.md    # file name with .md is accepted too
 ---
 ```
 

@@ -56,6 +56,25 @@ describe("build: a folder", () => {
     expect(otherHtml).toContain("More.");
   });
 
+  test("orders the nav from a tour written as file names, no index listed", async () => {
+    const dir = await tempDir();
+    writeFileSync(
+      join(dir, "index.md"),
+      "---\ntitle: Landing\ntour:\n  - other.md\n  - about.md\n---\n\nWelcome.\n",
+    );
+    writeFileSync(join(dir, "about.md"), "---\ntitle: About\n---\n\nAbout.\n");
+    writeFileSync(join(dir, "other.md"), "---\ntitle: Other\n---\n\nMore.\n");
+
+    expect(await main(["build", dir])).toBe(EXIT.ok);
+
+    const indexHtml = readFileSync(join(dir, ".build", "index.html"), "utf8");
+    const otherIdx = indexHtml.indexOf("Other</a>");
+    const aboutIdx = indexHtml.indexOf("About</a>");
+    expect(otherIdx).toBeGreaterThan(-1);
+    expect(aboutIdx).toBeGreaterThan(-1);
+    expect(otherIdx).toBeLessThan(aboutIdx);
+  });
+
   test("resolves a relative .md link to the built .html name", async () => {
     const dir = await tempDir();
     writeFileSync(join(dir, "index.md"), "---\ntitle: Landing\n---\n\nSee [Other](other.md) for more.\n");
