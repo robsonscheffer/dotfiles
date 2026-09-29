@@ -73,6 +73,7 @@ const DIRECTIVE_MARKERS: Record<string, string> = {
   checks: 'class="checks"',
   timeline: 'class="timeline"',
   progress: 'class="progress"',
+  rail: 'class="rail"',
 };
 
 interface FakeEnvOpts {

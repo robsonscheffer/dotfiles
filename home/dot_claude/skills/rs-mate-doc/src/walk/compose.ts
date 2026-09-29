@@ -59,6 +59,7 @@ function renderFrontmatter(pr: FetchedPr, inputs: WalkInputs, updated: string): 
     "shape: walk",
     "kind: walk",
     "status: draft",
+    "notes: true",
     `summary: ${yamlString(inputs.story.lead ?? pr.meta.title)}`,
   ];
   if (tags.length > 0) lines.push(`tags: [${tags.map(yamlString).join(", ")}]`);
@@ -119,7 +120,9 @@ function buildGroupClaim(pr: FetchedPr, group: StoryGroup, build: ClaimBuild, ch
   for (const file of group.files) {
     const change = firstFileChange(pr.diff, file);
     if (change.found && change.excerpt) {
-      const ref = `${pr.repo}@${pr.meta.headRefOid}:${file}:${change.line ?? 1}`;
+      // An added line only exists at head; a pure-removal fallback only exists at base.
+      const sha = change.side === "removed" ? pr.meta.baseRefOid : pr.meta.headRefOid;
+      const ref = `${pr.repo}@${sha}:${file}:${change.line ?? 1}`;
       claim = {
         id,
         claim: group.framing,

@@ -41,24 +41,37 @@ export function renderDiffFence(filepath: string, diff: string, maxLines = 80): 
   return ["```diff title=" + filepath, lines.join("\n") + note, "```"].join("\n");
 }
 
+// Which image (commit) an excerpt's line number applies to: "added" lines only exist at the
+// PR's head commit, "removed" lines only exist at the PR's base commit.
+export type ChangeSide = "added" | "removed";
+
 export interface FileChange {
   found: boolean;
-  excerpt?: string; // trimmed content of the first non-empty added/removed line
-  line?: number; // best-effort line number in the new file (old file for a removed-only line)
+  excerpt?: string; // trimmed content of the chosen line
+  line?: number; // best-effort line number in the image named by `side`
+  side?: ChangeSide;
 }
 
 const HUNK_RE = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
 
-// Finds the first real content change for one file in a unified diff, for anchoring a code
-// claim. Best-effort: it walks hunk headers to track line numbers, which drifts on the "\ No
-// newline at end of file" marker and similar edge cases a real patch parser would handle -
-// acceptable here since this only has to point close enough for a human to confirm.
+// Finds the best line to anchor a code claim to, for one file in a unified diff. Prefers the
+// first added line (it survives at the PR's head commit, where every claim is normally
+// checked). Only when a file's whole diff has no added line at all - a pure removal - falls
+// back to the first removed line, which the caller must then anchor at the base commit instead,
+// since it no longer exists at head. Best-effort: it walks hunk headers to track line numbers,
+// which drifts on the "\ No newline at end of file" marker and similar edge cases a real patch
+// parser would handle - acceptable here since this only has to point close enough for a human
+// to confirm.
 export function firstFileChange(diff: string, filepath: string): FileChange {
   let inFile = false;
   let oldLine = 0;
   let newLine = 0;
-  for (const raw of diff.split("\n")) {
+  let removedFallback: FileChange | undefined;
+
+  const lines = diff.split("\n");
+  for (const raw of lines) {
     if (raw.startsWith("diff --git ")) {
+      if (inFile) break; // left the target file's section with no added line found
       inFile = raw.includes(filepath);
       continue;
     }
@@ -75,16 +88,16 @@ export function firstFileChange(diff: string, filepath: string): FileChange {
 
     if (raw.startsWith("+")) {
       const body = raw.slice(1).trim();
-      if (body.length > 0) return { found: true, excerpt: body, line: newLine };
+      if (body.length > 0) return { found: true, excerpt: body, line: newLine, side: "added" };
       newLine++;
     } else if (raw.startsWith("-")) {
       const body = raw.slice(1).trim();
-      if (body.length > 0) return { found: true, excerpt: body, line: oldLine };
+      if (body.length > 0 && !removedFallback) removedFallback = { found: true, excerpt: body, line: oldLine, side: "removed" };
       oldLine++;
     } else {
       newLine++;
       oldLine++;
     }
   }
-  return { found: false };
+  return removedFallback ?? { found: false };
 }
