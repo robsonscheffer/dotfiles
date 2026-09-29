@@ -200,3 +200,95 @@ describe("open: a stale pid file on the wrong port", () => {
     }
   }, 20_000);
 });
+
+describe("open: an unrecognised viewer for the same state dir", () => {
+  // An older mate-doc install answered no ping and its pid file is gone, but its command line
+  // still names this state dir: it is ours, so open replaces it instead of failing.
+  async function startOldViewer(stateDir: string): Promise<{ child: ReturnType<typeof Bun.spawn>; port: number }> {
+    const probe = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response("") });
+    const port = probe.port!;
+    probe.stop(true);
+    const oldInstall = await tempDir("mate-doc-open-old-install-");
+    const script = join(oldInstall, "detached-server.ts");
+    writeFileSync(
+      script,
+      `Bun.serve({ hostname: "127.0.0.1", port: Number(process.argv[3]), fetch: () => new Response("not found", { status: 404 }) });\n`,
+    );
+    const child = Bun.spawn({
+      cmd: [process.execPath, script, "--port", String(port), "--state-dir", stateDir],
+      stdin: "ignore",
+      stdout: "ignore",
+      stderr: "ignore",
+    });
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline) {
+      if (await fetch(`http://127.0.0.1:${port}/`).then(() => true, () => false)) break;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    return { child, port };
+  }
+
+  test("stops the old viewer and starts its own on the same port", async () => {
+    const stateDir = await tempDir("mate-doc-open-old-viewer-state-");
+    const served = await tempDir("mate-doc-open-old-viewer-served-");
+    writeFileSync(join(served, "index.md"), "---\ntitle: Doc\n---\n\nBody.\n");
+    const { child, port } = await startOldViewer(stateDir);
+
+    let handle: ServerHandle | null = null;
+    try {
+      const result = await openPath(served, {
+        stateDir,
+        port,
+        parse,
+        render,
+        loadLedger: (): Ledger | null => null,
+        openBrowser: () => {},
+      });
+      handle = result.handle;
+
+      await child.exited;
+      const pidInfo = await readPidFile(stateDir);
+      expect(pidInfo?.port).toBe(port);
+      const ping = await fetch(`http://127.0.0.1:${port}/__mate-doc/ping`);
+      expect(await ping.text()).toStartWith("mate-doc:");
+
+      if (pidInfo && pidInfo.pid !== process.pid) {
+        try {
+          process.kill(pidInfo.pid, "SIGTERM");
+        } catch {
+          // already gone
+        }
+      }
+    } finally {
+      await handle?.stop();
+      try {
+        child.kill();
+      } catch {
+        // already gone
+      }
+    }
+  }, 20_000);
+
+  test("leaves a viewer for another state dir alone", async () => {
+    const stateDir = await tempDir("mate-doc-open-other-viewer-state-");
+    const otherStateDir = await tempDir("mate-doc-open-other-viewer-other-");
+    const served = await tempDir("mate-doc-open-other-viewer-served-");
+    writeFileSync(join(served, "index.md"), "---\ntitle: Doc\n---\n\nBody.\n");
+    const { child, port } = await startOldViewer(otherStateDir);
+
+    try {
+      const attempt = openPath(served, {
+        stateDir,
+        port,
+        parse,
+        render,
+        loadLedger: (): Ledger | null => null,
+        openBrowser: () => {},
+      });
+      await expect(attempt).rejects.toThrow(/isn't a mate-doc viewer/);
+      expect(child.exitCode).toBeNull();
+    } finally {
+      child.kill();
+    }
+  }, 20_000);
+});
