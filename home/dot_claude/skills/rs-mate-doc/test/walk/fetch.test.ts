@@ -43,6 +43,7 @@ describe("fetchPr", () => {
             headRefName: "refactor/x",
             headRefOid: "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
             baseRefName: "main",
+            baseRefOid: "b2c3d4e5f60718293a4b5c6d7e8f9012345678a",
             additions: 10,
             deletions: 5,
             changedFiles: 2,
@@ -67,7 +68,7 @@ describe("fetchPr", () => {
 
     const bodyCalls = calls.filter((c) => c.includes("body"));
     expect(bodyCalls).toHaveLength(1);
-    const metaCalls = calls.filter((c) => c.includes("number,title,author,headRefName,headRefOid,baseRefName,additions,deletions,changedFiles,url"));
+    const metaCalls = calls.filter((c) => c.includes("number,title,author,headRefName,headRefOid,baseRefName,baseRefOid,additions,deletions,changedFiles,url"));
     expect(metaCalls).toHaveLength(1);
     // Body is never bundled into the structured --json call, and vice versa.
     for (const c of metaCalls) expect(c).not.toContain("body");

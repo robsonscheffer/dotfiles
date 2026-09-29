@@ -120,7 +120,9 @@ function buildGroupClaim(pr: FetchedPr, group: StoryGroup, build: ClaimBuild, ch
   for (const file of group.files) {
     const change = firstFileChange(pr.diff, file);
     if (change.found && change.excerpt) {
-      const ref = `${pr.repo}@${pr.meta.headRefOid}:${file}:${change.line ?? 1}`;
+      // An added line only exists at head; a pure-removal fallback only exists at base.
+      const sha = change.side === "removed" ? pr.meta.baseRefOid : pr.meta.headRefOid;
+      const ref = `${pr.repo}@${sha}:${file}:${change.line ?? 1}`;
       claim = {
         id,
         claim: group.framing,

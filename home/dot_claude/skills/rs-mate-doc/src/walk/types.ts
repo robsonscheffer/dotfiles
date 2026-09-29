@@ -16,6 +16,7 @@ export interface PrMeta {
   headRefName: string;
   headRefOid: string;
   baseRefName: string;
+  baseRefOid: string;
   additions: number;
   deletions: number;
   changedFiles: number;
