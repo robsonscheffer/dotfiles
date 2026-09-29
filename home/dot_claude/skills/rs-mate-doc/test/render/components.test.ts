@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { renderDirective } from "../../src/render/directives.ts";
 import { renderBlock } from "../../src/render/block.ts";
+import { renderInline } from "../../src/render/inline.ts";
 import { createCtx } from "../../src/render/ctx.ts";
 import { computeFlowLayout } from "../../src/render/flow.ts";
 import type { DirectiveNode } from "../../src/types.ts";
@@ -49,6 +50,74 @@ describe("tiles", () => {
     expect(html).toContain("Qualifying");
     expect(html).toContain("claim-marker");
     expect(html).toMatchSnapshot();
+  });
+});
+
+describe("tiles: stat delta", () => {
+  test("renders a good delta when direction matches good-when", () => {
+    const n = directive("tiles", { raw: ["Signups: 1,204 +12% up good-when:up"] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain("1,204");
+    expect(html).toContain("tile-delta-good");
+    expect(html).toContain("+12%");
+    expect(html).toMatchSnapshot();
+  });
+
+  test("renders a good delta when a falling metric is the improvement", () => {
+    const n = directive("tiles", { raw: ["Churn: 42 -3 down good-when:down"] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain("tile-delta-good");
+  });
+
+  test("renders a bad delta when direction contradicts good-when", () => {
+    const n = directive("tiles", { raw: ["Churn: 42 +3 up good-when:down"] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain("tile-delta-bad");
+  });
+
+  test("good-when defaults to up when omitted", () => {
+    const n = directive("tiles", { raw: ["Errors: 5 -1 down"] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain("tile-delta-bad");
+  });
+
+  test("a tile with no delta renders exactly as before", () => {
+    const n = directive("tiles", { raw: ["Excluded: 42"] });
+    const html = renderDirective(n, ctx());
+    expect(html).not.toContain("tile-delta");
+    expect(html).toContain("42");
+  });
+});
+
+describe("inline badge", () => {
+  test.each(["good", "warn", "bad", "info", "neutral"])("renders the %s tone", (tone) => {
+    const html = renderInline([text(`:badge[Blocked]{tone=${tone}}`)], ctx());
+    expect(html).toContain(`badge badge-${tone}`);
+    expect(html).toContain("Blocked");
+    expect(html).toMatchSnapshot();
+  });
+
+  test("defaults to neutral with no attrs", () => {
+    const html = renderInline([text(":badge[Draft]")], ctx());
+    expect(html).toContain("badge badge-neutral");
+  });
+
+  test("falls back to neutral for an unknown tone", () => {
+    const html = renderInline([text(":badge[Weird]{tone=purple}")], ctx());
+    expect(html).toContain("badge badge-neutral");
+  });
+
+  test("renders inside a table cell alongside plain text", () => {
+    const cellHtml = renderInline([text("Rollout is "), text(":badge[Blocked]{tone=bad}"), text(" for now.")], ctx());
+    expect(cellHtml).toContain("badge badge-bad");
+    expect(cellHtml).toContain("Rollout is");
+    expect(cellHtml).toContain("for now.");
+  });
+
+  test("escapes the label", () => {
+    const html = renderInline([text(':badge[<script>]{tone=info}')], ctx());
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&lt;script&gt;");
   });
 });
 

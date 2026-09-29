@@ -52,6 +52,24 @@ describe("new: guide shape", () => {
   });
 });
 
+describe("new: dashboard shape", () => {
+  test("writes a folder with the dashboard skeleton", async () => {
+    const dir = await tempDir();
+    const target = join(dir, "dashboard");
+    expect(await main(["new", target, "--shape", "dashboard"])).toBe(EXIT.ok);
+    expect(existsSync(join(target, "index.md"))).toBe(true);
+    const text = readFileSync(join(target, "index.md"), "utf8");
+    expect(text).toContain("shape: dashboard");
+  });
+
+  test("refuses to overwrite an existing folder", async () => {
+    const dir = await tempDir();
+    const target = join(dir, "dashboard");
+    await main(["new", target, "--shape", "dashboard"]);
+    expect(await main(["new", target, "--shape", "dashboard"])).toBe(EXIT.usage);
+  });
+});
+
 describe("new: unbuildable shapes", () => {
   test("--shape walk points at the walk command instead of building anything", async () => {
     const dir = await tempDir();

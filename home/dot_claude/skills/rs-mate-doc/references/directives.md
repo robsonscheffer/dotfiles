@@ -2,9 +2,21 @@
 
 A directive is a fenced block: `:::name args` on its own line, content, then `:::`. Claim refs work inside them. An unknown name is a lint error.
 
+Inline: `:badge[label]{tone=bad}` renders a small rounded label. Tones: `good`, `warn`, `bad`,
+`info`, `neutral` (default when omitted or unrecognized). Works anywhere inline text does,
+including inside a table cell.
+
+```markdown
+Rollout is :badge[Blocked]{tone=bad} pending the flag flip.
+
+| Item | Status |
+| --- | --- |
+| Refund flow | :badge[On track]{tone=good} |
+```
+
 | Directive | Use it for | Content |
 | --- | --- | --- |
-| `tiles` | a few headline numbers | one `Label: value {Cn}` per line |
+| `tiles` | a few headline numbers, optionally with a delta | one `Label: value {Cn}` per line |
 | `cards` | links to other pages in the doc | a markdown list of links |
 | `means` | defining a term the reader will trip on | prose |
 | `collide <term>` | a term that means something else elsewhere | prose |
@@ -17,10 +29,17 @@ A directive is a fenced block: `:::name args` on its own line, content, then `::
 | `risks` | risks with likelihood and owner | a markdown table |
 | `notverified` | the list of open claims | leave empty; it fills itself |
 
+A `tiles` line can carry a delta: `Label: value +12% up good-when:up`. `up`/`down` is the
+delta's own direction; `good-when` says which direction is the improvement, so color follows
+that meaning instead of the sign (a delta of `-3 down good-when:down` still renders as good).
+`good-when` defaults to `up` when left off.
+
 ```markdown
 :::tiles
 Fast checkout orders: 312 {C3}
 Refund window: 14 days {C4}
+Signups: 1,204 +12% up good-when:up
+Churn: 42 -3 down good-when:down
 :::
 
 :::steps
@@ -61,7 +80,7 @@ Should the refund window change from 14 to 30 days for annual plans?
 title: Checkout guide
 summary: One line a reader sees in listings.
 status: draft          # draft until a person runs approve
-shape: guide           # plain | guide | brief
+shape: guide           # plain | guide | brief | dashboard
 tour:                  # guide/brief only: reading order of pages
   - index
   - how-to-refund

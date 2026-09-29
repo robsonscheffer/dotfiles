@@ -1,4 +1,4 @@
-// `mate-doc new <path> --shape plain|guide|brief`: copy a shape skeleton to <path>. Refuses to
+// `mate-doc new <path> --shape plain|guide|brief|dashboard`: copy a shape skeleton to <path>. Refuses to
 // overwrite anything that already exists. `--shape walk` is not a buildable shape: it points at
 // the `walk` command instead.
 import { existsSync, mkdirSync, readdirSync, statSync, copyFileSync } from "node:fs";
@@ -28,7 +28,7 @@ export async function runNew(argv: string[]): Promise<number> {
   const shape = shapeIdx !== -1 ? rest[shapeIdx + 1] : undefined;
 
   if (!path || !shape) {
-    process.stderr.write("mate-doc new: usage: mate-doc new <path> --shape plain|guide|brief\n");
+    process.stderr.write("mate-doc new: usage: mate-doc new <path> --shape plain|guide|brief|dashboard\n");
     return EXIT.usage;
   }
 
@@ -37,7 +37,7 @@ export async function runNew(argv: string[]): Promise<number> {
     return EXIT.usage;
   }
 
-  if (shape !== "plain" && shape !== "guide" && shape !== "brief") {
+  if (shape !== "plain" && shape !== "guide" && shape !== "brief" && shape !== "dashboard") {
     process.stderr.write(`mate-doc new: unknown shape "${shape}"\n`);
     return EXIT.usage;
   }
