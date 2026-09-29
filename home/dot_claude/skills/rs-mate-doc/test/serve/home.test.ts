@@ -93,10 +93,16 @@ describe("serve: home index", () => {
     expect(html).toContain('id="index-search"');
     expect(html).toContain('data-title="orders guide"');
     expect(html).toContain('data-summary="how orders flow"');
-    // No display:none anywhere in the markup itself: everything starts visible, filtering is
-    // applied only by the inline script reacting to input, so a script-off client sees it all.
-    expect(html).not.toContain("display: none");
-    expect(html).not.toContain("display:none");
+    // No inline display:none on any entry: everything starts visible, filtering is applied
+    // only by the inline script reacting to input, so a script-off client sees it all. (The
+    // shared stylesheet's own print rules use display: none for chrome like nav/TOC, which is
+    // unrelated to this filter and is not scoped to .index-entry.)
+    const entryTags = html.match(/<li class="index-entry"[^>]*>/g) ?? [];
+    expect(entryTags.length).toBeGreaterThan(0);
+    for (const tag of entryTags) {
+      expect(tag).not.toContain("display: none");
+      expect(tag).not.toContain("display:none");
+    }
   });
 
   test("the kind filter includes every kind the collector can emit, including plain", async () => {

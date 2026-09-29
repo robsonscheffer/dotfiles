@@ -15,6 +15,14 @@ export const THEME_CSS = `
   --badge-high: #b3261e;
   --badge-med: #8a6d00;
   --badge-low: #1e6b3a;
+  /* Foreground-text variants of the badge colors: --badge-high/-med/-low are also used as
+     backgrounds behind white text (.badge-*, .risk-badge), where the raw values already pass
+     4.5:1. As plain text on --bg they only pass in light theme; the dark overrides below use
+     brighter shades so claim markers, unresolved links, tile deltas, and callout borders stay
+     readable on the dark background too. */
+  --badge-high-text: #b3261e;
+  --badge-med-text: #8a6d00;
+  --badge-low-text: #1e6b3a;
   --code-comment: #6a737d;
   --code-keyword: #a626a4;
   --code-string: #50a14f;
@@ -30,6 +38,9 @@ export const THEME_CSS = `
     --border: #33363c;
     --callout-bg: #1d2025;
     --code-bg: #1d2025;
+    --badge-high-text: #ff8a80;
+    --badge-med-text: #ffca5c;
+    --badge-low-text: #5fd38d;
     --code-comment: #8b98a8;
     --code-keyword: #d18fd1;
     --code-string: #98c379;
@@ -45,6 +56,9 @@ html[data-theme="dark"] {
   --border: #33363c;
   --callout-bg: #1d2025;
   --code-bg: #1d2025;
+  --badge-high-text: #ff8a80;
+  --badge-med-text: #ffca5c;
+  --badge-low-text: #5fd38d;
   --code-comment: #8b98a8;
   --code-keyword: #d18fd1;
   --code-string: #98c379;
@@ -59,6 +73,9 @@ html[data-theme="light"] {
   --border: #d8d8d8;
   --callout-bg: #f4f5f7;
   --code-bg: #f4f5f7;
+  --badge-high-text: #b3261e;
+  --badge-med-text: #8a6d00;
+  --badge-low-text: #1e6b3a;
   --code-comment: #6a737d;
   --code-keyword: #a626a4;
   --code-string: #50a14f;
@@ -81,9 +98,20 @@ main, .left-nav, .toc { padding: 1.5rem; }
 .toc > ul { padding-left: 0; }
 .toc a { color: var(--muted); text-decoration: none; }
 .toc a:hover { color: var(--accent); }
-@media (max-width: 760px) {
+/* Reading width: a text column of about 70 characters. Wide content (tables, code, diagrams,
+   tiles, cards, tabs, risks) opts back out to the full width main has available. */
+main :is(p, ul, ol, dl, blockquote, .callout, .doc-summary, .decide-owner, h1, h2, h3, h4, h5, h6) {
+  max-width: 70ch;
+}
+main :is(table, pre, figure.code-block, .tiles, .flow-diagram, .cards, .tab-panels, .risks) {
+  max-width: none;
+}
+/* One breakpoint for the whole layout: side-col (rail + TOC) and the left-nav both react to it,
+   below 900px, everything narrower than that stacks single-column above the main content. */
+@media (max-width: 900px) {
   .layout { flex-direction: column; }
   .side-col { position: static; width: 100%; order: -1; }
+  .left-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
 }
 .rail { border: 1px solid var(--border); border-radius: 6px; padding: 1rem; }
 .rail-list { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 0.75rem; margin: 0; }
@@ -121,8 +149,11 @@ main, .left-nav, .toc { padding: 1.5rem; }
   padding: 0.5rem;
   font: inherit;
 }
-.note-toggle:focus-visible, .note-textarea:focus-visible,
-.notes-copy-btn:focus-visible, .notes-download-btn:focus-visible {
+/* One focus style for the whole page: every link, button, and summary gets the same visible
+   outline in both themes. */
+a:focus-visible, button:focus-visible, summary:focus-visible,
+input:focus-visible, textarea:focus-visible, select:focus-visible,
+[tabindex]:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -159,13 +190,13 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
 }
 .callout-title { font-weight: 600; margin: 0 0 0.4rem; }
 .callout-means { border-left-color: var(--accent); }
-.callout-warn { border-left-color: var(--badge-high); }
+.callout-warn { border-left-color: var(--badge-high-text); }
 .callout-note { border-left-color: var(--code-title); }
-.callout-collide { border-left-color: var(--badge-med); }
-.callout-decide { border-left-color: var(--badge-med); }
+.callout-collide { border-left-color: var(--badge-med-text); }
+.callout-decide { border-left-color: var(--badge-med-text); }
 .term-chip { border-bottom: 1px dotted var(--accent); cursor: help; }
 .claim-marker { cursor: help; }
-.claim-marker.claim-not_verified, .claim-marker.claim-missing { color: var(--badge-high); font-weight: 700; }
+.claim-marker.claim-not_verified, .claim-marker.claim-missing { color: var(--badge-high-text); font-weight: 700; }
 .claim-marker.claim-missing::after { content: " !"; }
 .claim-evidence {
   font-size: 0.85rem;
@@ -178,7 +209,7 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
   gap: 0.5rem;
   align-items: center;
 }
-.claim-evidence-missing { color: var(--badge-high); border-left-color: var(--badge-high); }
+.claim-evidence-missing { color: var(--badge-high-text); border-left-color: var(--badge-high-text); }
 .claim-excerpt { background: var(--code-bg); padding: 0.1rem 0.3rem; border-radius: 3px; }
 .verdict-badge {
   text-transform: uppercase;
@@ -192,8 +223,8 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
 .tile { border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; min-width: 120px; }
 .tile-value { font-size: 1.4rem; font-weight: 700; }
 .tile-delta { font-size: 0.85rem; font-weight: 600; margin-top: 0.15rem; }
-.tile-delta-good { color: var(--badge-low); }
-.tile-delta-bad { color: var(--badge-high); }
+.tile-delta-good { color: var(--badge-low-text); }
+.tile-delta-bad { color: var(--badge-high-text); }
 .tile-label { color: var(--muted); font-size: 0.85rem; }
 .badge {
   display: inline-block;
@@ -232,7 +263,7 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
 .cards { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0; }
 .card { border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; text-decoration: none; flex: 1 1 200px; }
 .decide-owner { font-weight: 600; margin: 0.5rem 0 0; }
-.risk-badge { font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 3px; color: var(--bg); }
+.risk-badge { font-weight: 700; padding: 0.1rem 0.5rem; border-radius: 3px; color: #fff; }
 .risk-badge.risk-high { background: var(--badge-high); }
 .risk-badge.risk-med { background: var(--badge-med); }
 .risk-badge.risk-low { background: var(--badge-low); }
@@ -240,23 +271,23 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
 .not-verified-list li { border-bottom: 1px solid var(--border); padding: 0.4rem 0; }
 .claim-owner { color: var(--muted); }
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-th, td { border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left; }
+th, td { border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left; word-break: break-word; }
 pre { background: var(--code-bg); border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; }
 figure.code-block { margin: 1rem 0; }
 figure.code-block figcaption { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }
 code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-.diff .diff-add { color: var(--badge-low); display: block; }
-.diff .diff-del { color: var(--badge-high); display: block; }
+.diff .diff-add { color: var(--badge-low-text); display: block; }
+.diff .diff-del { color: var(--badge-high-text); display: block; }
 .diff .diff-ctx { color: var(--fg); display: block; }
 .hljs-comment, .hljs-quote { color: var(--code-comment); }
 .hljs-keyword, .hljs-selector-tag, .hljs-literal { color: var(--code-keyword); }
 .hljs-string, .hljs-attr { color: var(--code-string); }
 .hljs-number { color: var(--code-number); }
 .hljs-title, .hljs-title.class_, .hljs-title.function_ { color: var(--code-title); }
-.link-unresolved { color: var(--badge-high); border-bottom: 1px dotted var(--badge-high); }
+.link-unresolved { color: var(--badge-high-text); border-bottom: 1px dotted var(--badge-high-text); }
 .directive-unknown, .directive-unhandled, .doc-error {
-  border: 1px solid var(--badge-high);
-  color: var(--badge-high);
+  border: 1px solid var(--badge-high-text);
+  color: var(--badge-high-text);
   border-radius: 4px;
   padding: 0.5rem 0.75rem;
   margin: 1rem 0;
@@ -272,6 +303,26 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   padding: 0.3rem 0.6rem;
   cursor: pointer;
   z-index: 10;
+}
+.left-nav-disclosure summary { cursor: pointer; font-weight: 600; padding: 0.25rem 0; }
+@media print {
+  .breadcrumbs, .left-nav, .prev-next, .side-col, .theme-toggle,
+  .notes-toolbar, .note-control {
+    display: none !important;
+  }
+  /* Print has no interaction, so a collapsed <details> (e.g. the walk lane's judgment reveal)
+     must show its content and the toggle it would otherwise need loses its purpose. */
+  details:not([open]) summary { display: none; }
+  details:not([open]) > *:not(summary) { display: block !important; }
+  a:not([href^="/"]):not([href^="#"])::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: var(--muted);
+  }
+  table, figure.code-block, pre {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
 `;
 
