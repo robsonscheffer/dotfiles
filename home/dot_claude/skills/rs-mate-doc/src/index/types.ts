@@ -1,9 +1,15 @@
 // Types for the home index (src/serve/home.ts renders them; collect.ts builds them).
-import type { Level } from "../types.ts";
+import type { Level, Shape } from "../types.ts";
 
-export type IndexKind = "doc set" | "guide" | "brief" | "walk" | "dashboard" | "legacy" | "page";
+// collect.ts's kindFor() falls back to frontmatter's `shape` when no explicit `kind` extra is
+// set, so every Shape value can end up as a kind. This record forces a compile error if Shape
+// ever gains or loses a member without this list changing too.
+const SHAPE_KINDS_RECORD: Record<Shape, true> = { plain: true, guide: true, brief: true, walk: true };
+const SHAPE_KINDS = Object.keys(SHAPE_KINDS_RECORD) as Shape[];
 
-export const INDEX_KINDS: readonly IndexKind[] = ["doc set", "guide", "brief", "walk", "dashboard", "legacy", "page"];
+export type IndexKind = Shape | "doc set" | "dashboard" | "legacy" | "page";
+
+export const INDEX_KINDS: readonly IndexKind[] = [...SHAPE_KINDS, "doc set", "dashboard", "legacy", "page"];
 
 export interface IndexEntry {
   title: string;

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { collectHomeEntries, createHomeCache } from "../../src/index/collect.ts";
+import { INDEX_KINDS } from "../../src/index/types.ts";
 import { serve } from "../../src/serve/server.ts";
 import { addFolder } from "../../src/serve/state.ts";
 import type { ServerHandle } from "../../src/types.ts";
@@ -96,6 +97,27 @@ describe("serve: home index", () => {
     // applied only by the inline script reacting to input, so a script-off client sees it all.
     expect(html).not.toContain("display: none");
     expect(html).not.toContain("display:none");
+  });
+
+  test("the kind filter includes every kind the collector can emit, including plain", async () => {
+    const stateDir = await mkTmpDir("mate-doc-home-state-");
+    const docSet = await makeDocSet();
+    await addFolder(stateDir, docSet);
+
+    handle = await serve({
+      host: "127.0.0.1",
+      port: 0,
+      stateDir,
+      parse: stubParse,
+      render: stubRenderPlain,
+      loadLedger: nullLedger,
+    });
+
+    const res = await fetch(`${handle.url}/`);
+    const html = await res.text();
+    for (const kind of INDEX_KINDS) {
+      expect(html).toContain(`<option value="${kind}">`);
+    }
   });
 
   test("a doc set with a fresh claims.yaml is marked fresh", async () => {
