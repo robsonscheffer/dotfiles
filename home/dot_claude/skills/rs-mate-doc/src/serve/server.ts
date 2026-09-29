@@ -7,11 +7,13 @@ import { navForDoc, orderPages } from "../nav/index.ts";
 import type { Doc, RenderOptions, ServeOptions, ServerHandle } from "../types.ts";
 import { contentTypeFor } from "./content-type.ts";
 import { collectFolderListing, renderFolderListing } from "./folder-view.ts";
+import { createHomeCache, collectHomeEntries } from "../index/collect.ts";
+import { renderHome } from "./home.ts";
 import { precomputeResolvedLinks } from "./link-resolve.ts";
 import { findFolderForAbsolutePath, resolveSafePath } from "./security.ts";
 import { loadFolders, realOrSelf, type RememberedFolder } from "./state.ts";
 import { createSseHub, LIVE_RELOAD_PATH, liveReloadClientScript } from "./sse.ts";
-import { THEME_CSS, THEME_TOGGLE_SCRIPT } from "../render/theme.ts";
+import { THEME_CSS } from "../render/theme.ts";
 import { createWatcher } from "./watch.ts";
 
 // Answers only from a mate-doc viewer, so `open` can tell it apart from whatever else holds the port.
@@ -63,32 +65,13 @@ interface FolderPagesCache {
   docs: Doc[];
 }
 
-function renderIndex(folders: RememberedFolder[]): string {
-  const items = folders
-    .map((f) => `<li><a href="/${encodeURIComponent(f.alias)}/">${f.alias}</a></li>`)
-    .join("\n");
-  return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>mate-doc</title>
-<style>${THEME_CSS}</style>
-</head>
-<body class="no-nav">
-<button type="button" class="theme-toggle" aria-label="Toggle color theme">Theme</button>
-<div class="layout"><main><header class="doc-header"><h1>Remembered folders</h1></header><ul>${items}</ul></main></div>
-<script>${THEME_TOGGLE_SCRIPT}</script>
-</body>
-</html>`;
-}
-
 export async function serve(opts: ServeOptions): Promise<ServerHandle> {
   if (opts.host !== "127.0.0.1") {
     throw new Error(`mate-doc serve: refusing to bind host "${opts.host}", loopback only.`);
   }
 
   const legacyCss = await readFile(LEGACY_CSS_PATH, "utf8");
+  const homeCache = createHomeCache();
 
   const hub = createSseHub();
   const watcher = createWatcher(() => hub.broadcast("reload"));
@@ -211,7 +194,8 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
     }
 
     if (url.pathname === "/" || url.pathname === "") {
-      return new Response(renderIndex(state.folders), {
+      const entries = await collectHomeEntries(state.folders, opts.parse, homeCache);
+      return new Response(renderHome(entries), {
         headers: { "Content-Type": "text/html; charset=utf-8" },
       });
     }
