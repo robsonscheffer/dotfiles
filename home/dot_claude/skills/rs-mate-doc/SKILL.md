@@ -124,12 +124,23 @@ mate-doc compare prompt.md                          # default core, one run, tim
 mate-doc compare prompt.md --core other.md --runs 3 --model opus --out compare-dir
 ```
 
-The default agent invocation is `claude -p --bare` (with core: `... --append-system-prompt-file
-<core>`); override the base command with the `compare:` key of
-`${XDG_CONFIG_HOME:-~/.config}/mate-doc/config.yaml` (`compare.command: codex exec --json`, for
-example) when comparing against a different agent CLI. The out dir gets `without.md`, `with.md`
-(numbered per run when `--runs` > 1), and an `index.md` with the prompt, both outputs in a
-`:::tabs` block, word counts, and the core's path and sha256.
+The default agent invocation is `claude -p --safe-mode` (with core: `... --append-system-prompt-file
+<core>`), not `--bare`: `--bare` skips keychain and OAuth reads, so a normal logged-in user gets
+an auth error instead of an answer. `--safe-mode` keeps the login and disables CLAUDE.md, skills,
+plugins, and hooks, which is the isolation compare needs. Override the base command with the
+`compare:` key of `${XDG_CONFIG_HOME:-~/.config}/mate-doc/config.yaml`
+(`compare.command: codex exec --json`) when comparing against a different agent CLI, and its
+`compare.core_flag` (default `--append-system-prompt-file`) when that CLI's system-prompt flag has
+a different name, for example:
+
+```yaml
+compare:
+  command: codex exec --json
+  core_flag: --system-prompt-file
+```
+
+The out dir gets `without.md`, `with.md` (numbered per run when `--runs` > 1), and an `index.md`
+with the prompt, both outputs in a `:::tabs` block, word counts, and the core's path and sha256.
 
 ## Reporting back
 

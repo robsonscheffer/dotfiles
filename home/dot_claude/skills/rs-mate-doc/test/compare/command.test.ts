@@ -80,9 +80,9 @@ describe("mate-doc compare", () => {
 
     expect(code).toBe(0);
     expect(calls).toHaveLength(2);
-    expect(calls[0]!.cmd).toEqual(["claude", "-p", "--bare"]);
+    expect(calls[0]!.cmd).toEqual(["claude", "-p", "--safe-mode"]);
     expect(calls[0]!.opts?.input).toBe("Explain the refund policy.");
-    expect(calls[1]!.cmd).toEqual(["claude", "-p", "--bare", "--append-system-prompt-file", corePath]);
+    expect(calls[1]!.cmd).toEqual(["claude", "-p", "--safe-mode", "--append-system-prompt-file", corePath]);
     expect(calls[1]!.opts?.input).toBe("Explain the refund policy.");
   });
 
@@ -98,11 +98,11 @@ describe("mate-doc compare", () => {
 
     await runCompare([promptPath, "--core", corePath, "--out", outDir, "--model", "opus"], env);
 
-    expect(calls[0]!.cmd).toEqual(["claude", "-p", "--bare", "--model", "opus"]);
+    expect(calls[0]!.cmd).toEqual(["claude", "-p", "--safe-mode", "--model", "opus"]);
     expect(calls[1]!.cmd).toEqual([
       "claude",
       "-p",
-      "--bare",
+      "--safe-mode",
       "--append-system-prompt-file",
       corePath,
       "--model",
@@ -127,6 +127,28 @@ describe("mate-doc compare", () => {
 
     expect(calls[0]!.cmd).toEqual(["codex", "exec", "--json"]);
     expect(calls[1]!.cmd).toEqual(["codex", "exec", "--json", "--append-system-prompt-file", corePath]);
+  });
+
+  test("uses compare.core_flag from config.yaml for the with-core invocation", async () => {
+    const dir = await tempDir();
+    const promptPath = await writePromptFile(dir);
+    const corePath = await writeCoreFile(dir);
+    const outDir = join(dir, "out");
+    const configDir = join(emptyConfigDir, "mate-doc");
+    await mkdir(configDir, { recursive: true });
+    await writeFile(
+      join(configDir, "config.yaml"),
+      "compare:\n  command: codex exec --json\n  core_flag: --system-prompt-file\n",
+    );
+    const { env, calls } = recordingEnv([
+      { code: 0, stdout: "plain", stderr: "" },
+      { code: 0, stdout: "core", stderr: "" },
+    ]);
+
+    await runCompare([promptPath, "--core", corePath, "--out", outDir], env);
+
+    expect(calls[0]!.cmd).toEqual(["codex", "exec", "--json"]);
+    expect(calls[1]!.cmd).toEqual(["codex", "exec", "--json", "--system-prompt-file", corePath]);
   });
 
   test("writes without.md, with.md, and an index.md that reports the core hash", async () => {
@@ -198,6 +220,31 @@ describe("mate-doc compare", () => {
 
     expect(code).not.toBe(0);
     await expect(readFile(join(outDir, "index.md"), "utf8")).rejects.toThrow();
+  });
+
+  test("failure message shows stdout and the exit code when stderr is empty", async () => {
+    const dir = await tempDir();
+    const promptPath = await writePromptFile(dir);
+    const corePath = await writeCoreFile(dir);
+    const outDir = join(dir, "out");
+    const { env } = recordingEnv([{ code: 1, stdout: "Not logged in · Please run /login", stderr: "" }]);
+
+    const written: string[] = [];
+    const originalWrite = process.stderr.write.bind(process.stderr);
+    process.stderr.write = ((chunk: string | Uint8Array) => {
+      written.push(chunk.toString());
+      return true;
+    }) as typeof process.stderr.write;
+
+    try {
+      const code = await runCompare([promptPath, "--core", corePath, "--out", outDir], env);
+      expect(code).not.toBe(0);
+      const message = written.join("");
+      expect(message).toContain("exit 1");
+      expect(message).toContain("Not logged in");
+    } finally {
+      process.stderr.write = originalWrite;
+    }
   });
 
   test("usage error when the prompt file does not exist", async () => {
