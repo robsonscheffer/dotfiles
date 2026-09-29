@@ -7,7 +7,8 @@ description: >-
   written), sticky-rail risks, questions to bring, a collapsed prior-discussion log classifying
   bot vs human comments, your notes, and a hidden judgment revealed at the end.
   Submits the review to GitHub as the final step.
-  Triggers on: "walk this PR", "review deck", "walk PR", "/rs-walk <url>".
+  Triggers on: "walk this PR", "review deck", "walk PR", "/rs-walk <url>", "/rs-walk <url>
+  --mate-doc" (opt-in mate-doc path).
 version: 0.4.0
 ---
 
@@ -262,6 +263,36 @@ then `gh pr review ${PR_NUMBER} --repo "${REPO}" --request-changes --body "{comm
    log.md, qmd re-index, commit.
 3. `git -C ~/brain add wiki/learning/walk-pr-${PR_NUMBER}-${SLUG}.md && git -C ~/brain commit -m
 "chore: walk pr-${PR_NUMBER} learning entry"`
+
+---
+
+## mate-doc path (opt-in: `/rs-walk <url> --mate-doc`)
+
+The default flow above (Steps 0-7) is what this skill runs. This path only runs when the
+invocation explicitly passes `--mate-doc`, and it stays opt-in until it has been checked end to
+end on a real PR. Say that plainly to the user before running it.
+
+1. Fetch the raw PR: `mate-doc walk <url> --fetch-only --out <dir>`. Writes `meta.json`,
+   `body.txt`, `diff.patch`, `files.txt`, `comments.json` into `<dir>`.
+2. Dispatch the same agents Step 4 already defines, with the same inputs and the same isolation
+   rule, per the task/schema/rules in `AGENT-PROMPTS.md`. Don't copy or restate those prompts
+   here. Write each agent's JSON into `<dir>` under the filenames `mate-doc walk --inputs` reads:
+   `story.json`, `questions.json`, `risks.json`, `judgment.json`, and, when they ran,
+   `ticket-fit.json` / `comment-triage.json` / `context.json`.
+3. Compose the walk: `mate-doc walk <url> --inputs <dir> --out <walk-dir>`.
+4. Check it: `mate-doc lint <walk-dir>` then `mate-doc gate <walk-dir>`. Fix the source and
+   re-run either on a failure before opening.
+5. Open it for reading: `mate-doc open <walk-dir>`.
+6. After the user has read the walk and written notes, ask (AskUserQuestion) the same "Ready to
+   submit?" question as Step 7: Approve, Request changes, Comment only, or Skip for now. Export
+   the reader's notes from the open walk page (its own **Download notes JSON** control) to a
+   file, then run `mate-doc walk submit <walk-dir> --<mode> --notes-file <exported notes>`
+   without `--yes` first; this only prints the body and the exact `gh` command, and posts
+   nothing. Show that dry run to the user. Only after an explicit yes, run the same command again
+   with `--yes` added.
+7. Close the loop: `mate-doc walk close <walk-dir> --verdict <verdict> --notes-file <exported
+notes>`. This runs the user's own `walk.close_hook`, if one is configured: the equivalent of
+   this skill's own bookkeeping in Step 7, kept out of this repo the same way.
 
 ---
 
