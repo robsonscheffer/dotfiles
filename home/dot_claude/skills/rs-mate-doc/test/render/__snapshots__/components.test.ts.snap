@@ -31,3 +31,5 @@ exports[`inline badge renders the bad tone 1`] = `"<span class="badge badge-bad"
 exports[`inline badge renders the info tone 1`] = `"<span class="badge badge-info">Blocked</span>"`;
 
 exports[`inline badge renders the neutral tone 1`] = `"<span class="badge badge-neutral">Blocked</span>"`;
+
+exports[`rail renders a plain key: value line 1`] = `"<aside class="rail" aria-label="Summary"><dl class="rail-list"><dt class="rail-key">Branch</dt><dd class="rail-value">refactor/portal-storeless</dd></dl></aside>"`;

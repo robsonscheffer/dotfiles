@@ -37,9 +37,11 @@ export function exportNotesMarkdown(headings: NoteHeading[], notes: Record<strin
   return parts.join("\n").trimEnd();
 }
 
+// `hidden` by default, same convention as the tabs directive's non-first panel: a script-off
+// reader never sees the control at all; the script below clears the attribute once it runs.
 export function renderNoteControl(slug: string, title: string): string {
   return (
-    `<div class="note-control" data-note-slug="${escapeAttr(slug)}">` +
+    `<div class="note-control" data-note-slug="${escapeAttr(slug)}" hidden>` +
     `<button type="button" class="note-toggle" aria-expanded="false">Add a note</button>` +
     `<textarea class="note-textarea" aria-label="${escapeAttr(`Notes for ${title}`)}" hidden></textarea>` +
     `</div>`
@@ -48,16 +50,12 @@ export function renderNoteControl(slug: string, title: string): string {
 
 export function renderNotesToolbar(): string {
   return (
-    `<div class="notes-toolbar">` +
+    `<div class="notes-toolbar" hidden>` +
     `<button type="button" class="notes-copy-btn">Copy notes</button>` +
     `<button type="button" class="notes-download-btn">Download notes JSON</button>` +
     `</div>`
   );
 }
-
-// Adds the "js" class as early as possible so CSS can hide every notes control until this runs;
-// with scripts off the class never lands and the page renders with no notes UI at all.
-export const NOTES_ENABLE_SCRIPT = `document.documentElement.classList.add('js');`;
 
 // A standalone JS mirror of noteStorageKey/exportNotesJson/exportNotesMarkdown: the page has no
 // import system, so the logic is inlined here rather than shared at runtime with the functions
@@ -69,8 +67,11 @@ export function renderNotesScript(pagePath: string, headings: NoteHeading[]): st
   var pagePath = ${pagePathJson};
   var headings = ${headingsJson};
   function storageKey(slug) { return 'mate-doc-note:' + pagePath + ':' + slug; }
+  var toolbar = document.querySelector('.notes-toolbar');
+  if (toolbar) toolbar.hidden = false;
   var controls = document.querySelectorAll('.note-control');
   controls.forEach(function (control) {
+    control.hidden = false;
     var slug = control.getAttribute('data-note-slug');
     var toggle = control.querySelector('.note-toggle');
     var textarea = control.querySelector('.note-textarea');

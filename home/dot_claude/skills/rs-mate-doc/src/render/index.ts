@@ -4,7 +4,7 @@ import { renderBlock, renderBlocks } from "./block.ts";
 import { createCtx } from "./ctx.ts";
 import { extractRail, renderDirective } from "./directives.ts";
 import { renderNav } from "./nav.ts";
-import { NOTES_ENABLE_SCRIPT, renderNoteControl, renderNotesScript, renderNotesToolbar, type NoteHeading } from "./notes.ts";
+import { renderNoteControl, renderNotesScript, renderNotesToolbar, type NoteHeading } from "./notes.ts";
 import { THEME_CSS, THEME_TOGGLE_SCRIPT } from "./theme.ts";
 import { renderToc } from "./toc.ts";
 import { escapeHtml, plainTextOf } from "./util.ts";
@@ -65,7 +65,7 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
 
   const themeAttr = opts.theme === "light" || opts.theme === "dark" ? ` data-theme="${opts.theme}"` : "";
   const liveReload = opts.liveReload ? renderLiveReloadScript(opts.liveReload) : "";
-  const notesScript = notesEnabled ? `<script>${NOTES_ENABLE_SCRIPT}${renderNotesScript(doc.path, noteHeadings)}</script>\n` : "";
+  const notesScript = notesEnabled ? `<script>${renderNotesScript(doc.path, noteHeadings)}</script>\n` : "";
 
   return (
     `<!doctype html>\n` +

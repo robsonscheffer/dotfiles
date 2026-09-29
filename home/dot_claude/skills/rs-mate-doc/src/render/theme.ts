@@ -89,8 +89,7 @@ main, .left-nav, .toc { padding: 1.5rem; }
 .rail-list { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 0.75rem; margin: 0; }
 .rail-key { color: var(--muted); font-size: 0.85rem; }
 .rail-value { margin: 0; text-align: right; }
-.notes-toolbar { display: none; gap: 0.5rem; margin-top: 0.5rem; }
-.js .notes-toolbar { display: flex; }
+.notes-toolbar { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 .notes-copy-btn, .notes-download-btn {
   background: var(--callout-bg);
   border: 1px solid var(--border);
@@ -100,8 +99,7 @@ main, .left-nav, .toc { padding: 1.5rem; }
   cursor: pointer;
   font-size: 0.85rem;
 }
-.note-control { display: none; margin: 0.75rem 0 1.5rem; }
-.js .note-control { display: block; }
+.note-control { margin: 0.75rem 0 1.5rem; }
 .note-toggle {
   background: none;
   border: 1px dashed var(--border);

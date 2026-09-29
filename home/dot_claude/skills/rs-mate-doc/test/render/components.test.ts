@@ -250,6 +250,38 @@ describe("notverified", () => {
   });
 });
 
+describe("rail", () => {
+  test("renders a plain key: value line", () => {
+    const n = directive("rail", { raw: ["Branch: refactor/portal-storeless"] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain('class="rail"');
+    expect(html).toContain("Branch");
+    expect(html).toContain("refactor/portal-storeless");
+    expect(html).toMatchSnapshot();
+  });
+
+  test("renders a badge value", () => {
+    const n = directive("rail", { raw: ["Status: :badge[On track]{tone=good}"] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain("badge badge-good");
+    expect(html).toContain("On track");
+  });
+
+  test("renders a markdown link value", () => {
+    const n = directive("rail", { raw: ["PR: [#42](https://example.com/acme/console/pull/42)"] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain('<a href="https://example.com/acme/console/pull/42"');
+    expect(html).toContain("#42");
+  });
+
+  test("skips a line with no colon", () => {
+    const n = directive("rail", { raw: ["Branch: main", "not a key value line"] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain("Branch");
+    expect(html).not.toContain("not a key value line");
+  });
+});
+
 describe("diff code fence", () => {
   test("styles added and removed lines with a file title", () => {
     const block = codeBlock("+added line\n-removed line\n context line", "diff", { title: "src/orders.ts" });
