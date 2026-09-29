@@ -20,4 +20,7 @@ export interface IndexEntry {
   updated: number; // epoch ms, newest mtime backing this entry
   href: string;
   pr?: string; // "repo#number", present on walk entries
+  // set when this page or doc set's frontmatter failed to parse; title/kind above are then
+  // fallbacks (file or folder name), not read from the broken file.
+  frontmatterError?: string;
 }

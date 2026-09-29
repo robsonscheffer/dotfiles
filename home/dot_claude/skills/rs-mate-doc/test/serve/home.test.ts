@@ -3,6 +3,7 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { collectHomeEntries, createHomeCache } from "../../src/index/collect.ts";
 import { INDEX_KINDS } from "../../src/index/types.ts";
+import { parse } from "../../src/parser/index.ts";
 import { serve } from "../../src/serve/server.ts";
 import { addFolder } from "../../src/serve/state.ts";
 import type { ServerHandle } from "../../src/types.ts";
@@ -143,6 +144,52 @@ describe("serve: home index", () => {
     const res = await fetch(`${handle.url}/`);
     const html = await res.text();
     expect(html).toContain("status-fresh");
+  });
+});
+
+async function makeMixedFrontmatterPages(): Promise<string> {
+  const dir = await mkTmpDir("mate-doc-home-badfm-");
+  await writeFile(join(dir, "good.md"), "---\ntitle: Good page\nsummary: fine\n---\nbody");
+  await writeFile(join(dir, "bad.md"), "---\ntitle: a: b: [\n---\nbody");
+  return dir;
+}
+
+describe("serve: home index with bad frontmatter", () => {
+  test("a folder with one good page and one bad-frontmatter page returns 200 and lists both, the bad one flagged", async () => {
+    const stateDir = await mkTmpDir("mate-doc-home-state-");
+    const pages = await makeMixedFrontmatterPages();
+    await addFolder(stateDir, pages);
+
+    handle = await serve({
+      host: "127.0.0.1",
+      port: 0,
+      stateDir,
+      parse,
+      render: stubRenderPlain,
+      loadLedger: nullLedger,
+    });
+
+    const res = await fetch(`${handle.url}/`);
+    expect(res.status).toBe(200);
+    const html = await res.text();
+
+    expect(html).toContain("Good page");
+    expect(html).toContain(">bad<"); // falls back to the file name
+    expect(html).toContain('class="status-banner status-error"');
+    expect(html).toContain("YAML Parse error");
+  });
+
+  test("collectHomeEntries never throws when a page's frontmatter fails to parse", async () => {
+    const pages = await makeMixedFrontmatterPages();
+    const cache = createHomeCache();
+    const folders = [{ path: pages, alias: "docs" }];
+
+    const entries = await collectHomeEntries(folders, parse, cache);
+    expect(entries).toHaveLength(2);
+    const bad = entries.find((e) => e.title === "bad");
+    expect(bad?.frontmatterError).toContain("YAML Parse error");
+    const good = entries.find((e) => e.title === "Good page");
+    expect(good?.frontmatterError).toBeUndefined();
   });
 });
 

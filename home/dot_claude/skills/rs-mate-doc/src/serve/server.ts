@@ -4,7 +4,7 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { navForDoc, orderPages } from "../nav/index.ts";
-import type { Doc, RenderOptions, ServeOptions, ServerHandle } from "../types.ts";
+import type { Doc, ErrorNode, Parse, RenderOptions, ServeOptions, ServerHandle } from "../types.ts";
 import { contentTypeFor } from "./content-type.ts";
 import { collectFolderListing, renderFolderListing } from "./folder-view.ts";
 import { createHomeCache, collectHomeEntries } from "../index/collect.ts";
@@ -32,6 +32,25 @@ const LEGACY_CSS_PATH = join(dirname(fileURLToPath(import.meta.url)), "../../ass
 
 function notFound(): Response {
   return new Response("not found", { status: 404 });
+}
+
+// A page whose frontmatter fails to parse still needs a Doc to render and to sit in a folder's
+// sibling list for nav: title falls back to the file name (via navForDoc/pageKey, since
+// frontmatter.title is unset), and the parse error shows the way the renderer already shows a
+// body-level parse error (an ErrorNode, rendered as a `.doc-error` block).
+function errorDoc(path: string, err: unknown): Doc {
+  const message = err instanceof Error ? err.message : String(err);
+  const pos = { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } };
+  const node: ErrorNode = { type: "error", message: `frontmatter: ${message}`, children: [], pos };
+  return { path, frontmatter: { extra: {} }, body: [node], headings: [], claimRefs: [], errors: [node] };
+}
+
+function safeParse(parse: Parse, src: string, path: string): Doc {
+  try {
+    return parse(src, path);
+  } catch (err) {
+    return errorDoc(path, err);
+  }
 }
 
 // Viewer URL for a page, e.g. `/<alias>/<relative path without .md>`.
@@ -102,7 +121,7 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
     if (cached && cached.newest === newest) return cached.docs;
 
     const docs = await Promise.all(
-      mdPaths.map(async (p) => opts.parse(await readFile(p, "utf8"), p)),
+      mdPaths.map(async (p) => safeParse(opts.parse, await readFile(p, "utf8"), p)),
     );
     folderPagesCache.set(dirAbs, { newest, docs });
     return docs;
@@ -115,7 +134,7 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
   ): Promise<Response> {
     const docDir = dirname(abs);
     const siblingDocs = await loadFolderPages(docDir);
-    const doc = siblingDocs.find((d) => d.path === abs) ?? opts.parse(await readFile(abs, "utf8"), abs);
+    const doc = siblingDocs.find((d) => d.path === abs) ?? safeParse(opts.parse, await readFile(abs, "utf8"), abs);
 
     const ledger = opts.loadLedger(docDir);
     const folders = (await loadFolders(opts.stateDir)).folders;
