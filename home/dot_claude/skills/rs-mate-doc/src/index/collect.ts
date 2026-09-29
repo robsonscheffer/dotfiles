@@ -149,16 +149,39 @@ async function htmlEntry(folder: RegisteredFolder, name: string): Promise<IndexE
   };
 }
 
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
+// A doc set or page whose frontmatter failed to parse still gets an entry: title falls back to
+// the folder or file name, kind stays whatever the caller already knew (a doc set is still a
+// doc set), and the parse error rides along for the index to show as a badge.
+function errorEntry(title: string, kind: IndexKind, href: string, updated: number, err: unknown): IndexEntry {
+  return { title, kind, updated, href, frontmatterError: errorMessage(err) };
+}
+
 async function collectFolderEntries(folder: RegisteredFolder, parse: Parse, nowMs: number): Promise<IndexEntry[]> {
   const listing = await listDir(folder.path);
   const updated = await newestMtime(folder.path, listing.names);
 
   if (listing.hasIndex) {
-    return [await docSetEntry(folder, parse, nowMs, updated)];
+    try {
+      return [await docSetEntry(folder, parse, nowMs, updated)];
+    } catch (err) {
+      return [errorEntry(folder.alias, "doc set", `/${folder.alias}/`, updated, err)];
+    }
   }
 
   const entries: IndexEntry[] = [];
-  for (const name of listing.mdFiles) entries.push(await pageEntry(folder, name, parse));
+  for (const name of listing.mdFiles) {
+    try {
+      entries.push(await pageEntry(folder, name, parse));
+    } catch (err) {
+      const base = name.slice(0, -3);
+      const st = await stat(join(folder.path, name)).catch(() => undefined);
+      entries.push(errorEntry(base, "page", `/${folder.alias}/${base}`, st?.mtimeMs ?? updated, err));
+    }
+  }
   for (const name of listing.htmlFiles) entries.push(await htmlEntry(folder, name));
   return entries;
 }

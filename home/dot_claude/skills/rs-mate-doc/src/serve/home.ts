@@ -19,9 +19,12 @@ function renderEntry(entry: IndexEntry): string {
   const freshBadge =
     entry.fresh === undefined ? "" : entry.fresh ? ` <span class="status-banner status-fresh">fresh</span>` : ` <span class="status-banner status-stale">stale</span>`;
   const prBadge = entry.pr ? ` <span class="pr-label">${esc(entry.pr)}</span>` : "";
+  const errorBadge = entry.frontmatterError
+    ? ` <span class="status-banner status-error" title="${esc(entry.frontmatterError)}">frontmatter error</span>`
+    : "";
   const updated = formatDate(entry.updated);
   return `<li class="index-entry" data-kind="${esc(entry.kind)}" data-title="${esc(entry.title.toLowerCase())}" data-summary="${esc((entry.summary ?? "").toLowerCase())}">
-<a href="${esc(entry.href)}">${esc(entry.title)}</a>${level}${freshBadge}${prBadge}
+<a href="${esc(entry.href)}">${esc(entry.title)}</a>${level}${freshBadge}${prBadge}${errorBadge}
 ${summary}
 <p class="index-updated">${esc(updated)}</p>
 </li>`;
@@ -65,6 +68,7 @@ export function renderHome(entries: IndexEntry[]): string {
 .pr-label { font-size: 0.85rem; color: var(--muted); }
 .status-fresh { background: var(--callout-bg); }
 .status-stale { border-color: var(--badge-high-text); color: var(--badge-high-text); }
+.status-error { border-color: var(--badge-high-text); color: var(--badge-high-text); }
 </style>
 </head>
 <body class="no-nav">
