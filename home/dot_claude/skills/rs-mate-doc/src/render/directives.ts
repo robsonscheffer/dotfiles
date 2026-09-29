@@ -1,4 +1,4 @@
-import type { DirectiveNode, TableNode } from "../types.ts";
+import type { Block, DirectiveNode, TableNode } from "../types.ts";
 import type { Ctx } from "./ctx.ts";
 import { nextId } from "./ctx.ts";
 import { buildFlowSvg } from "./flow.ts";
@@ -41,6 +41,8 @@ export function renderDirective(n: DirectiveNode, ctx: Ctx): string {
       return renderRisks(n, ctx);
     case "notverified":
       return renderNotVerified(ctx);
+    case "rail":
+      return renderRail(n);
     default:
       return `<div class="directive-unhandled">${escapeHtml(n.name)}</div>`;
   }
@@ -187,6 +189,71 @@ function renderDecide(n: DirectiveNode, ctx: Ctx): string {
 function renderRisks(n: DirectiveNode, ctx: Ctx): string {
   const body = n.children.map((child) => (child.type === "table" ? renderTable(child as TableNode, ctx, true) : renderBlock(child, ctx))).join("");
   return `<div class="risks">${body}</div>`;
+}
+
+// A rail is a raw key: value block, like tiles, but rendered as a standalone sticky side
+// panel rather than inline content - see render/index.ts, which pulls the first top-level
+// :::rail directive out of the body before the ordinary block pass reaches it.
+export function extractRail(body: Block[]): { rail: DirectiveNode | null; rest: Block[] } {
+  const idx = body.findIndex((b) => b.type === "directive" && b.known && b.name === "rail");
+  if (idx === -1) return { rail: null, rest: body };
+  const rail = body[idx] as DirectiveNode;
+  const rest = [...body.slice(0, idx), ...body.slice(idx + 1)];
+  return { rail, rest };
+}
+
+// Values may hold a markdown link and/or a badge; nothing else. `[text](url)` first, then
+// `:badge[label]{tone=x}` inside whatever text is left, same tones as the inline badge syntax.
+const RAIL_LINK_RE = /\[([^\]]*)\]\(([^)]*)\)/g;
+const RAIL_BADGE_RE = /:badge\[([^\]]*)\](?:\{([^}]*)\})?/g;
+const RAIL_BADGE_TONES = new Set(["good", "warn", "bad", "info", "neutral"]);
+
+function renderRailBadges(text: string): string {
+  if (!text.includes(":badge[")) return escapeHtml(text);
+  let out = "";
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+  RAIL_BADGE_RE.lastIndex = 0;
+  while ((m = RAIL_BADGE_RE.exec(text))) {
+    out += escapeHtml(text.slice(lastIndex, m.index));
+    const toneMatch = m[2] ? /tone\s*=\s*([a-zA-Z]+)/.exec(m[2]) : null;
+    const requested = toneMatch ? toneMatch[1]!.toLowerCase() : "neutral";
+    const tone = RAIL_BADGE_TONES.has(requested) ? requested : "neutral";
+    out += `<span class="badge badge-${tone}">${escapeHtml(m[1] ?? "")}</span>`;
+    lastIndex = m.index + m[0].length;
+  }
+  out += escapeHtml(text.slice(lastIndex));
+  return out;
+}
+
+function renderRailValue(value: string): string {
+  let out = "";
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+  RAIL_LINK_RE.lastIndex = 0;
+  while ((m = RAIL_LINK_RE.exec(value))) {
+    out += renderRailBadges(value.slice(lastIndex, m.index));
+    const href = m[2] ?? "";
+    out += `<a href="${escapeAttr(href)}" rel="noopener noreferrer">${escapeHtml(m[1] ?? "")}</a>`;
+    lastIndex = m.index + m[0].length;
+  }
+  out += renderRailBadges(value.slice(lastIndex));
+  return out;
+}
+
+function renderRail(n: DirectiveNode): string {
+  const rows = (n.raw ?? [])
+    .map((line) => {
+      const idx = line.indexOf(":");
+      if (idx === -1) return "";
+      const key = line.slice(0, idx).trim();
+      const value = line.slice(idx + 1).trim();
+      if (!key) return "";
+      return `<dt class="rail-key">${escapeHtml(key)}</dt><dd class="rail-value">${renderRailValue(value)}</dd>`;
+    })
+    .filter(Boolean)
+    .join("");
+  return `<aside class="rail" aria-label="Summary"><dl class="rail-list">${rows}</dl></aside>`;
 }
 
 function renderNotVerified(ctx: Ctx): string {

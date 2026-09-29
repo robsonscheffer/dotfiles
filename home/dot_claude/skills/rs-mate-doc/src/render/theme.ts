@@ -76,11 +76,58 @@ body {
 main, .left-nav, .toc { padding: 1.5rem; }
 .layout { display: flex; align-items: flex-start; gap: 1rem; }
 .layout main { flex: 1 1 auto; min-width: 0; }
-.toc { flex: 0 0 220px; position: sticky; top: 0; align-self: flex-start; }
+.side-col { flex: 0 0 220px; position: sticky; top: 0; align-self: flex-start; display: flex; flex-direction: column; gap: 1rem; }
 .toc ul { list-style: none; padding-left: 1rem; margin: 0; }
 .toc > ul { padding-left: 0; }
 .toc a { color: var(--muted); text-decoration: none; }
 .toc a:hover { color: var(--accent); }
+@media (max-width: 760px) {
+  .layout { flex-direction: column; }
+  .side-col { position: static; width: 100%; order: -1; }
+}
+.rail { border: 1px solid var(--border); border-radius: 6px; padding: 1rem; }
+.rail-list { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 0.75rem; margin: 0; }
+.rail-key { color: var(--muted); font-size: 0.85rem; }
+.rail-value { margin: 0; text-align: right; }
+.notes-toolbar { display: none; gap: 0.5rem; margin-top: 0.5rem; }
+.js .notes-toolbar { display: flex; }
+.notes-copy-btn, .notes-download-btn {
+  background: var(--callout-bg);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.note-control { display: none; margin: 0.75rem 0 1.5rem; }
+.js .note-control { display: block; }
+.note-toggle {
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.note-textarea {
+  display: block;
+  width: 100%;
+  min-height: 5rem;
+  margin-top: 0.5rem;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.5rem;
+  font: inherit;
+}
+.note-toggle:focus-visible, .note-textarea:focus-visible,
+.notes-copy-btn:focus-visible, .notes-download-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .left-nav { flex: 0 0 200px; border-right: 1px solid var(--border); }
 .left-nav ul { list-style: none; padding: 0; margin: 0; }
 .left-nav li.current a { color: var(--accent); font-weight: 600; }
