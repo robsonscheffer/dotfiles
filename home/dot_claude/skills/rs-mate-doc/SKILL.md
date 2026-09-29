@@ -103,7 +103,10 @@ mate-doc walk <pr-url> --inputs <dir> --out <walk-dir>
 mate-doc lint <walk-dir> && mate-doc open <walk-dir>
 ```
 
-The walk does not submit a GitHub review. rs-walk still owns that.
+Once the human has read the walk, `mate-doc walk submit <walk-dir> --approve|--request-changes|--comment` posts
+the review to GitHub, and `mate-doc walk close <walk-dir> --verdict <v>` records the outcome. Submit always
+dry-runs first: without `--yes` it prints the exact body and `gh` command and posts nothing. Show the human that
+output and get a yes before re-running with `--yes` - posting a review is outward-facing.
 
 Code refs cite the PR's head commit SHA (`<repo>@<sha>:<file>:<line>`), so `mate-doc audit` can resolve them with `git` or `gh`, and carry a `ttl_days` since the head can move.
 

@@ -3,16 +3,24 @@
 //
 //   walk <pr-url> --inputs <dir> [--out <dir>]     compose a walk from agent output already on disk
 //   walk <pr-url> --fetch-only --out <dir>          fetch and write the raw PR data for agents to read
+//   walk submit <walk-dir> --approve|... [--yes]    post the walk's review to GitHub
+//   walk close <walk-dir> --verdict <v>             record the verdict and run the close hook
 //
 // --inputs reads the same filenames the agent-output fixture uses: story.json, questions.json,
 // risks.json, judgment.json, and optionally context.json / ticket-fit.json / comment-triage.json.
 // This is a deliberate departure from rs-walk's own /tmp/walk-<pr>-*.json naming (see the result
 // notes) - a mate-doc build never has a stable PR number to key /tmp filenames on before it has
 // fetched the PR, so the caller-supplied --inputs directory is the unit instead.
+//
+// "submit" and "close" are dispatched here, on the literal first token, rather than in
+// src/cli.ts: neither collides with a real PR reference (parsePrRef always requires a "/" or
+// "#"), so `mate-doc walk` keeps its single entry point.
 import { EXIT } from "../types.ts";
 import type { Env } from "../types.ts";
+import { runWalkClose } from "./close.ts";
 import { composeWalk } from "./compose.ts";
 import { fetchPr, fetchPrComments, parsePrRef } from "./fetch.ts";
+import { runWalkSubmit } from "./submit.ts";
 import type { WalkInputs } from "./types.ts";
 
 interface ParsedArgs {
@@ -49,6 +57,9 @@ async function readJsonIfExists<T>(path: string): Promise<T | undefined> {
 const USAGE = "usage: mate-doc walk <pr-url> --inputs <dir> [--out <dir>] | mate-doc walk <pr-url> --fetch-only --out <dir>";
 
 export async function runWalk(argv: string[], env: Env): Promise<number> {
+  if (argv[0] === "submit") return runWalkSubmit(argv.slice(1), env);
+  if (argv[0] === "close") return runWalkClose(argv.slice(1), env);
+
   const args = parseArgs(argv);
   if (!args.prRef) {
     process.stderr.write(`mate-doc walk: ${USAGE}\n`);
