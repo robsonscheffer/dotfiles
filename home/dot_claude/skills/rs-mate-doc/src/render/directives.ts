@@ -144,11 +144,25 @@ function groupTabs(children: DirectiveNode["children"]): TabGroup[] {
 }
 
 function renderTabs(n: DirectiveNode, ctx: Ctx): string {
-  const tabs = groupTabs(n.children).map((g) => ({ title: g.title, html: renderBlocks(g.body, ctx), id: nextId(ctx, "tab") }));
+  const tabs = groupTabs(n.children).map((g) => ({
+    title: g.title,
+    html: renderBlocks(g.body, ctx),
+    panelId: nextId(ctx, "tab"),
+    btnId: nextId(ctx, "tab-btn"),
+  }));
   const buttons = tabs
-    .map((t, i) => `<button type="button" class="tab-btn" data-tab="${t.id}"${i === 0 ? ' aria-selected="true"' : ""}>${escapeHtml(t.title)}</button>`)
+    .map(
+      (t, i) =>
+        `<button type="button" id="${t.btnId}" class="tab-btn" role="tab" data-tab="${t.panelId}" ` +
+        `aria-selected="${i === 0 ? "true" : "false"}" aria-controls="${t.panelId}">${escapeHtml(t.title)}</button>`,
+    )
     .join("");
-  const panels = tabs.map((t, i) => `<div class="tab-panel" id="${t.id}"${i === 0 ? "" : " hidden"}>${t.html}</div>`).join("");
+  const panels = tabs
+    .map(
+      (t, i) =>
+        `<div class="tab-panel" id="${t.panelId}" role="tabpanel" aria-labelledby="${t.btnId}"${i === 0 ? "" : " hidden"}>${t.html}</div>`,
+    )
+    .join("");
   const rootId = nextId(ctx, "tabs");
   return (
     `<div class="tabs" id="${rootId}">` +
@@ -157,7 +171,7 @@ function renderTabs(n: DirectiveNode, ctx: Ctx): string {
     `</div>` +
     `<script>(function(){var root=document.getElementById(${JSON.stringify(rootId)});if(!root)return;` +
     `root.querySelectorAll(".tab-btn").forEach(function(btn){btn.addEventListener("click",function(){` +
-    `root.querySelectorAll(".tab-btn").forEach(function(b){b.removeAttribute("aria-selected")});` +
+    `root.querySelectorAll(".tab-btn").forEach(function(b){b.setAttribute("aria-selected","false")});` +
     `btn.setAttribute("aria-selected","true");` +
     `root.querySelectorAll(".tab-panel").forEach(function(p){p.hidden=true});` +
     `document.getElementById(btn.dataset.tab).hidden=false;});});})();</script>`
