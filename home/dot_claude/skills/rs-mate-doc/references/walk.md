@@ -50,4 +50,35 @@ Each group's `framing` becomes a claim. When a file in the group has a hunk in t
 
 ## Output
 
-`--out <walk-dir>` gets `index.md` and `claims.yaml`. Run `mate-doc lint` on it, then `mate-doc open` it for Robson.
+`--out <walk-dir>` gets `index.md` and `claims.yaml`. Run `mate-doc lint` on it. Then record a verdict for every
+claim in `claims.yaml`: `mate-doc verdict <walk-dir> <Cn> --supports|--overstates|--contradicts|--unrelated --by
+<name>`, once per claim ID. `mate-doc gate <walk-dir>` fails with "has no verdict yet" until every claim has one -
+that's a missing command to run, not a source problem to fix. Once gate passes, `mate-doc open` it for Robson.
+
+## Submit
+
+`mate-doc walk submit <walk-dir> --approve | --request-changes | --comment [--body-file F] [--notes-file N] [--yes]`
+reads the PR from the walk's own frontmatter (`pr: "org/repo#123"`) and posts a review with `gh pr review`. The
+body is the file at `--body-file` plus, when given, `--notes-file` - a JSON object `{ "section": "text" }`
+rendered as one bullet per section and appended after the body text.
+
+Without `--yes` this only prints what would be posted and the exact `gh` command, and posts nothing. Posting a
+review is outward-facing, so always show that dry run to Robson and get a yes before adding `--yes`. A `gh`
+failure with `--yes` prints `gh`'s error, exits non-zero, and leaves the walk's frontmatter untouched.
+
+## Close
+
+`mate-doc walk close <walk-dir> --verdict approved|changes-requested|commented|skipped [--notes-file N]` writes
+`verdict` and `closed: YYYY-MM-DD` into the walk's frontmatter, keeping every other key, its order, and the whole
+body untouched. It then runs `walk.close_hook` from `~/.config/mate-doc/config.yaml` if set - a shell command that
+gets the walk dir, PR number, repo, verdict, and notes-file path as `MATE_DOC_WALK_DIR`, `MATE_DOC_PR`,
+`MATE_DOC_REPO`, `MATE_DOC_VERDICT`, `MATE_DOC_NOTES_FILE`. Example config:
+
+```yaml
+walk:
+  close_hook: "~/bin/my-walk-bookkeeping.sh"
+```
+
+The hook is personal bookkeeping (a learning note, a log line, a re-index, a commit) - it never ships in this
+repo. A failing hook prints its output and exits non-zero, but the frontmatter change stays either way. No hook
+configured is not an error.

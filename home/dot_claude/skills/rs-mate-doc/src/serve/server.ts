@@ -1,16 +1,19 @@
 // L5: the local viewer server. Binds loopback-only, serves only remembered
 // folders, live-reloads on file change.
-import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { readdir, readFile, stat } from "node:fs/promises";
+import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { RenderOptions, ServeOptions, ServerHandle } from "../types.ts";
+import { navForDoc, orderPages } from "../nav/index.ts";
+import type { Doc, RenderOptions, ServeOptions, ServerHandle } from "../types.ts";
 import { contentTypeFor } from "./content-type.ts";
 import { collectFolderListing, renderFolderListing } from "./folder-view.ts";
+import { createHomeCache, collectHomeEntries } from "../index/collect.ts";
+import { renderHome } from "./home.ts";
 import { precomputeResolvedLinks } from "./link-resolve.ts";
-import { findFolderForAbsolutePath, resolveSafePath } from "./security.ts";
+import { resolveSafePath } from "./security.ts";
 import { loadFolders, realOrSelf, type RememberedFolder } from "./state.ts";
 import { createSseHub, LIVE_RELOAD_PATH, liveReloadClientScript } from "./sse.ts";
-import { THEME_CSS, THEME_TOGGLE_SCRIPT } from "../render/theme.ts";
+import { THEME_CSS } from "../render/theme.ts";
 import { createWatcher } from "./watch.ts";
 
 // Answers only from a mate-doc viewer, so `open` can tell it apart from whatever else holds the port.
@@ -31,24 +34,35 @@ function notFound(): Response {
   return new Response("not found", { status: 404 });
 }
 
-function renderIndex(folders: RememberedFolder[]): string {
-  const items = folders
-    .map((f) => `<li><a href="/${encodeURIComponent(f.alias)}/">${f.alias}</a></li>`)
-    .join("\n");
-  return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>mate-doc</title>
-<style>${THEME_CSS}</style>
-</head>
-<body class="no-nav">
-<button type="button" class="theme-toggle" aria-label="Toggle color theme">Theme</button>
-<div class="layout"><main><header class="doc-header"><h1>Remembered folders</h1></header><ul>${items}</ul></main></div>
-<script>${THEME_TOGGLE_SCRIPT}</script>
-</body>
-</html>`;
+// Viewer URL for a page, e.g. `/<alias>/<relative path without .md>`.
+function pageHref(folder: RememberedFolder, mdAbsPath: string): string {
+  const rel = relative(folder.path, mdAbsPath).replace(/\.md$/, "");
+  const parts = rel.split(sep).filter(Boolean).map(encodeURIComponent);
+  return `/${folder.alias}/${parts.join("/")}`;
+}
+
+// Viewer URL for a folder's own index (root folder omits the trailing segment).
+function folderHref(folder: RememberedFolder, dirAbs: string): string {
+  const rel = relative(folder.path, dirAbs);
+  if (!rel) return `/${folder.alias}/`;
+  const parts = rel.split(sep).filter(Boolean).map(encodeURIComponent);
+  return `/${folder.alias}/${parts.join("/")}`;
+}
+
+function breadcrumbsFor(
+  folder: RememberedFolder,
+  docDir: string,
+  doc: Doc,
+): { title: string; href: string }[] {
+  return [
+    { title: folder.alias, href: folderHref(folder, docDir) },
+    { title: doc.frontmatter.title ?? "", href: pageHref(folder, doc.path) },
+  ];
+}
+
+interface FolderPagesCache {
+  newest: number;
+  docs: Doc[];
 }
 
 export async function serve(opts: ServeOptions): Promise<ServerHandle> {
@@ -57,10 +71,12 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
   }
 
   const legacyCss = await readFile(LEGACY_CSS_PATH, "utf8");
+  const homeCache = createHomeCache();
 
   const hub = createSseHub();
   const watcher = createWatcher(() => hub.broadcast("reload"));
   const watchedFolders = new Set<string>();
+  const folderPagesCache = new Map<string, FolderPagesCache>();
 
   function ensureWatched(folder: RememberedFolder): void {
     if (watchedFolders.has(folder.path)) return;
@@ -68,20 +84,56 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
     watcher.addFolder(folder.path);
   }
 
+  // Sibling markdown pages directly inside dirAbs (not recursive into subfolders), cached
+  // per folder keyed on the newest mtime among the directory itself and its .md files: a new
+  // page or a directory entry change bumps the directory's own mtime, a changed `tour` or
+  // title bumps the file's mtime, either invalidates the cache.
+  async function loadFolderPages(dirAbs: string): Promise<Doc[]> {
+    const entries = await readdir(dirAbs, { withFileTypes: true });
+    const mdPaths = entries
+      .filter((e) => e.isFile() && e.name.endsWith(".md") && !e.name.startsWith("."))
+      .map((e) => join(dirAbs, e.name));
+
+    const dirStat = await stat(dirAbs);
+    const fileStats = await Promise.all(mdPaths.map((p) => stat(p)));
+    const newest = fileStats.reduce((max, s) => Math.max(max, s.mtimeMs), dirStat.mtimeMs);
+
+    const cached = folderPagesCache.get(dirAbs);
+    if (cached && cached.newest === newest) return cached.docs;
+
+    const docs = await Promise.all(
+      mdPaths.map(async (p) => opts.parse(await readFile(p, "utf8"), p)),
+    );
+    folderPagesCache.set(dirAbs, { newest, docs });
+    return docs;
+  }
+
   async function serveDoc(
     folder: RememberedFolder,
     abs: string,
     urlPath: string,
   ): Promise<Response> {
-    const src = await readFile(abs, "utf8");
-    const doc = opts.parse(src, abs);
     const docDir = dirname(abs);
+    const siblingDocs = await loadFolderPages(docDir);
+    const doc = siblingDocs.find((d) => d.path === abs) ?? opts.parse(await readFile(abs, "utf8"), abs);
+
     const ledger = opts.loadLedger(docDir);
     const folders = (await loadFolders(opts.stateDir)).folders;
     const resolved = await precomputeResolvedLinks(folders, abs, doc);
+
+    const pages = orderPages(siblingDocs, docDir);
+    const nav = navForDoc(
+      pages,
+      doc,
+      docDir,
+      (p) => pageHref(folder, p.path),
+      breadcrumbsFor(folder, docDir, doc),
+    );
+
     const renderOptions: RenderOptions = {
       theme: "auto",
       liveReload: LIVE_RELOAD_PATH,
+      nav,
       resolveLink: (node) => resolved.get(node) ?? null,
     };
     const html = opts.render(doc, ledger, renderOptions);
@@ -130,19 +182,9 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
 
     const state = await loadFolders(opts.stateDir);
 
-    // legacy: remove after pages migrate. Old `/md?path=<absolute>` links from the retired
-    // html-artifact skill; redirect into the viewer if the path is inside a remembered folder.
-    if (url.pathname === "/md") {
-      const rawPath = url.searchParams.get("path");
-      const found = rawPath ? findFolderForAbsolutePath(state.folders, rawPath) : null;
-      if (!found) return notFound();
-      const encodedRelPath = found.relPath.split("/").map(encodeURIComponent).join("/");
-      const target = `/${encodeURIComponent(found.folder.alias)}/${encodedRelPath}`;
-      return new Response(null, { status: 302, headers: { Location: target } });
-    }
-
     if (url.pathname === "/" || url.pathname === "") {
-      return new Response(renderIndex(state.folders), {
+      const entries = await collectHomeEntries(state.folders, opts.parse, homeCache);
+      return new Response(renderHome(entries), {
         headers: { "Content-Type": "text/html; charset=utf-8" },
       });
     }

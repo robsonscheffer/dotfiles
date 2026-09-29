@@ -55,11 +55,16 @@ export const DIRECTIVES = [
   "decide",
   "risks",
   "notverified",
+  "rail",
+  "reveal",
+  "checks",
+  "timeline",
+  "progress",
 ] as const;
 export type DirectiveName = (typeof DIRECTIVES)[number];
 
 // Directives whose body is kept as raw lines instead of parsed markdown.
-export const RAW_DIRECTIVES: readonly DirectiveName[] = ["flow", "tiles"];
+export const RAW_DIRECTIVES: readonly DirectiveName[] = ["flow", "tiles", "rail", "checks", "timeline"];
 
 export type ClaimId = `C${number}`;
 
@@ -276,7 +281,7 @@ export interface RunResult {
 
 export interface Env {
   has(cap: Capability): boolean;
-  run(cmd: string[], opts?: { cwd?: string; timeoutMs?: number }): Promise<RunResult>;
+  run(cmd: string[], opts?: { cwd?: string; timeoutMs?: number; input?: string }): Promise<RunResult>;
   fetch(url: string): Promise<{ status: number; body: string }>;
   now(): Date;
 }
@@ -327,7 +332,8 @@ export type LintRule =
   | "pii-in-excerpt"
   | "unknown-directive"
   | "parse-error"
-  | "unclaimed-fact"; // warn only, see Q-e
+  | "unclaimed-fact" // warn only, see Q-e
+  | "badge-tone"; // warn only, unknown badge tone falls back to neutral at render time
 
 export interface LintIssue {
   rule: LintRule;
@@ -441,6 +447,7 @@ export const COMMANDS = [
   "status",
   "forget",
   "walk",
+  "compare",
 ] as const;
 export type Command = (typeof COMMANDS)[number];
 

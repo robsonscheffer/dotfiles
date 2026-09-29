@@ -517,7 +517,12 @@ export function convertBlocks(tokens: Token[], lo: number, hi: number, ctx: Ctx)
             const [startLine0, endLine0] = t.map!;
             raw = ctx.lines.slice(startLine0 + 1, endLine0);
           } else {
+            // :::tabs turns each heading into a tab title, never a rendered heading element
+            // (see render/directives.ts groupTabs), so its ids have nothing to anchor a TOC
+            // link to. Drop headings collected while parsing this directive's children.
+            const headingsBefore = ctx.headings.length;
             children = convertBlocks(tokens, i + 1, close, ctx);
+            if (meta.name === "tabs") ctx.headings.length = headingsBefore;
           }
           const node: DirectiveNode = {
             type: "directive",

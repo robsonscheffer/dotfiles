@@ -114,6 +114,15 @@ describe("directives", () => {
     }
   });
 
+  test("headings inside :::tabs never end up in the TOC index, but keep their heading node", () => {
+    const src =
+      "## Before\n\n:::tabs\n## Staging\nPoint at staging.\n## Production\nPoint at prod.\n:::\n\n## After\n";
+    const doc = parse(src, "tabs-toc.md");
+    expect(doc.headings.map((h) => h.id)).toEqual(["before", "after"]);
+    const tabs = doc.body.find((b) => b.type === "directive" && b.name === "tabs") as DirectiveNode;
+    expect(tabs.children.filter((c) => c.type === "heading")).toHaveLength(2);
+  });
+
   test("a directive with no closing fence becomes an error node with position", () => {
     const src = "intro\n\n:::warn\nthis never closes\n";
     const doc = parse(src, "unclosed.md");

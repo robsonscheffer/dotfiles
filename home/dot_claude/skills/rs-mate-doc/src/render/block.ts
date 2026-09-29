@@ -94,20 +94,46 @@ function renderCodeBlock(n: CodeBlockNode): string {
   const title = n.meta.title;
   const caption = title ? `<figcaption>${escapeHtml(title)}</figcaption>` : "";
   if (n.lang === "diff") {
-    const lines = n.value
-      .split("\n")
-      .map((line) => {
-        let cls = "diff-ctx";
-        if (line.startsWith("+")) cls = "diff-add";
-        else if (line.startsWith("-")) cls = "diff-del";
-        return `<span class="${cls}">${escapeHtml(line)}</span>`;
-      })
-      .join("\n");
-    return `<figure class="code-block diff">${caption}<pre><code>${lines}</code></pre></figure>`;
+    return renderDiffBlock(n, caption);
   }
   const { html, language } = highlightCode(n.value, n.lang);
   const langClass = language ? ` language-${escapeAttr(language)}` : "";
   return `<figure class="code-block">${caption}<pre><code class="hljs${langClass}">${html}</code></pre></figure>`;
+}
+
+// `file=<path>` becomes a file header above the code; `start=<line>` numbers added, removed,
+// and context lines, tracking the pre- and post-image line counters separately (a run of
+// context lines keeps both in step; a run of adds/dels only advances the side it touched).
+function renderDiffBlock(n: CodeBlockNode, caption: string): string {
+  const file = n.meta.file;
+  const header = file ? `<div class="diff-file">${escapeHtml(file)}</div>` : "";
+  const startLine = n.meta.start ? Number.parseInt(n.meta.start, 10) : null;
+  let oldLine = startLine ?? 0;
+  let newLine = startLine ?? 0;
+  const lines = n.value
+    .split("\n")
+    .map((line) => {
+      let cls = "diff-ctx";
+      if (line.startsWith("+")) cls = "diff-add";
+      else if (line.startsWith("-")) cls = "diff-del";
+      let numHtml = "";
+      if (startLine !== null) {
+        if (cls === "diff-add") {
+          numHtml = `<span class="diff-num diff-num-new">${newLine}</span>`;
+          newLine++;
+        } else if (cls === "diff-del") {
+          numHtml = `<span class="diff-num diff-num-old">${oldLine}</span>`;
+          oldLine++;
+        } else {
+          numHtml = `<span class="diff-num diff-num-old">${oldLine}</span><span class="diff-num diff-num-new">${newLine}</span>`;
+          oldLine++;
+          newLine++;
+        }
+      }
+      return `<span class="${cls}">${numHtml}${escapeHtml(line)}</span>`;
+    })
+    .join("\n");
+  return `<figure class="code-block diff">${caption}${header}<pre><code>${lines}</code></pre></figure>`;
 }
 
 export function renderTable(n: TableNode, ctx: Ctx, badgeify = false): string {

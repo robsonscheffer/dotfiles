@@ -1,6 +1,7 @@
 // Lint: doc-shape rules plus ledger-shape rules, evaluated together.
 import { readFileSync } from "node:fs";
 import { validateLedger } from "../ledger/index.ts";
+import { BADGE_RE, BADGE_TONES } from "../render/inline.ts";
 import type {
   Block,
   ClaimRefNode,
@@ -24,6 +25,7 @@ const PII_PATTERNS: RegExp[] = [
   /\b(?:\d[ -]*?){13,19}\b/, // card-shaped
 ];
 const PRIVATE_PATH_PATTERNS = ["wiki/", "projects/", "~/brain"];
+const TONE_ATTR_RE = /tone\s*=\s*([a-zA-Z]+)/;
 
 function collectText(nodes: Inline[]): { value: string; pos: Span }[] {
   const out: { value: string; pos: Span }[] = [];
@@ -140,6 +142,25 @@ function lintDoc(doc: Doc, ledger: Ledger | null): LintIssue[] {
       }
       if (/localhost(:\d+)?/.test(t.value)) {
         issues.push({ rule: "localhost-url", severity: "error", message: "localhost URL in doc", path: doc.path, pos: t.pos });
+      }
+      // badge-tone: warn only, an unknown tone silently renders as neutral.
+      if (t.value.includes(":badge[")) {
+        BADGE_RE.lastIndex = 0;
+        let m: RegExpExecArray | null;
+        while ((m = BADGE_RE.exec(t.value))) {
+          const attrs = m[2];
+          const toneMatch = attrs ? TONE_ATTR_RE.exec(attrs) : null;
+          const requested = toneMatch ? toneMatch[1]!.toLowerCase() : null;
+          if (requested && !BADGE_TONES.has(requested)) {
+            issues.push({
+              rule: "badge-tone",
+              severity: "warn",
+              message: `badge tone "${requested}" is unknown and falls back to neutral`,
+              path: doc.path,
+              pos: t.pos,
+            });
+          }
+        }
       }
     }
     // unclaimed-fact: warn only, a sentence with a number or code identifier and no claim ref.

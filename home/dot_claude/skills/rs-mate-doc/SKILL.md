@@ -1,6 +1,6 @@
 ---
 name: rs-mate-doc
-description: Write markdown docs whose facts are checked, using the mate-doc CLI (new, lint, audit, verdict, gate, build, open, status, walk). Use whenever Robson asks for a doc, brief, guide, explainer, decision memo, or PR walk that other people will rely on, wants claims in a doc backed by code/links/queries, asks to audit or refresh an existing mate-doc folder (one with a claims.yaml), wants to preview markdown in the mate-doc viewer, or mentions mate-doc, claims ledger, gate, or "official" docs. Prefer it over plain rs-doc when the facts must hold up; rs-doc still governs how the prose reads.
+description: Write markdown docs whose facts are checked, using the mate-doc CLI (new, lint, audit, verdict, gate, build, open, status, walk, compare). Use whenever Robson asks for a doc, brief, guide, explainer, decision memo, or PR walk that other people will rely on, wants claims in a doc backed by code/links/queries, asks to audit or refresh an existing mate-doc folder (one with a claims.yaml), wants to preview markdown in the mate-doc viewer, wants to see what a core rules file (e.g. AGENTS.md) actually changes about an agent's answer, or mentions mate-doc, claims ledger, gate, or "official" docs. Prefer it over plain rs-doc when the facts must hold up; rs-doc still governs how the prose reads.
 allowed-tools:
   - Read
   - Write
@@ -17,6 +17,7 @@ allowed-tools:
   - Bash(mate-doc open:*)
   - Bash(mate-doc status:*)
   - Bash(mate-doc walk:*)
+  - Bash(mate-doc compare:*)
   - Bash(git show:*)
   - Bash(git log:*)
   - Bash(gh pr view:*)
@@ -103,11 +104,32 @@ mate-doc walk <pr-url> --inputs <dir> --out <walk-dir>
 mate-doc lint <walk-dir> && mate-doc open <walk-dir>
 ```
 
-The walk does not submit a GitHub review. rs-walk still owns that.
+Once the human has read the walk, `mate-doc walk submit <walk-dir> --approve|--request-changes|--comment` posts
+the review to GitHub, and `mate-doc walk close <walk-dir> --verdict <v>` records the outcome. Submit always
+dry-runs first: without `--yes` it prints the exact body and `gh` command and posts nothing. Show the human that
+output and get a yes before re-running with `--yes` - posting a review is outward-facing.
 
 Code refs cite the PR's head commit SHA (`<repo>@<sha>:<file>:<line>`), so `mate-doc audit` can resolve them with `git` or `gh`, and carry a `ttl_days` since the head can move.
 
 When `context.json` has items, the composed doc gets a "Related notes" section rendering each as a wikilink (no vault path, just the note name).
+
+## Comparing a prompt with and without the core
+
+`mate-doc compare <prompt-file>` runs the same prompt through an agent CLI twice, once bare and
+once with a core rules file (default `~/.claude/AGENTS.md`) appended as a system prompt, and
+writes both outputs side by side.
+
+```
+mate-doc compare prompt.md                          # default core, one run, timestamped out dir
+mate-doc compare prompt.md --core other.md --runs 3 --model opus --out compare-dir
+```
+
+The default agent invocation is `claude -p --bare` (with core: `... --append-system-prompt-file
+<core>`); override the base command with the `compare:` key of
+`${XDG_CONFIG_HOME:-~/.config}/mate-doc/config.yaml` (`compare.command: codex exec --json`, for
+example) when comparing against a different agent CLI. The out dir gets `without.md`, `with.md`
+(numbered per run when `--runs` > 1), and an `index.md` with the prompt, both outputs in a
+`:::tabs` block, word counts, and the core's path and sha256.
 
 ## Reporting back
 

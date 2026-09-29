@@ -103,6 +103,7 @@ export const PR_META = {
   headRefName: "refactor/portal-storeless",
   headRefOid: "9c1f3a7d2e4b6c8091a2b3c4d5e6f7081920a3b4",
   baseRefName: "main",
+  baseRefOid: "1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d",
   additions: 612,
   deletions: 1043,
   changedFiles: GROUPS.reduce((n, g) => n + g.files.length, 0),

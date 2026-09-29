@@ -4,15 +4,12 @@ import { basename, dirname, join, normalize, relative, sep } from "node:path";
 import { createEnv } from "../env.ts";
 import { gate } from "../gate/index.ts";
 import { loadLedger } from "../ledger/index.ts";
+import { navForDoc, orderPages, pageKey } from "../nav/index.ts";
 import { parse } from "../parser/index.ts";
 import { render } from "../render/index.ts";
 import { collectMarkdownFiles } from "./shared.ts";
-import type { Banner, Doc, Env, GateResult, LinkNode, NavPage } from "../types.ts";
+import type { Banner, Doc, Env, GateResult, LinkNode } from "../types.ts";
 import { EXIT } from "../types.ts";
-
-function pageKey(mdAbsPath: string, docDir: string): string {
-  return relative(docDir, mdAbsPath).replace(/\.md$/, "").split(sep).join("/");
-}
 
 function htmlNameFor(mdAbsPath: string, docDir: string): string {
   return `${pageKey(mdAbsPath, docDir)}.html`;
@@ -86,39 +83,12 @@ async function buildFolder(docDir: string, outArg: string | undefined, env: Env)
   for (const f of mdFiles) docs.push(parse(await readFile(f, "utf8"), f));
 
   const byKey = new Map(docs.map((d) => [pageKey(d.path, docDir), d] as const));
-  const indexDoc = byKey.get("index");
-  const tour = indexDoc?.frontmatter.tour;
-
-  let order: string[];
-  if (tour && tour.length > 0) {
-    order = tour;
-  } else {
-    order = [...byKey.keys()].sort((a, b) => {
-      if (a === "index") return -1;
-      if (b === "index") return 1;
-      return a.localeCompare(b);
-    });
-  }
-  const pages = order.filter((k) => byKey.has(k)).map((k) => byKey.get(k)!);
+  const pages = orderPages(docs, docDir);
 
   const gateResult = ledger ? await gate(docDir, env) : null;
 
   for (const doc of docs) {
-    const idx = pages.findIndex((p) => p === doc);
-    const navPages: NavPage[] = pages.map((p) => ({
-      title: p.frontmatter.title ?? pageKey(p.path, docDir),
-      href: htmlNameFor(p.path, docDir),
-      current: p === doc,
-    }));
-    const nav =
-      pages.length > 1 && idx !== -1
-        ? {
-            breadcrumbs: [],
-            pages: navPages,
-            prev: idx > 0 ? navPages[idx - 1] : undefined,
-            next: idx < navPages.length - 1 ? navPages[idx + 1] : undefined,
-          }
-        : undefined;
+    const nav = navForDoc(pages, doc, docDir, (p) => htmlNameFor(p.path, docDir));
 
     const banner = bannerFromGate(gateResult, doc);
     const html = render(doc, ledger, {

@@ -49,18 +49,42 @@ function extractTicketTags(title: string, ticketKey: string | undefined): string
   return tags;
 }
 
-function renderFrontmatter(pr: FetchedPr, inputs: WalkInputs): string {
+// `kind: walk`, `pr`, and `verdict` are the home index's fields (src/index/collect.ts): kind
+// picks the entry's filter bucket, pr labels it, verdict stays empty until the walk closes.
+function renderFrontmatter(pr: FetchedPr, inputs: WalkInputs, updated: string): string {
   const tags = extractTicketTags(pr.meta.title, inputs.ticketFit?.ticket_key);
   const lines = [
     "---",
     `title: ${yamlString(`#${pr.meta.number}: ${pr.meta.title}`)}`,
     "shape: walk",
+    "kind: walk",
     "status: draft",
+    "notes: true",
     `summary: ${yamlString(inputs.story.lead ?? pr.meta.title)}`,
   ];
   if (tags.length > 0) lines.push(`tags: [${tags.map(yamlString).join(", ")}]`);
   lines.push(`sources: [${yamlString(pr.meta.url)}]`);
+  lines.push(`pr: ${yamlString(`${pr.repo}#${pr.meta.number}`)}`);
+  lines.push('verdict: ""');
+  lines.push(`updated: ${updated}`);
   lines.push("---");
+  return lines.join("\n");
+}
+
+// The sticky rail panel (WRN lane, render/directives.ts's :::rail): a compact PR summary that
+// stays visible while scrolling, separate from the fuller header prose below it.
+function renderRailSection(pr: FetchedPr, inputs: WalkInputs, ticketFit: TicketFit | undefined): string {
+  const m = pr.meta;
+  const lines = [
+    ":::rail",
+    `Author: ${m.author.login}`,
+    `PR: [#${m.number}](${m.url})`,
+    `Branch: ${m.headRefName}`,
+  ];
+  if (ticketFit) lines.push(`Ticket: ${ticketFit.ticket_key}`);
+  lines.push(`Comments: ${inputs.commentTriage?.length ?? 0}`);
+  lines.push(`Risks: ${inputs.risks.length}`);
+  lines.push(":::");
   return lines.join("\n");
 }
 
@@ -96,7 +120,9 @@ function buildGroupClaim(pr: FetchedPr, group: StoryGroup, build: ClaimBuild, ch
   for (const file of group.files) {
     const change = firstFileChange(pr.diff, file);
     if (change.found && change.excerpt) {
-      const ref = `${pr.repo}@${pr.meta.headRefOid}:${file}:${change.line ?? 1}`;
+      // An added line only exists at head; a pure-removal fallback only exists at base.
+      const sha = change.side === "removed" ? pr.meta.baseRefOid : pr.meta.headRefOid;
+      const ref = `${pr.repo}@${sha}:${file}:${change.line ?? 1}`;
       claim = {
         id,
         claim: group.framing,
@@ -303,7 +329,7 @@ export function composeWalk(pr: FetchedPr, inputs: WalkInputs, opts: ComposeOpti
   const checkedAt = now.toISOString().slice(0, 10);
   const build: ClaimBuild = { claims: [], nextId: 1 };
 
-  const parts: string[] = [renderHeader(pr), renderStorySection(inputs.story)];
+  const parts: string[] = [renderRailSection(pr, inputs, inputs.ticketFit), renderHeader(pr), renderStorySection(inputs.story)];
 
   inputs.story.groups.forEach((group, gi) => {
     const claimId = buildGroupClaim(pr, group, build, checkedAt);
@@ -318,7 +344,7 @@ export function composeWalk(pr: FetchedPr, inputs: WalkInputs, opts: ComposeOpti
   parts.push(renderJudgmentSection(inputs.judgment));
 
   const body = parts.filter((p) => p.length > 0).join("\n\n");
-  const md = `${renderFrontmatter(pr, inputs)}\n\n${body}\n`;
+  const md = `${renderFrontmatter(pr, inputs, checkedAt)}\n\n${body}\n`;
 
   return { files: { "index.md": md, "claims.yaml": renderClaimsYaml(build.claims) } };
 }

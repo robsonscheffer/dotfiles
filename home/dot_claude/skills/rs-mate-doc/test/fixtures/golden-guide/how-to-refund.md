@@ -29,3 +29,10 @@ customer -> support: request refund
 support -> orders: issue refund
 orders -> customer: refund confirmation
 :::
+
+```diff file=src/refunds/issue.ts start=12
+ function issueRefund(order) {
+-  return legacyRefund(order)
++  return refundService.issue(order)
+ }
+```

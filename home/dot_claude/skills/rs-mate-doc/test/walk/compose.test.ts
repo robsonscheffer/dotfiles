@@ -36,6 +36,21 @@ describe("composeWalk", () => {
     expect(md).toContain("status: draft");
   });
 
+  test("frontmatter opts the walk into per-section notes", () => {
+    const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
+    const md = composed.files["index.md"]!;
+    expect(md).toContain("notes: true");
+  });
+
+  test("frontmatter carries the home index's kind, pr, verdict, and updated fields", () => {
+    const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
+    const md = composed.files["index.md"]!;
+    expect(md).toContain("kind: walk");
+    expect(md).toContain(`pr: "${FETCHED_PR.repo}#${FETCHED_PR.meta.number}"`);
+    expect(md).toContain('verdict: ""');
+    expect(md).toContain("updated: 2026-09-25");
+  });
+
   test("section order matches rs-walk: story, diff groups, ticket fit, questions, risks, prior discussion, judgment", () => {
     const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
     const md = composed.files["index.md"]!;

@@ -4,6 +4,7 @@ import { COMMANDS, EXIT, type Command, type Env } from "./types.ts";
 import { runApprove } from "./commands/approve.ts";
 import { runAudit } from "./commands/audit.ts";
 import { runBuild } from "./commands/build.ts";
+import { runCompare } from "./commands/compare.ts";
 import { runForget } from "./commands/forget.ts";
 import { runGate } from "./commands/gate.ts";
 import { runLint } from "./commands/lint.ts";
@@ -33,6 +34,7 @@ Usage: mate-doc <command> [args]
   status [<path>]            level, freshness, open claims
   forget <folder>            stop serving a folder
   walk <pr-url> --inputs <d> build a PR walk (--fetch-only to fetch)
+  compare <prompt-file>      run a prompt with and without the core, side by side
 `;
 
 function isCommand(s: string): s is Command {
@@ -81,6 +83,8 @@ export async function main(argv: string[], deps: MainDeps = {}): Promise<number>
       return runWalk(rest, deps.env ?? createEnv());
     case "publish":
       return deps.env ? runPublish(rest, deps.env) : runPublish(rest);
+    case "compare":
+      return deps.env ? runCompare(rest, deps.env) : runCompare(rest);
   }
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { render } from "../../src/render/index.ts";
-import { heading, link, makeClaim, makeDoc, makeLedger, para, text } from "./helpers.ts";
+import { directive, heading, link, makeClaim, makeDoc, makeLedger, para, text } from "./helpers.ts";
 
 describe("page shell", () => {
   test("no http URLs in the output unless a content link is present", () => {
@@ -126,5 +126,63 @@ describe("page shell", () => {
     expect(html).toContain("acme/web@main:src/label.ts:42");
     expect(html).toContain("2026-09-25");
     expect(html).toContain("verdict-supports");
+  });
+});
+
+describe("rail placement", () => {
+  test("a :::rail directive renders in the side column above the TOC, not inline in main", () => {
+    const rail = directive("rail", { raw: ["Author: Sam"] });
+    const doc = makeDoc(
+      [rail, heading(2, "intro", "Intro"), para(text("Body."))],
+      { title: "Doc" },
+      [{ level: 2, id: "intro", text: "Intro", pos: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } } }],
+    );
+    const html = render(doc, null, { theme: "auto" });
+    const sideMatch = /<aside class="side-col">(.*)<\/aside>\s*<\/div>/s.exec(html);
+    expect(sideMatch).not.toBeNull();
+    const side = sideMatch![1]!;
+    expect(side).toContain('class="rail"');
+    expect(side.indexOf('class="rail"')).toBeLessThan(side.indexOf('class="toc"'));
+
+    const mainMatch = /<main>(.*)<\/main>/s.exec(html);
+    expect(mainMatch).not.toBeNull();
+    expect(mainMatch![1]).not.toContain('class="rail"');
+  });
+
+  test("no rail: no side-col wrapper appears without a TOC either", () => {
+    const doc = makeDoc([para(text("Just a paragraph."))], { title: "Doc" });
+    const html = render(doc, null, { theme: "auto" });
+    expect(html).not.toContain('class="side-col"');
+  });
+});
+
+describe("notes box", () => {
+  test("notes: true renders one control per h2, and the toolbar", () => {
+    const doc = makeDoc(
+      [heading(2, "first", "First"), para(text("Body one.")), heading(2, "second", "Second"), para(text("Body two."))],
+      { title: "Doc", extra: { notes: true } },
+    );
+    const html = render(doc, null, { theme: "auto" });
+    expect(html).toContain("notes-toolbar");
+    expect(html).toContain("notes-copy-btn");
+    expect(html).toContain("notes-download-btn");
+    const matches = html.match(/class="note-control"/g) ?? [];
+    expect(matches.length).toBe(2);
+    expect(html).toContain('data-note-slug="first"');
+    expect(html).toContain('data-note-slug="second"');
+  });
+
+  test("without notes: true, no notes controls or toolbar render", () => {
+    const doc = makeDoc([heading(2, "first", "First"), para(text("Body one."))], { title: "Doc" });
+    const html = render(doc, null, { theme: "auto" });
+    expect(html).not.toContain('class="note-control"');
+    expect(html).not.toContain('class="notes-toolbar"');
+  });
+
+  test("the page is readable with scripts off: notes controls carry the hidden attribute by default", () => {
+    const doc = makeDoc([heading(2, "first", "First"), para(text("Body one."))], { title: "Doc", extra: { notes: true } });
+    const html = render(doc, null, { theme: "auto" });
+    expect(html).toContain('class="note-control" data-note-slug="first" hidden');
+    expect(html).toContain('class="notes-toolbar" hidden');
   });
 });

@@ -9,7 +9,7 @@ export function renderInline(nodes: Inline[], ctx: Ctx): string {
 function renderInlineNode(n: Inline, ctx: Ctx): string {
   switch (n.type) {
     case "text":
-      return applyTermChips(n.value, ctx);
+      return renderTextWithBadges(n.value, ctx);
     case "inlineCode":
       return `<code>${escapeHtml(n.value)}</code>`;
     case "emphasis":
@@ -105,6 +105,36 @@ export function sourceLinkFor(ev: Evidence): string {
     case "mcp":
       return `<a class="claim-source" href="${escapeAttr(ev.source)}" rel="noopener noreferrer">${escapeHtml(ev.source)}</a>`;
   }
+}
+
+// Inline badge: ":badge[label]{tone=bad}". Tones: good, warn, bad, info, neutral (default).
+// An unknown tone falls back to neutral rather than failing the render.
+export const BADGE_RE = /:badge\[([^\]]*)\](?:\{([^}]*)\})?/g;
+export const BADGE_TONES = new Set(["good", "warn", "bad", "info", "neutral"]);
+
+function renderBadge(label: string, attrs: string | undefined): string {
+  const toneMatch = attrs ? /tone\s*=\s*([a-zA-Z]+)/.exec(attrs) : null;
+  const requested = toneMatch ? toneMatch[1]!.toLowerCase() : "neutral";
+  const tone = BADGE_TONES.has(requested) ? requested : "neutral";
+  return `<span class="badge badge-${tone}">${escapeHtml(label)}</span>`;
+}
+
+// Badges are recognized directly on plain text nodes rather than through a dedicated parser
+// rule: the syntax never collides with anything CommonMark's inline parser already claims, so a
+// regex pass here is enough and keeps the new syntax out of the shared AST contract.
+function renderTextWithBadges(value: string, ctx: Ctx): string {
+  if (!value.includes(":badge[")) return applyTermChips(value, ctx);
+  let out = "";
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+  BADGE_RE.lastIndex = 0;
+  while ((m = BADGE_RE.exec(value))) {
+    out += applyTermChips(value.slice(lastIndex, m.index), ctx);
+    out += renderBadge(m[1] ?? "", m[2]);
+    lastIndex = m.index + m[0].length;
+  }
+  out += applyTermChips(value.slice(lastIndex), ctx);
+  return out;
 }
 
 // Later plain-text occurrences of a term introduced by a `collide` block get a hover chip.
