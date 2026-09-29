@@ -70,6 +70,7 @@ Rules:
 - If there genuinely was no alternative worth weighing (a pure mechanical
   change, a rename, a config bump), don't invent one — the alternative-weighing
   beat is for when it's real, not a mandatory clause.
+- No em-dashes anywhere in your JSON strings; `mate-doc lint` rejects them. Use a comma, colon, or period.
 
 ## Agent 2 — Questions
 
@@ -92,6 +93,7 @@ Rules:
 - Questions only the reviewer can answer by reading the actual code. No "why did they do X" — the story covers that.
 - Each pointer must be a real file from the file list.
 - If the PR description mentions something pending QA or unconfirmed, that is always a question.
+- No em-dashes anywhere in your JSON strings; `mate-doc lint` rejects them. Use a comma, colon, or period.
 
 ## Agent 3 — Risk
 
@@ -115,6 +117,7 @@ Rules:
 - Unverified assumptions are always risks. Hardcoded strings that must match external systems. Missing tests for edge cases.
 - "None identified" only if genuinely true — return `[]`.
 - Max 4 flags. Triage ruthlessly.
+- No em-dashes anywhere in your JSON strings; `mate-doc lint` rejects them. Use a comma, colon, or period.
 
 ## Agent 4 — Judgment
 
@@ -151,6 +154,8 @@ Return a **JSON object**:
 ```
 
 Do not soften. Do not inflate. "None identified" only if genuinely true.
+
+No em-dashes anywhere in your JSON strings; `mate-doc lint` rejects them. Use a comma, colon, or period.
 
 ## Agent 5 — Ticket fit (only if Step 2b found a ticket)
 
@@ -194,6 +199,7 @@ Rules:
 - `status: "Unplanned Deviation"` is for scope the PR added that the ticket never mentioned (not
   necessarily bad — flag it, don't judge it here; that's Agent 4's job on the diff, not this one).
 - If Step 2b found no ticket, skip this agent — Step 5 renders "no ticket linked" without calling it.
+- No em-dashes anywhere in your JSON strings; `mate-doc lint` rejects them. Use a comma, colon, or period.
 
 ## Agent 6 — Comment triage (only if Step 2a found comments)
 
@@ -247,3 +253,4 @@ Rules:
   that raised findings and simply hasn't been followed up on yet is `resolved: false`, not omitted.
 - If Step 2a found zero comments, skip this agent — Step 5 renders "no comments yet" without
   calling it.
+- No em-dashes anywhere in your JSON strings; `mate-doc lint` rejects them. Use a comma, colon, or period.
