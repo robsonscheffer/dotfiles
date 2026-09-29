@@ -113,4 +113,24 @@ export const stubRender: Render = (doc: Doc, _ledger: Ledger | null, opts) => {
 
 export const stubRenderPlain: Render = () => "<html>stub</html>";
 
+// Renders nav (breadcrumbs, side nav, prev/next) as plain markup so nav tests can assert on it
+// without a real renderer.
+export const stubRenderNav: Render = (doc, _ledger, opts) => {
+  const nav = opts.nav;
+  const navHtml = nav
+    ? `<nav class="breadcrumbs">${nav.breadcrumbs
+        .map((b) => `<a href="${b.href}">${b.title}</a>`)
+        .join(" / ")}</nav>` +
+      `<nav class="left-nav"><ul>${nav.pages
+        .map(
+          (p) =>
+            `<li class="${p.current ? "current" : ""}"><a href="${p.href}">${p.title}</a></li>`,
+        )
+        .join("")}</ul></nav>` +
+      (nav.prev ? `<a class="prev" href="${nav.prev.href}">${nav.prev.title}</a>` : "") +
+      (nav.next ? `<a class="next" href="${nav.next.href}">${nav.next.title}</a>` : "")
+    : "<span class=\"no-nav\"></span>";
+  return `<html><body>${navHtml}<h1>${doc.frontmatter.title ?? ""}</h1></body></html>`;
+};
+
 export const nullLedger = (): Ledger | null => null;
