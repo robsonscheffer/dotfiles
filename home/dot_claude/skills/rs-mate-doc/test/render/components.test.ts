@@ -183,6 +183,31 @@ describe("steps / tabs / cards", () => {
     expect(html).toContain("Second");
   });
 
+  test("tab buttons and panels carry full ARIA wiring", () => {
+    const n = directive("tabs", {
+      children: [heading(2, "tab-a", "First"), para(text("Body of the first tab.")), heading(2, "tab-b", "Second"), para(text("Body of the second tab."))],
+    });
+    const html = renderDirective(n, ctx());
+    const buttonMatches = [...html.matchAll(/<button[^>]*>/g)].map((m) => m[0]!);
+    expect(buttonMatches).toHaveLength(2);
+    for (const btn of buttonMatches) {
+      expect(btn).toContain('role="tab"');
+      expect(btn).toMatch(/aria-selected="(true|false)"/);
+      expect(btn).toMatch(/aria-controls="[^"]+"/);
+      expect(btn).toMatch(/id="[^"]+"/);
+    }
+    const panelMatches = [...html.matchAll(/<div class="tab-panel"[^>]*>/g)].map((m) => m[0]!);
+    expect(panelMatches).toHaveLength(2);
+    for (const panel of panelMatches) {
+      expect(panel).toContain('role="tabpanel"');
+      expect(panel).toMatch(/aria-labelledby="[^"]+"/);
+    }
+    // Each button's aria-controls points at a panel id that actually exists, and vice versa.
+    const controlsIds = buttonMatches.map((b) => /aria-controls="([^"]+)"/.exec(b)![1]!);
+    const panelIds = panelMatches.map((p) => /id="([^"]+)"/.exec(p)![1]!);
+    expect(controlsIds.sort()).toEqual(panelIds.sort());
+  });
+
   test("a tab panel contains its non-heading children, and the heading isn't duplicated inside it", () => {
     const n = directive("tabs", {
       children: [heading(2, "tab-staging", "Staging"), para(text("Point the client at the staging origin.")), heading(2, "tab-prod", "Production")],
@@ -227,6 +252,101 @@ describe("risks", () => {
     expect(html).toContain("risk-badge risk-high");
     expect(html).toContain("risk-badge risk-med");
     expect(html).toContain("risk-badge risk-low");
+  });
+
+  test("each row becomes a card with a severity-colored left border, the class the dark theme keys off", () => {
+    const t = table([[text("Risk")], [text("Severity")], [text("Owner")]], [
+      [[text("Data loss on retry")], [text("HIGH")], [text("Alex")]],
+      [[text("Slow rollout")], [text("MED")], [text("Priya")]],
+    ]);
+    const n: DirectiveNode = directive("risks", { children: [t] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain('class="risk-cards"');
+    expect(html).toContain('class="risk-card risk-high"');
+    expect(html).toContain('class="risk-card risk-med"');
+    // Non-severity cells keep their column header as a label so a card reads on its own.
+    expect(html).toContain('<span class="risk-field-label">Risk</span>Data loss on retry');
+    expect(html).toContain('<span class="risk-field-label">Owner</span>Alex');
+    expect(html).toMatchSnapshot();
+  });
+});
+
+describe("reveal", () => {
+  test("renders a details/summary, so it works with scripts off and expands for print", () => {
+    const n = directive("reveal", { args: ["Show", "reviewer", "notes"], children: [para(text("Left border looked off in dark mode."))] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain("<details class=\"reveal\">");
+    expect(html).toContain("<summary>Show reviewer notes</summary>");
+    expect(html).toContain("Left border looked off in dark mode.");
+    expect(html).toMatchSnapshot();
+  });
+
+  test("defaults its label when no args are given", () => {
+    const n = directive("reveal", { children: [para(text("Body."))] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain("<summary>Show more</summary>");
+  });
+});
+
+describe("checks", () => {
+  test("maps each status to its badge tone", () => {
+    const n = directive("checks", {
+      raw: [
+        "met | Emits checkout_clicked | C1",
+        "partial | Refund API documented | C2",
+        "not-met | Retry idempotency | ",
+        "n/a | Legacy cart flow | ",
+      ],
+    });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain('class="badge badge-good"');
+    expect(html).toContain('class="badge badge-warn"');
+    expect(html).toContain('class="badge badge-bad"');
+    expect(html).toContain('class="badge badge-neutral"');
+    expect(html).toContain("Emits checkout_clicked");
+    expect(html).toContain("C1");
+    expect(html).toMatchSnapshot();
+  });
+
+  test("skips a malformed line instead of throwing", () => {
+    const n = directive("checks", { raw: ["not a status line"] });
+    expect(() => renderDirective(n, ctx())).not.toThrow();
+  });
+});
+
+describe("timeline", () => {
+  test("renders one item per date | text line, in order", () => {
+    const n = directive("timeline", {
+      raw: ["2026-08-01 | Feature flag created", "2026-09-01 | Rolled out to 100%"],
+    });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain('<ol class="timeline">');
+    expect(html).toContain('<time class="timeline-date">2026-08-01</time>');
+    expect(html).toContain("Feature flag created");
+    const firstIdx = html.indexOf("2026-08-01");
+    const secondIdx = html.indexOf("2026-09-01");
+    expect(firstIdx).toBeGreaterThan(-1);
+    expect(secondIdx).toBeGreaterThan(firstIdx);
+    expect(html).toMatchSnapshot();
+  });
+});
+
+describe("progress", () => {
+  test("renders an accessible progress bar from done/total", () => {
+    const n = directive("progress", { args: ["7/12", "Refund", "automation", "rollout"] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain('role="progressbar"');
+    expect(html).toContain('aria-valuenow="7"');
+    expect(html).toContain('aria-valuemax="12"');
+    expect(html).toContain("Refund automation rollout (7/12)");
+    expect(html).toMatchSnapshot();
+  });
+
+  test("falls back to 0/1 when the fraction is missing or malformed", () => {
+    const n = directive("progress", { args: [] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain('aria-valuenow="0"');
+    expect(html).toContain('aria-valuemax="1"');
   });
 });
 
@@ -289,6 +409,33 @@ describe("diff code fence", () => {
     expect(html).toContain("src/orders.ts");
     expect(html).toContain("diff-add");
     expect(html).toContain("diff-del");
+    expect(html).toMatchSnapshot();
+  });
+
+  test("without file= or start=, no header or line numbers appear", () => {
+    const block = codeBlock("+added\n-removed\n context", "diff");
+    const html = renderBlock(block, ctx());
+    expect(html).not.toContain("diff-file");
+    expect(html).not.toContain("diff-num");
+  });
+
+  test("file= alone renders a file header with no line numbers", () => {
+    const block = codeBlock("+added\n-removed\n context", "diff", { file: "src/analytics/label.ts" });
+    const html = renderBlock(block, ctx());
+    expect(html).toContain('<div class="diff-file">src/analytics/label.ts</div>');
+    expect(html).not.toContain("diff-num");
+  });
+
+  test("file= and start= together number added, removed, and context lines from start", () => {
+    const block = codeBlock("+added\n-removed\n context", "diff", { file: "src/analytics/label.ts", start: "40" });
+    const html = renderBlock(block, ctx());
+    expect(html).toContain('<div class="diff-file">src/analytics/label.ts</div>');
+    // The added line is the pre-image's line 40 in the post-image; the removed line is the
+    // pre-image's line 40 too (they can't both hold that slot, so each side counts on its own).
+    expect(html).toContain('<span class="diff-num diff-num-new">40</span>');
+    expect(html).toContain('<span class="diff-num diff-num-old">40</span>');
+    // The context line after both keeps old and new in step, one number ahead of each side.
+    expect(html).toContain('<span class="diff-num diff-num-old">41</span><span class="diff-num diff-num-new">41</span>');
     expect(html).toMatchSnapshot();
   });
 });

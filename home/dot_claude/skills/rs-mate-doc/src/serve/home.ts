@@ -64,7 +64,7 @@ export function renderHome(entries: IndexEntry[]): string {
 .index-updated { color: var(--muted); font-size: 0.8rem; margin: 0.2rem 0 0; }
 .pr-label { font-size: 0.85rem; color: var(--muted); }
 .status-fresh { background: var(--callout-bg); }
-.status-stale { border-color: var(--badge-high); color: var(--badge-high); }
+.status-stale { border-color: var(--badge-high-text); color: var(--badge-high-text); }
 </style>
 </head>
 <body class="no-nav">
