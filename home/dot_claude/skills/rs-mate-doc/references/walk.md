@@ -50,7 +50,10 @@ Each group's `framing` becomes a claim. When a file in the group has a hunk in t
 
 ## Output
 
-`--out <walk-dir>` gets `index.md` and `claims.yaml`. Run `mate-doc lint` on it, then `mate-doc open` it for Robson.
+`--out <walk-dir>` gets `index.md` and `claims.yaml`. Run `mate-doc lint` on it. Then record a verdict for every
+claim in `claims.yaml`: `mate-doc verdict <walk-dir> <Cn> --supports|--overstates|--contradicts|--unrelated --by
+<name>`, once per claim ID. `mate-doc gate <walk-dir>` fails with "has no verdict yet" until every claim has one -
+that's a missing command to run, not a source problem to fix. Once gate passes, `mate-doc open` it for Robson.
 
 ## Submit
 

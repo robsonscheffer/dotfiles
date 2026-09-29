@@ -280,17 +280,22 @@ end on a real PR. Say that plainly to the user before running it.
    `story.json`, `questions.json`, `risks.json`, `judgment.json`, and, when they ran,
    `ticket-fit.json` / `comment-triage.json` / `context.json`.
 3. Compose the walk: `mate-doc walk <url> --inputs <dir> --out <walk-dir>`.
-4. Check it: `mate-doc lint <walk-dir>` then `mate-doc gate <walk-dir>`. Fix the source and
-   re-run either on a failure before opening.
-5. Open it for reading: `mate-doc open <walk-dir>`.
-6. After the user has read the walk and written notes, ask (AskUserQuestion) the same "Ready to
+4. Lint it: `mate-doc lint <walk-dir>`. Fix the source and re-run on a failure before
+   continuing.
+5. Record a verdict for every claim: `mate-doc verdict <walk-dir> <Cn>
+   --supports|--overstates|--contradicts|--unrelated --by <name>`, once per claim ID in
+   `claims.yaml`. Then run `mate-doc gate <walk-dir>`; it fails with "has no verdict yet" until
+   every claim has one, and that failure has no "fix the source" step, only a missing verdict
+   command to run. Fix any other gate failure at the source and re-run before opening.
+6. Open it for reading: `mate-doc open <walk-dir>`.
+7. After the user has read the walk and written notes, ask (AskUserQuestion) the same "Ready to
    submit?" question as Step 7: Approve, Request changes, Comment only, or Skip for now. Export
    the reader's notes from the open walk page (its own **Download notes JSON** control) to a
    file, then run `mate-doc walk submit <walk-dir> --<mode> --notes-file <exported notes>`
    without `--yes` first; this only prints the body and the exact `gh` command, and posts
    nothing. Show that dry run to the user. Only after an explicit yes, run the same command again
    with `--yes` added.
-7. Close the loop: `mate-doc walk close <walk-dir> --verdict <verdict> --notes-file <exported
+8. Close the loop: `mate-doc walk close <walk-dir> --verdict <verdict> --notes-file <exported
 notes>`. This runs the user's own `walk.close_hook`, if one is configured: the equivalent of
    this skill's own bookkeeping in Step 7, kept out of this repo the same way.
 
