@@ -2,8 +2,8 @@
 // symlink escapes. Only a remembered folder's own realpath is ever served.
 import { realpathSync } from "node:fs";
 import { stat } from "node:fs/promises";
-import { join, normalize, relative, sep } from "node:path";
-import { isWithin, type RememberedFolder } from "./state.ts";
+import { join, normalize, sep } from "node:path";
+import { isWithin } from "./state.ts";
 
 export type Resolved =
   | { kind: "dir"; abs: string }
@@ -44,20 +44,4 @@ export async function resolveSafePath(baseRealDir: string, restPath: string): Pr
     }
   }
   return { kind: "notfound" };
-}
-
-// legacy: remove after pages migrate. Old `/md?path=<absolute>` links pointed at a file by
-// its real filesystem path; this finds which remembered folder (if any) now covers it.
-export function findFolderForAbsolutePath(
-  folders: RememberedFolder[],
-  absPath: string,
-): { folder: RememberedFolder; relPath: string } | null {
-  const real = realOrNull(absPath);
-  if (!real) return null;
-  for (const folder of folders) {
-    if (isWithin(folder.path, real)) {
-      return { folder, relPath: relative(folder.path, real).split(sep).join("/") };
-    }
-  }
-  return null;
 }

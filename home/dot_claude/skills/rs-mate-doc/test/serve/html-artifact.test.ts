@@ -150,13 +150,13 @@ describe("serve: static .html artifacts", () => {
     expect(await res.text()).toContain("--accent");
   });
 
-  test("legacy /md?path= redirects into the viewer when the path is inside a remembered folder", async () => {
-    const stateDir = await mkTmpDir("mate-doc-md-legacy-state-");
-    const served = await mkTmpDir("mate-doc-md-legacy-served-");
+  test("/md?path= 404s now that the legacy redirect is gone", async () => {
+    const stateDir = await mkTmpDir("mate-doc-md-gone-state-");
+    const served = await mkTmpDir("mate-doc-md-gone-served-");
     await mkdir(join(served, "notes"), { recursive: true });
     await writeFile(join(served, "notes", "index.md"), "# hi");
+    await addFolder(stateDir, served);
 
-    const entry = await addFolder(stateDir, served);
     handle = await serve({
       host: "127.0.0.1",
       port: 0,
@@ -168,55 +168,6 @@ describe("serve: static .html artifacts", () => {
 
     const absPath = join(served, "notes", "index.md");
     const res = await fetch(`${handle.url}/md?path=${encodeURIComponent(absPath)}`, {
-      redirect: "manual",
-    });
-    expect(res.status).toBe(302);
-    expect(res.headers.get("location")).toBe(`/${entry.alias}/notes/index.md`);
-  });
-
-  test("legacy /md?path= encodes a name with a space, #, and ? so the redirect resolves", async () => {
-    const stateDir = await mkTmpDir("mate-doc-md-legacy-encode-state-");
-    const served = await mkTmpDir("mate-doc-md-legacy-encode-served-");
-    const name = "a b#c?.md";
-    await writeFile(join(served, name), "# hi");
-
-    const entry = await addFolder(stateDir, served);
-    handle = await serve({
-      host: "127.0.0.1",
-      port: 0,
-      stateDir,
-      parse: stubParse,
-      render: stubRenderPlain,
-      loadLedger: nullLedger,
-    });
-
-    const absPath = join(served, name);
-    const res = await fetch(`${handle.url}/md?path=${encodeURIComponent(absPath)}`, {
-      redirect: "manual",
-    });
-    expect(res.status).toBe(302);
-    const location = res.headers.get("location");
-    expect(location).toBe(`/${entry.alias}/${encodeURIComponent(name)}`);
-
-    const followed = await fetch(`${handle.url}${location}`);
-    expect(followed.status).toBe(200);
-  });
-
-  test("legacy /md?path= 404s when the path is outside any remembered folder", async () => {
-    const stateDir = await mkTmpDir("mate-doc-md-legacy-outside-state-");
-    const outside = await mkTmpDir("mate-doc-md-legacy-outside-");
-    await writeFile(join(outside, "secret.md"), "# secret");
-
-    handle = await serve({
-      host: "127.0.0.1",
-      port: 0,
-      stateDir,
-      parse: stubParse,
-      render: stubRenderPlain,
-      loadLedger: nullLedger,
-    });
-
-    const res = await fetch(`${handle.url}/md?path=${encodeURIComponent(join(outside, "secret.md"))}`, {
       redirect: "manual",
     });
     expect(res.status).toBe(404);
