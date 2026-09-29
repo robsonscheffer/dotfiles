@@ -183,6 +183,31 @@ describe("steps / tabs / cards", () => {
     expect(html).toContain("Second");
   });
 
+  test("tab buttons and panels carry full ARIA wiring", () => {
+    const n = directive("tabs", {
+      children: [heading(2, "tab-a", "First"), para(text("Body of the first tab.")), heading(2, "tab-b", "Second"), para(text("Body of the second tab."))],
+    });
+    const html = renderDirective(n, ctx());
+    const buttonMatches = [...html.matchAll(/<button[^>]*>/g)].map((m) => m[0]!);
+    expect(buttonMatches).toHaveLength(2);
+    for (const btn of buttonMatches) {
+      expect(btn).toContain('role="tab"');
+      expect(btn).toMatch(/aria-selected="(true|false)"/);
+      expect(btn).toMatch(/aria-controls="[^"]+"/);
+      expect(btn).toMatch(/id="[^"]+"/);
+    }
+    const panelMatches = [...html.matchAll(/<div class="tab-panel"[^>]*>/g)].map((m) => m[0]!);
+    expect(panelMatches).toHaveLength(2);
+    for (const panel of panelMatches) {
+      expect(panel).toContain('role="tabpanel"');
+      expect(panel).toMatch(/aria-labelledby="[^"]+"/);
+    }
+    // Each button's aria-controls points at a panel id that actually exists, and vice versa.
+    const controlsIds = buttonMatches.map((b) => /aria-controls="([^"]+)"/.exec(b)![1]!);
+    const panelIds = panelMatches.map((p) => /id="([^"]+)"/.exec(p)![1]!);
+    expect(controlsIds.sort()).toEqual(panelIds.sort());
+  });
+
   test("a tab panel contains its non-heading children, and the heading isn't duplicated inside it", () => {
     const n = directive("tabs", {
       children: [heading(2, "tab-staging", "Staging"), para(text("Point the client at the staging origin.")), heading(2, "tab-prod", "Production")],
