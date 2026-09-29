@@ -29,17 +29,23 @@ export function createEnv(): Env {
       return false;
     },
 
-    async run(cmd: string[], opts?: { cwd?: string; timeoutMs?: number }): Promise<RunResult> {
+    async run(cmd: string[], opts?: { cwd?: string; timeoutMs?: number; input?: string }): Promise<RunResult> {
       const timeoutMs = opts?.timeoutMs ?? defaultTimeoutFor(cmd);
       const proc = Bun.spawn(cmd, {
         cwd: opts?.cwd,
         // Bun.spawn does not pick up in-process mutations to process.env (e.g. a test
         // prepending to PATH) unless env is passed explicitly.
         env: process.env,
-        stdin: "ignore", // an interactive prompt (e.g. an SSO login) should fail fast, not hang
+        // an interactive prompt (e.g. an SSO login) should fail fast, not hang, unless the
+        // caller has text to pipe in (e.g. a prompt for an agent CLI reading stdin).
+        stdin: opts?.input !== undefined ? "pipe" : "ignore",
         stdout: "pipe",
         stderr: "pipe",
       });
+      if (opts?.input !== undefined && proc.stdin) {
+        proc.stdin.write(opts.input);
+        proc.stdin.end();
+      }
       const timer = setTimeout(() => {
         try {
           proc.kill();

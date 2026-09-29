@@ -276,7 +276,7 @@ export interface RunResult {
 
 export interface Env {
   has(cap: Capability): boolean;
-  run(cmd: string[], opts?: { cwd?: string; timeoutMs?: number }): Promise<RunResult>;
+  run(cmd: string[], opts?: { cwd?: string; timeoutMs?: number; input?: string }): Promise<RunResult>;
   fetch(url: string): Promise<{ status: number; body: string }>;
   now(): Date;
 }
@@ -441,6 +441,7 @@ export const COMMANDS = [
   "status",
   "forget",
   "walk",
+  "compare",
 ] as const;
 export type Command = (typeof COMMANDS)[number];
 
