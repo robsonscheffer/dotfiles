@@ -59,6 +59,7 @@ function renderFrontmatter(pr: FetchedPr, inputs: WalkInputs, updated: string): 
     "shape: walk",
     "kind: walk",
     "status: draft",
+    "notes: true",
     `summary: ${yamlString(inputs.story.lead ?? pr.meta.title)}`,
   ];
   if (tags.length > 0) lines.push(`tags: [${tags.map(yamlString).join(", ")}]`);

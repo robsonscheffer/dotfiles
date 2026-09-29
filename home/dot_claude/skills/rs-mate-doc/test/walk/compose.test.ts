@@ -36,6 +36,12 @@ describe("composeWalk", () => {
     expect(md).toContain("status: draft");
   });
 
+  test("frontmatter opts the walk into per-section notes", () => {
+    const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
+    const md = composed.files["index.md"]!;
+    expect(md).toContain("notes: true");
+  });
+
   test("frontmatter carries the home index's kind, pr, verdict, and updated fields", () => {
     const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
     const md = composed.files["index.md"]!;
