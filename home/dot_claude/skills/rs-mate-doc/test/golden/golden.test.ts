@@ -69,6 +69,7 @@ const DIRECTIVE_MARKERS: Record<string, string> = {
   decide: 'class="callout callout-decide"',
   risks: 'class="risks"',
   notverified: "not-verified-list",
+  rail: 'class="rail"',
 };
 
 interface FakeEnvOpts {

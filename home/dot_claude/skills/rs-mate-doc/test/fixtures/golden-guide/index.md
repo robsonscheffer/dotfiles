@@ -11,6 +11,11 @@ tour:
 
 # Acme checkout guide
 
+:::rail
+Owner: Sam
+Service: orders
+:::
+
 This guide walks through how the acme/web checkout flow works, from the buy button to a
 refund. Checkout emits a checkout_clicked event when the buy button fires. {C1}
 
