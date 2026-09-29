@@ -132,6 +132,34 @@ describe("lint: unclaimed-fact (warn)", () => {
   });
 });
 
+describe("lint: badge-tone (warn)", () => {
+  const badgePos = { start: { line: 4, column: 3 }, end: { line: 4, column: 3 } };
+
+  function badgeParagraph(value: string) {
+    return { type: "paragraph" as const, children: [{ type: "text" as const, value, pos: badgePos }], pos: badgePos };
+  }
+
+  test("warns on an unknown tone at the text node's position", () => {
+    const doc = baseDoc({ body: [badgeParagraph("Rollout is :badge[Blocked]{tone=urgent} pending review.")] });
+    const issues = lint([doc], null);
+    const issue = issues.find((i) => i.rule === "badge-tone");
+    expect(issue?.severity).toBe("warn");
+    expect(issue?.pos).toEqual(badgePos);
+  });
+
+  for (const tone of ["good", "warn", "bad", "info", "neutral"]) {
+    test(`does not warn on the valid tone "${tone}"`, () => {
+      const doc = baseDoc({ body: [textParagraph(`Rollout is :badge[Blocked]{tone=${tone}} pending review.`)] });
+      expect(rulesOf(lint([doc], null))).not.toContain("badge-tone");
+    });
+  }
+
+  test("does not warn on a badge with no tone attribute", () => {
+    const doc = baseDoc({ body: [textParagraph("Rollout is :badge[Blocked] pending review.")] });
+    expect(rulesOf(lint([doc], null))).not.toContain("badge-tone");
+  });
+});
+
 describe("lint: ledger shape rules", () => {
   test("flags not_verified without an owner", () => {
     const ledger: Ledger = { path: "claims.yaml", claims: [{ id: "C1", claim: "x", status: "not_verified" }] };
