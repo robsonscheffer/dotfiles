@@ -10,7 +10,7 @@ import { collectFolderListing, renderFolderListing } from "./folder-view.ts";
 import { createHomeCache, collectHomeEntries } from "../index/collect.ts";
 import { renderHome } from "./home.ts";
 import { precomputeResolvedLinks } from "./link-resolve.ts";
-import { findFolderForAbsolutePath, resolveSafePath } from "./security.ts";
+import { resolveSafePath } from "./security.ts";
 import { loadFolders, realOrSelf, type RememberedFolder } from "./state.ts";
 import { createSseHub, LIVE_RELOAD_PATH, liveReloadClientScript } from "./sse.ts";
 import { THEME_CSS } from "../render/theme.ts";
@@ -181,17 +181,6 @@ export async function serve(opts: ServeOptions): Promise<ServerHandle> {
     }
 
     const state = await loadFolders(opts.stateDir);
-
-    // legacy: remove after pages migrate. Old `/md?path=<absolute>` links from the retired
-    // html-artifact skill; redirect into the viewer if the path is inside a remembered folder.
-    if (url.pathname === "/md") {
-      const rawPath = url.searchParams.get("path");
-      const found = rawPath ? findFolderForAbsolutePath(state.folders, rawPath) : null;
-      if (!found) return notFound();
-      const encodedRelPath = found.relPath.split("/").map(encodeURIComponent).join("/");
-      const target = `/${encodeURIComponent(found.folder.alias)}/${encodedRelPath}`;
-      return new Response(null, { status: 302, headers: { Location: target } });
-    }
 
     if (url.pathname === "/" || url.pathname === "") {
       const entries = await collectHomeEntries(state.folders, opts.parse, homeCache);

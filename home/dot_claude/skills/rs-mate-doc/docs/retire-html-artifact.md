@@ -88,12 +88,12 @@ self-starts the viewer on demand.
 
 ## Migrate legacy pages, then drop the legacy CSS
 
-The viewer still carries a compatibility layer for pages written by the tool it replaced: an
-old stylesheet URL, and an old query-string link format. Once nothing depends on either, remove
-them.
+The viewer carried a compatibility layer for pages written by the tool it replaced: an old
+stylesheet URL, and an old query-string link format.
 
-1. List pages still linking the old stylesheet or the old link format:
-   `rg -l 'localhost:52010/(style/main.css|md\?path)' <artifact dir>`.
-2. Migrate each page to the current markdown-plus-ledger format, one set of pages per commit.
-3. When the list from step 1 is empty: delete the legacy assets directory, the legacy
-   stylesheet route, the old query-string link redirect, and their tests.
+1. **Done.** The old `/md?path=<absolute path>` link format has been removed; all pages that
+   used it were migrated first. A request to `/md?path=...` now 404s like any other unknown
+   route.
+2. The old stylesheet route (`/style/main.css`) stays for now, on purpose; some pages still
+   link it. List remaining pages with `rg -l 'localhost:52010/style/main.css' <artifact dir>`,
+   migrate them, then delete the legacy assets directory, the route, and its tests.
