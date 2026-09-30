@@ -4,6 +4,7 @@ import { validateLedger } from "../ledger/index.ts";
 import { BADGE_RE, BADGE_TONES } from "../render/inline.ts";
 import type {
   Block,
+  Claim,
   ClaimRefNode,
   Doc,
   Inline,
@@ -24,6 +25,10 @@ const PII_PATTERNS: RegExp[] = [
   /\b\d{3}-\d{2}-\d{4}\b/, // SSN-shaped
   /\b(?:\d[ -]*?){13,19}\b/, // card-shaped
 ];
+const INSTRUCTION_WORDS = new Set([
+  "read", "skim", "start", "begin", "look", "see", "note", "review", "skip", "focus", "scroll",
+]);
+const LOCAL_REF_RE = /diff\.patch:|\bmeta\.json\b|\bbody\.txt\b/;
 const PRIVATE_PATH_PATTERNS = ["wiki/", "projects/", "~/brain"];
 const TONE_ATTR_RE = /tone\s*=\s*([a-zA-Z]+)/;
 
@@ -201,6 +206,19 @@ function findLineForClaim(ledgerPath: string, claimId: string | undefined): Span
   return fallback;
 }
 
+function excerptOf(claim: Claim): string | undefined {
+  const ev = claim.evidence;
+  if (!ev) return undefined;
+  return ev.kind === "code" || ev.kind === "mcp" || ev.kind === "link" ? ev.excerpt : undefined;
+}
+
+// Heuristic: a claim that starts with a reading direction is not a fact. The verifier's
+// "uncheckable" verdict is the second check.
+function isInstruction(text: string): boolean {
+  const first = text.replace(/^\s*\d+[.)]\s*/, "").trim().split(/\s+/)[0] ?? "";
+  return INSTRUCTION_WORDS.has(first.toLowerCase().replace(/[^a-z]+$/, ""));
+}
+
 function lintLedger(ledger: Ledger): LintIssue[] {
   const issues: LintIssue[] = [];
   const { valid, errors } = validateLedger(ledger);
@@ -221,35 +239,72 @@ function lintLedger(ledger: Ledger): LintIssue[] {
     }
   }
 
+  const at = (claim: string) => findLineForClaim(ledger.path, claim);
   for (const claim of ledger.claims) {
-    if (claim.evidence) {
-      const excerpt =
-        claim.evidence.kind === "code" || claim.evidence.kind === "mcp"
-          ? claim.evidence.excerpt
-          : claim.evidence.kind === "link"
-            ? claim.evidence.excerpt
-            : undefined;
-      if (excerpt) {
-        if (SECRET_PATTERNS.some((pattern) => pattern.test(excerpt))) {
-          issues.push({
-            rule: "secret-in-excerpt",
-            severity: "error",
-            message: `evidence excerpt for ${claim.id} looks like a secret`,
-            path: ledger.path,
-            pos: findLineForClaim(ledger.path, claim.id),
-            claim: claim.id,
-          });
-        }
-        if (PII_PATTERNS.some((pattern) => pattern.test(excerpt))) {
-          issues.push({
-            rule: "pii-in-excerpt",
-            severity: "error",
-            message: `evidence excerpt for ${claim.id} looks like PII`,
-            path: ledger.path,
-            pos: findLineForClaim(ledger.path, claim.id),
-            claim: claim.id,
-          });
-        }
+    if (claim.status === "verified" && !claim.verdict) {
+      issues.push({
+        rule: "verified-without-verdict",
+        severity: "error",
+        message: `${claim.id} is verified but has no verdict`,
+        path: ledger.path,
+        pos: at(claim.id),
+        claim: claim.id,
+      });
+    }
+    if (isInstruction(claim.claim)) {
+      issues.push({
+        rule: "claim-is-instruction",
+        severity: "error",
+        message: `${claim.id} reads as an instruction, not a checkable fact`,
+        path: ledger.path,
+        pos: at(claim.id),
+        claim: claim.id,
+      });
+    }
+    const excerpt = excerptOf(claim);
+    if (excerpt) {
+      if (SECRET_PATTERNS.some((pattern) => pattern.test(excerpt))) {
+        issues.push({
+          rule: "secret-in-excerpt",
+          severity: "error",
+          message: `evidence excerpt for ${claim.id} looks like a secret`,
+          path: ledger.path,
+          pos: at(claim.id),
+          claim: claim.id,
+        });
+      }
+      if (PII_PATTERNS.some((pattern) => pattern.test(excerpt))) {
+        issues.push({
+          rule: "pii-in-excerpt",
+          severity: "error",
+          message: `evidence excerpt for ${claim.id} looks like PII`,
+          path: ledger.path,
+          pos: at(claim.id),
+          claim: claim.id,
+        });
+      }
+    }
+    if (excerpt !== undefined) {
+      const trimmed = excerpt.trim();
+      if (trimmed.length < 8 || !/[A-Za-z0-9]{3}/.test(trimmed)) {
+        issues.push({
+          rule: "weak-excerpt",
+          severity: "error",
+          message: `evidence excerpt for ${claim.id} is too short or empty of content to prove anything`,
+          path: ledger.path,
+          pos: at(claim.id),
+          claim: claim.id,
+        });
+      }
+      if (LOCAL_REF_RE.test(excerpt)) {
+        issues.push({
+          rule: "excerpt-local-ref",
+          severity: "error",
+          message: `evidence excerpt for ${claim.id} names a local fetch file, not the source`,
+          path: ledger.path,
+          pos: at(claim.id),
+          claim: claim.id,
+        });
       }
     }
   }
