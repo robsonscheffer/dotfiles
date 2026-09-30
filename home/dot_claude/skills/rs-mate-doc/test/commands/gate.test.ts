@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { main } from "../../src/cli.ts";
+import { claimHash } from "../../src/ledger/index.ts";
 import { EXIT } from "../../src/types.ts";
 import { fakeEnv, mkTmpDir, rmTmpDir } from "./util.ts";
 
@@ -15,17 +16,23 @@ afterEach(async () => {
   await Promise.all(dirs.splice(0).map(rmTmpDir));
 });
 
-const CLEAN_CLAIM = `claims:
+const CLEAN_TEXT = "Self-serve pricing starts at $40 a month.";
+const CLEAN_EVIDENCE = { kind: "link", url: "https://example.com/pricing", excerpt: "starts at $40", needs: "http" };
+const CLEAN_HASH = claimHash({ claim: CLEAN_TEXT, evidence: CLEAN_EVIDENCE as never });
+
+const CLEAN_CLAIM = `author: agent:claude
+claims:
   - id: C1
     claim: Self-serve pricing starts at $40 a month.
     status: verified
     evidence:
       kind: link
       url: https://example.com/pricing
-      excerpt: "$40"
+      excerpt: "starts at $40"
       needs: http
     verdict: supports
-    checked_by: agent:claude
+    checked_by: verifier:fixture
+    verdict_hash: ${CLEAN_HASH}
     checked_at: "2026-09-20"
     ttl_days: 30
 `;

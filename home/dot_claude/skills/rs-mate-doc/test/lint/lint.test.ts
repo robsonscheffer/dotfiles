@@ -26,7 +26,7 @@ function rulesOf(issues: LintIssue[]): string[] {
 
 const ledgerWithC7: Ledger = {
   path: "guide/claims.yaml",
-  claims: [{ id: "C7", claim: "x", status: "verified", evidence: { kind: "link", url: "https://example.com", needs: "http" }, verdict: "supports", checked_by: "agent:claude", checked_at: "2026-09-25" }],
+  claims: [{ id: "C7", claim: "x", status: "verified", evidence: { kind: "link", url: "https://example.com", needs: "http" }, verdict: "supports", verdict_hash: "h", checked_by: "verifier:fixture", checked_at: "2026-09-25" }],
 };
 
 describe("lint: claim-unresolved", () => {

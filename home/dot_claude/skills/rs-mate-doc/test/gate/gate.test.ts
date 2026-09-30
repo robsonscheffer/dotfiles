@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { writeApproval } from "../../src/commands/approve.ts";
 import { gate } from "../../src/gate/index.ts";
-import { ledgerHash } from "../../src/ledger/index.ts";
+import { claimHash, ledgerHash } from "../../src/ledger/index.ts";
 import { parse } from "../../src/parser/index.ts";
 import type { Env, RunResult } from "../../src/types.ts";
 
@@ -28,13 +28,17 @@ function fakeEnv(overrides: Partial<Env> = {}): Env {
   };
 }
 
+const CLEAN_BASE = {
+  claim: "Self-serve pricing starts at $40 a month.",
+  evidence: { kind: "link", url: "https://example.com/pricing", excerpt: "starts at $40", needs: "http" },
+} as const;
 const CLEAN_CLAIM = {
   id: "C1",
-  claim: "Self-serve pricing starts at $40 a month.",
+  ...CLEAN_BASE,
   status: "verified",
-  evidence: { kind: "link", url: "https://example.com/pricing", excerpt: "$40", needs: "http" },
   verdict: "supports",
-  checked_by: "agent:claude",
+  verdict_hash: claimHash(CLEAN_BASE as never),
+  checked_by: "verifier:fixture",
   checked_at: "2026-09-20",
   ttl_days: 30,
 };
@@ -46,7 +50,7 @@ async function writePage(dir: string, frontmatterExtra = ""): Promise<void> {
   );
 }
 async function writeClaimsYaml(dir: string, claims: unknown[]): Promise<void> {
-  await writeFile(join(dir, "claims.yaml"), `claims:\n${claims.map((c) => "  - " + JSON.stringify(c)).join("\n")}`);
+  await writeFile(join(dir, "claims.yaml"), `author: agent:claude\nclaims:\n${claims.map((c) => "  - " + JSON.stringify(c)).join("\n")}`);
 }
 
 // Every gate reason must be locatable: a non-empty file, and a real line number.

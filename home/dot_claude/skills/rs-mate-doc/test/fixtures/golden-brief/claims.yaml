@@ -1,3 +1,4 @@
+author: agent:claude
 claims:
   - id: C1
     claim: 312 orders used the fast checkout path this week.
@@ -8,7 +9,8 @@ claims:
       expect: { rows: 1, value: 312, tolerance: 0 }
       needs: snow
     verdict: supports
-    checked_by: agent:claude
+    checked_by: verifier:fixture
+    verdict_hash: b8dc4ea3726fa04be1fa0141d34a4a895a011a9c7744c266d71b71a2408ce064
     checked_at: 2026-09-25
     ttl_days: 7
   - id: C2
@@ -20,6 +22,7 @@ claims:
       excerpt: "fast-checkout flag"
       needs: http
     verdict: supports
-    checked_by: agent:claude
+    checked_by: verifier:fixture
+    verdict_hash: 2861a55d3ea5f0e311331acb35778c6b8743c6d7f67f2abb3911dc055b032c01
     checked_at: 2026-09-25
     ttl_days: 7

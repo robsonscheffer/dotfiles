@@ -1,3 +1,4 @@
+author: agent:claude
 claims:
   - id: C1
     claim: Checkout emits a checkout_clicked event when the buy button fires.
@@ -8,7 +9,8 @@ claims:
       excerpt: "track('checkout_clicked')"
       needs: git
     verdict: supports
-    checked_by: agent:claude
+    checked_by: verifier:fixture
+    verdict_hash: d1c1fa8e8ae50a94558d0fea735b24258f29e20cdee7376d8f3e8ee6bd8d6a6e
     checked_at: 2026-09-25
     ttl_days: 30
   - id: C2
@@ -20,6 +22,7 @@ claims:
       expect: { rows: 1, value: 918, tolerance: 0 }
       needs: snow
     verdict: supports
-    checked_by: agent:claude
+    checked_by: verifier:fixture
+    verdict_hash: 5afb54bbe0ff8fc872024c0879734fae0699c5cdd04e92b07d3d42e44e56542b
     checked_at: 2026-09-25
     ttl_days: 7
