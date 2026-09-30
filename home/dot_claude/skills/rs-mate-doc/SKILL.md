@@ -1,6 +1,6 @@
 ---
 name: rs-mate-doc
-description: Write markdown docs whose facts are checked, using the mate-doc CLI (new, lint, audit, verdict, gate, build, open, status, walk, compare). Use whenever Robson asks for a doc, brief, guide, explainer, decision memo, or PR walk that other people will rely on, wants claims in a doc backed by code/links/queries, asks to audit or refresh an existing mate-doc folder (one with a claims.yaml), wants to preview markdown in the mate-doc viewer, wants to see what a core rules file (e.g. AGENTS.md) actually changes about an agent's answer, or mentions mate-doc, claims ledger, gate, or "official" docs. Prefer it over plain rs-doc when the facts must hold up; rs-doc still governs how the prose reads.
+description: Write markdown docs whose facts are checked, using the mate-doc CLI (new, lint, audit, verify, verdict, gate, build, open, status, walk, compare). Use whenever Robson asks for a doc, brief, guide, explainer, decision memo, or PR walk that other people will rely on, wants claims in a doc backed by code/links/queries, asks to audit or refresh an existing mate-doc folder (one with a claims.yaml), wants to preview markdown in the mate-doc viewer, wants to see what a core rules file (e.g. AGENTS.md) actually changes about an agent's answer, or mentions mate-doc, claims ledger, gate, or "official" docs. Prefer it over plain rs-doc when the facts must hold up; rs-doc still governs how the prose reads.
 allowed-tools:
   - Read
   - Write
@@ -11,6 +11,7 @@ allowed-tools:
   - Bash(mate-doc new:*)
   - Bash(mate-doc lint:*)
   - Bash(mate-doc audit:*)
+  - Bash(mate-doc verify:*)
   - Bash(mate-doc verdict:*)
   - Bash(mate-doc gate:*)
   - Bash(mate-doc build:*)
@@ -47,7 +48,8 @@ mate-doc new <folder> --shape plain|guide|brief   # skeleton full of TODOs
 # write pages + claims.yaml
 mate-doc lint <folder>        # structure, style, safety; exit 1 on any error
 mate-doc audit <folder>       # runs the evidence checks, prints the verdict worklist
-mate-doc verdict <folder> <Cn> --supports|--overstates|--contradicts|--unrelated --by agent:claude
+mate-doc verify <folder>      # a fresh agent judges each claim from fetched evidence
+# MCP claims: Robson runs `mate-doc verdict <folder> <Cn> --supports` himself
 mate-doc gate <folder>        # pass/fail with reasons; the exit code is the contract
 mate-doc build <folder> --out <dir>   # self-contained offline HTML
 mate-doc open <folder-or-file>        # live viewer at http://127.0.0.1:52010
@@ -62,6 +64,7 @@ Iterate lint and gate until both pass. `audit` exits 0 even when checks fail, so
 
 - Every sentence that states a checkable fact (a number, a name in code, a behavior, a date, a quote) ends with a claim ref like `{C3}`. Lint warns `unclaimed-fact` when a sentence has a number or code identifier and no ref.
 - Keep a claim to one fact, worded the way the page says it. The verdict compares the page sentence with the evidence, so a claim that bundles two facts can only be half supported.
+- A claim is one statement a reader could be wrong about that one piece of evidence can settle. Reading directions, advice, opinions and summaries of the doc are not claims and carry no ref. Lint fails them as `claim-is-instruction`.
 - Use the directives (`:::tiles`, `:::decide`, `:::risks`, `:::flow`, and others) when they fit the content, not for decoration. Syntax is in `references/directives.md`.
 - End each page that has open claims with a `## Open claims` section holding an empty `:::notverified` block; it lists the not_verified claims for the reader.
 - Lint rejects em-dashes, `localhost` URLs, and private vault paths (`wiki/`, `projects/`, `~/brain`) in prose. Rephrase rather than fight the rule; those docs get shared.
@@ -70,24 +73,17 @@ Iterate lint and gate until both pass. `audit` exits 0 even when checks fail, so
 
 Read `references/claims.md` before writing the ledger the first time in a session. The short version:
 
-- A claim you can back: `status: verified`, an `evidence` block, `checked_by: agent:claude`, `checked_at: <today>`, and a `ttl_days` that matches how fast the fact can rot (code on main: 30; a metric: 7).
+- A claim you can back: `status: proposed`, an `evidence` block, and a `ttl_days` that matches how fast the fact can rot (code on main: 30; a metric: 7). `mate-doc new` fills `author:`. You never write `verified`, `verdict`, `checked_by` or `checked_at`; `verify` writes them.
 - A claim you cannot back: `status: not_verified` with a real `owner`, the person who would know. Never leave `TODO` as the owner (the gate fails it) and never invent evidence to make a claim look verified. An honest open claim with a named owner passes the gate; a fabricated one is the exact failure this tool exists to catch.
-- Code evidence names its repo explicitly: `ref: owner/repo@<rev>:<path>:<line>` with a short `excerpt` that appears within 3 lines of that line. Read the file first and copy the excerpt exactly. Prefer a commit SHA or `main` for `<rev>`.
+- Code evidence names its repo explicitly: `ref: owner/repo@<rev>:<path>:<line>` with a short `excerpt` that appears within 3 lines of that line. Read the file first and copy the excerpt exactly. Prefer a commit SHA or `main` for `<rev>`. The excerpt has at least 8 characters with real words, and is never a fetch-dir file such as `diff.patch:12`.
 
 ### Verdicts
 
-`audit` proves the evidence still exists. It does not prove the evidence says what the page says. That judgment is yours, and it is recorded per claim with `mate-doc verdict`.
+You do not judge your own claims. `mate-doc verify <folder>` fetches the evidence itself and asks a fresh agent that sees only the claim and that evidence. On `supports` it moves the claim to `verified` and records `checked_by: verifier:<model>`.
 
-Order matters. A claim with no verdict yet is not machine-checked: the first `audit` only lists it on the worklist as `new`. So before the first verdict, read the source yourself (the file at that rev, the page at that URL) and confirm the excerpt is really there. After the verdict, `audit` and `gate` run the check every time, and a missing excerpt fails the gate as `check-failed`. Run `audit` once more after your verdicts to see the checks come back ok.
+For anything that did not pass, read its `verdict_reason`, fix the sentence or the evidence, and re-run `verify`. Editing a claim after its verdict makes it `verdict-stale`. `--overstates`, `--contradicts`, `--unrelated` and `--uncheckable` may be recorded with `mate-doc verdict`, but only make the gate stricter.
 
-For each claim on the worklist, read the page sentence and the evidence side by side, then pick one and always pass `--by agent:claude` (without it the ledger records `agent:unknown`):
-
-- `--supports`: the evidence says what the sentence says, no more and no less.
-- `--overstates`: the evidence is related but the sentence claims more (a bigger number, "always" where the code says "sometimes"). Fix the sentence, then re-verdict.
-- `--contradicts`: the evidence says otherwise. Fix the page, not the verdict.
-- `--unrelated`: wrong evidence. Find the right source or downgrade the claim to not_verified with an owner.
-
-Only `supports` passes the gate. Picking `--supports` to get green is the one move that makes the whole doc a lie; if you are unsure, say so and leave the claim open.
+MCP claims, and any `supports` a person must give, go to Robson: he runs `mate-doc verdict <folder> <Cn> --supports` at his own terminal. It refuses agents and refuses the ledger author. Picking a verdict to get green is the one move that makes the whole doc a lie; if unsure, leave the claim open.
 
 ## Previewing
 
@@ -95,13 +91,11 @@ Only `supports` passes the gate. Picking `--supports` to get green is the one mo
 
 ## PR walks
 
-`mate-doc walk` builds a review doc for a PR in two steps: fetch, then compose from your analysis. Read `references/walk.md` for the input file formats.
+`mate-doc walk` fetches a PR and composes a review doc from your analysis. `references/walk.md` has the input formats, anchors and refs. After composing, run `mate-doc lint`, `mate-doc verify <walk-dir>`, `mate-doc gate`, then `mate-doc open <walk-dir>`.
 
 ```
-mate-doc walk <pr-url> --fetch-only --out <dir>   # meta.json, body.txt, diff.patch, files.txt, comments.json
-# write story.json, questions.json, risks.json, judgment.json into <dir>
+mate-doc walk <pr-url> --fetch-only --out <dir>
 mate-doc walk <pr-url> --inputs <dir> --out <walk-dir>
-mate-doc lint <walk-dir> && mate-doc open <walk-dir>
 ```
 
 Once the human has read the walk, `mate-doc walk submit <walk-dir> --approve|--request-changes|--comment` posts
