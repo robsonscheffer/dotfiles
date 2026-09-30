@@ -327,10 +327,10 @@ describe("lint: new issues carry a real line on disk", () => {
   });
 });
 
-describe("schema: verified needs a verdict hash", () => {
-  test("a verified claim with no verdict_hash is rejected", () => {
+describe("schema: verdict hash is optional so the gate can demote old ledgers", () => {
+  test("a verified claim with no verdict_hash is accepted", () => {
     const claim = { ...proposed("C1", "x"), status: "verified", verdict: "supports", checked_by: "verifier:x", checked_at: "2026-09-25" };
-    expect(validateLedger(ledgerOf([claim])).valid).toBe(false);
+    expect(validateLedger(ledgerOf([claim])).valid).toBe(true);
   });
 
   test("a proposed claim with evidence and no checked_by is accepted", () => {
