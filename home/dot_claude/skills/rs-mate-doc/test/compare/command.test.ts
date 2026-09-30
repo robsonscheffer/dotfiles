@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { runCompare } from "../../src/commands/compare.ts";
-import type { Env, RunResult } from "../../src/types.ts";
+import { EXIT, type Env, type RunResult } from "../../src/types.ts";
 
 const dirs: string[] = [];
 async function tempDir(): Promise<string> {
@@ -22,242 +22,331 @@ afterEach(async () => {
   Object.assign(process.env, savedEnv);
 });
 
-let emptyConfigDir: string;
+let home: string;
 beforeEach(async () => {
-  // Point XDG_CONFIG_HOME at a folder with no mate-doc/config.yaml so every test that does not
-  // set up its own config falls back to the default compare command, regardless of what is
-  // actually installed on the machine running the suite.
-  emptyConfigDir = await tempDir();
-  process.env.XDG_CONFIG_HOME = emptyConfigDir;
+  // No mate-doc/config.yaml and an empty HOME: defaults apply and no real transcript is read.
+  process.env.XDG_CONFIG_HOME = await tempDir();
+  home = await tempDir();
+  process.env.HOME = home;
 });
 
 interface Call {
   cmd: string[];
-  opts?: { input?: string };
+  opts?: { input?: string; cwd?: string };
 }
 
-function recordingEnv(results: RunResult[]): { env: Env; calls: Call[] } {
+type Responder = (cmd: string[], call: number) => RunResult | Promise<RunResult>;
+
+function recordingEnv(respond: Responder): { env: Env; calls: Call[] } {
   const calls: Call[] = [];
-  let i = 0;
   const env: Env = {
     has: () => true,
     fetch: async () => ({ status: 200, body: "" }),
     now: () => new Date("2026-09-29T12:00:00Z"),
     run: async (cmd, opts) => {
       calls.push({ cmd, opts });
-      const result = results[i] ?? { code: 0, stdout: "", stderr: "" };
-      i++;
-      return result;
+      return respond(cmd, calls.length - 1);
     },
   };
   return { env, calls };
 }
 
-async function writePromptFile(dir: string, text = "Explain the refund policy."): Promise<string> {
-  const path = join(dir, "prompt.md");
-  await writeFile(path, text);
-  return path;
+function json(result: string, extra: Record<string, unknown> = {}): RunResult {
+  return {
+    code: 0,
+    stdout: JSON.stringify({ result, total_cost_usd: 0.01, duration_ms: 2000, ...extra }),
+    stderr: "",
+  };
 }
 
-async function writeCoreFile(dir: string, text = "# core rules\n"): Promise<string> {
-  const path = join(dir, "AGENTS.md");
-  await writeFile(path, text);
-  return path;
+function paneOf(cmd: string[]): "A" | "A-base" | "B" {
+  const joined = cmd.join(" ");
+  if (joined.includes("b.md")) return "B";
+  if (joined.includes("base.md")) return "A-base";
+  return "A";
 }
 
-describe("mate-doc compare", () => {
-  test("builds the default without/with commands and pipes the prompt on stdin", async () => {
-    const dir = await tempDir();
-    const promptPath = await writePromptFile(dir);
-    const corePath = await writeCoreFile(dir);
-    const outDir = join(dir, "out");
-    const { env, calls } = recordingEnv([
-      { code: 0, stdout: "plain answer", stderr: "" },
-      { code: 0, stdout: "core answer", stderr: "" },
-    ]);
+function sessionOf(cmd: string[]): string {
+  return cmd[cmd.indexOf("--session-id") + 1]!;
+}
 
-    const code = await runCompare([promptPath, "--core", corePath, "--out", outDir], env);
+interface Fixture {
+  dir: string;
+  prompt: string;
+  system: string;
+  base: string;
+  out: string;
+}
 
-    expect(code).toBe(0);
-    expect(calls).toHaveLength(2);
-    expect(calls[0]!.cmd).toEqual(["claude", "-p", "--safe-mode"]);
-    expect(calls[0]!.opts?.input).toBe("Explain the refund policy.");
-    expect(calls[1]!.cmd).toEqual(["claude", "-p", "--safe-mode", "--append-system-prompt-file", corePath]);
-    expect(calls[1]!.opts?.input).toBe("Explain the refund policy.");
+async function fixture(): Promise<Fixture> {
+  const dir = await tempDir();
+  const prompt = join(dir, "prompt.md");
+  const system = join(dir, "candidate.md");
+  const base = join(dir, "base-rules.md");
+  await writeFile(prompt, "Explain the refund policy.");
+  await writeFile(system, "# candidate rules\n");
+  await writeFile(base, "# base rules\n");
+  return { dir, prompt, system, base, out: join(dir, "out") };
+}
+
+function baseArgs(f: Fixture, extra: string[] = []): string[] {
+  return [f.prompt, "--system", f.system, "--base-system", f.base, "--print", "--out", f.out, ...extra];
+}
+
+async function captureStderr<T>(fn: () => Promise<T>): Promise<{ value: T; text: string }> {
+  const written: string[] = [];
+  const original = process.stderr.write.bind(process.stderr);
+  process.stderr.write = ((chunk: string | Uint8Array) => {
+    written.push(chunk.toString());
+    return true;
+  }) as typeof process.stderr.write;
+  try {
+    return { value: await fn(), text: written.join("") };
+  } finally {
+    process.stderr.write = original;
+  }
+}
+
+describe("mate-doc compare usage errors", () => {
+  test("--core is removed and the message names --system", async () => {
+    const f = await fixture();
+    const { env, calls } = recordingEnv(() => json("x"));
+    const { value, text } = await captureStderr(() => runCompare([f.prompt, "--core", f.system, "--print"], env));
+    expect(value).toBe(EXIT.usage);
+    expect(text).toContain("--system");
+    expect(calls).toHaveLength(0);
   });
 
-  test("passes --model through to both invocations", async () => {
-    const dir = await tempDir();
-    const promptPath = await writePromptFile(dir);
-    const corePath = await writeCoreFile(dir);
-    const outDir = join(dir, "out");
-    const { env, calls } = recordingEnv([
-      { code: 0, stdout: "plain", stderr: "" },
-      { code: 0, stdout: "core", stderr: "" },
-    ]);
-
-    await runCompare([promptPath, "--core", corePath, "--out", outDir, "--model", "opus"], env);
-
-    expect(calls[0]!.cmd).toEqual(["claude", "-p", "--safe-mode", "--model", "opus"]);
-    expect(calls[1]!.cmd).toEqual([
-      "claude",
-      "-p",
-      "--safe-mode",
-      "--append-system-prompt-file",
-      corePath,
-      "--model",
-      "opus",
-    ]);
+  test("missing --system", async () => {
+    const f = await fixture();
+    const { env } = recordingEnv(() => json("x"));
+    expect(await runCompare([f.prompt, "--print", "--base-system", f.base], env)).toBe(EXIT.usage);
   });
 
-  test("reads the base command from compare.command in config.yaml", async () => {
-    const dir = await tempDir();
-    const promptPath = await writePromptFile(dir);
-    const corePath = await writeCoreFile(dir);
-    const outDir = join(dir, "out");
-    const configDir = join(emptyConfigDir, "mate-doc");
-    await mkdir(configDir, { recursive: true });
-    await writeFile(join(configDir, "config.yaml"), "compare:\n  command: codex exec --json\n");
-    const { env, calls } = recordingEnv([
-      { code: 0, stdout: "plain", stderr: "" },
-      { code: 0, stdout: "core", stderr: "" },
-    ]);
-
-    await runCompare([promptPath, "--core", corePath, "--out", outDir], env);
-
-    expect(calls[0]!.cmd).toEqual(["codex", "exec", "--json"]);
-    expect(calls[1]!.cmd).toEqual(["codex", "exec", "--json", "--append-system-prompt-file", corePath]);
+  test("--runs below 1 or not a number", async () => {
+    const f = await fixture();
+    const { env } = recordingEnv(() => json("x"));
+    expect(await runCompare(baseArgs(f, ["--runs", "0"]), env)).toBe(EXIT.usage);
+    expect(await runCompare(baseArgs(f, ["--runs", "abc"]), env)).toBe(EXIT.usage);
   });
 
-  test("uses compare.core_flag from config.yaml for the with-core invocation", async () => {
-    const dir = await tempDir();
-    const promptPath = await writePromptFile(dir);
-    const corePath = await writeCoreFile(dir);
-    const outDir = join(dir, "out");
-    const configDir = join(emptyConfigDir, "mate-doc");
-    await mkdir(configDir, { recursive: true });
-    await writeFile(
-      join(configDir, "config.yaml"),
-      "compare:\n  command: codex exec --json\n  core_flag: --system-prompt-file\n",
+  test("no --print says interactive mode is not built yet", async () => {
+    const f = await fixture();
+    const { env, calls } = recordingEnv(() => json("x"));
+    const { value, text } = await captureStderr(() =>
+      runCompare([f.prompt, "--system", f.system, "--base-system", f.base], env),
     );
-    const { env, calls } = recordingEnv([
-      { code: 0, stdout: "plain", stderr: "" },
-      { code: 0, stdout: "core", stderr: "" },
-    ]);
-
-    await runCompare([promptPath, "--core", corePath, "--out", outDir], env);
-
-    expect(calls[0]!.cmd).toEqual(["codex", "exec", "--json"]);
-    expect(calls[1]!.cmd).toEqual(["codex", "exec", "--json", "--system-prompt-file", corePath]);
+    expect(value).toBe(EXIT.usage);
+    expect(text).toContain("interactive mode not built yet, use --print");
+    expect(calls).toHaveLength(0);
   });
 
-  test("writes without.md, with.md, and an index.md that reports the core hash", async () => {
-    const dir = await tempDir();
-    const promptPath = await writePromptFile(dir);
-    const corePath = await writeCoreFile(dir, "# core rules\n");
-    const outDir = join(dir, "out");
-    const { env } = recordingEnv([
-      { code: 0, stdout: "plain answer", stderr: "" },
-      { code: 0, stdout: "core answer", stderr: "" },
-    ]);
+  test("missing prompt, system, or base-system file", async () => {
+    const f = await fixture();
+    const { env } = recordingEnv(() => json("x"));
+    expect(await runCompare(["/does/not/exist.md", "--system", f.system, "--base-system", f.base, "--print"], env)).toBe(
+      EXIT.usage,
+    );
+    expect(await runCompare([f.prompt, "--system", "/does/not/exist.md", "--base-system", f.base, "--print"], env)).toBe(
+      EXIT.usage,
+    );
+    expect(await runCompare([f.prompt, "--system", f.system, "--base-system", "/does/not/exist.md", "--print"], env)).toBe(
+      EXIT.usage,
+    );
+  });
+});
 
-    const code = await runCompare([promptPath, "--core", corePath, "--out", outDir], env);
+describe("mate-doc compare batch", () => {
+  test("3 panes x 2 runs calls the right argv with the prompt as input and the cwd", async () => {
+    const f = await fixture();
+    const { env, calls } = recordingEnv(() => json("answer"));
 
-    expect(code).toBe(0);
-    expect(await readFile(join(outDir, "without.md"), "utf8")).toBe("plain answer");
-    expect(await readFile(join(outDir, "with.md"), "utf8")).toBe("core answer");
-    const index = await readFile(join(outDir, "index.md"), "utf8");
-    const expectedHash = createHash("sha256").update("# core rules\n").digest("hex");
-    expect(index).toContain(expectedHash);
-    expect(index).toContain(corePath);
+    const code = await runCompare(baseArgs(f, ["--runs", "2"]), env);
+
+    expect(code).toBe(EXIT.ok);
+    expect(calls).toHaveLength(6);
+    expect(calls.map((c) => paneOf(c.cmd))).toEqual(["A", "A-base", "B", "A", "A-base", "B"]);
+    for (const call of calls) {
+      const tail = call.cmd.slice(-5);
+      expect(tail.slice(0, 3)).toEqual(["-p", "--output-format", "json"]);
+      expect(tail[3]).toBe("--session-id");
+      expect(tail[4]).toMatch(/^[0-9a-f-]{36}$/);
+      expect(call.opts?.input).toBe("Explain the refund policy.");
+      expect(call.opts?.cwd).toBe(process.cwd());
+    }
+    expect(new Set(calls.map((c) => sessionOf(c.cmd))).size).toBe(6);
+    expect(calls[0]!.cmd.join(" ")).not.toContain(".md");
   });
 
-  test("numbers without/with files per run when --runs > 1", async () => {
-    const dir = await tempDir();
-    const promptPath = await writePromptFile(dir);
-    const corePath = await writeCoreFile(dir);
-    const outDir = join(dir, "out");
-    const { env } = recordingEnv([
-      { code: 0, stdout: "plain-1", stderr: "" },
-      { code: 0, stdout: "core-1", stderr: "" },
-      { code: 0, stdout: "plain-2", stderr: "" },
-      { code: 0, stdout: "core-2", stderr: "" },
-    ]);
+  test("A-base and B differ only at the system path, and point at the copies", async () => {
+    const f = await fixture();
+    const { env, calls } = recordingEnv(() => json("answer"));
 
-    const code = await runCompare([promptPath, "--core", corePath, "--out", outDir, "--runs", "2"], env);
+    await runCompare(baseArgs(f, ["--runs", "1", "--model", "opus"]), env);
 
-    expect(code).toBe(0);
-    expect(await readFile(join(outDir, "without-1.md"), "utf8")).toBe("plain-1");
-    expect(await readFile(join(outDir, "with-1.md"), "utf8")).toBe("core-1");
-    expect(await readFile(join(outDir, "without-2.md"), "utf8")).toBe("plain-2");
-    expect(await readFile(join(outDir, "with-2.md"), "utf8")).toBe("core-2");
+    const strip = (cmd: string[]) => cmd.slice(0, -2);
+    const baseCmd = strip(calls[1]!.cmd);
+    const bCmd = strip(calls[2]!.cmd);
+    const diff = baseCmd.map((part, i) => [part, bCmd[i]]).filter(([x, y]) => x !== y);
+    expect(baseCmd).toHaveLength(bCmd.length);
+    expect(diff).toEqual([[join(f.out, "system", "base.md"), join(f.out, "system", "b.md")]]);
+    expect(baseCmd).toContain("--model");
+    expect(baseCmd).toContain("opus");
   });
 
-  test("exits non-zero with the runner's error when the without-core call fails", async () => {
-    const dir = await tempDir();
-    const promptPath = await writePromptFile(dir);
-    const corePath = await writeCoreFile(dir);
-    const outDir = join(dir, "out");
-    const { env } = recordingEnv([{ code: 1, stdout: "", stderr: "claude: not authenticated" }]);
+  test("copies the two files and writes sha256.txt", async () => {
+    const f = await fixture();
+    const { env } = recordingEnv(() => json("answer"));
 
-    const code = await runCompare([promptPath, "--core", corePath, "--out", outDir], env);
+    await runCompare(baseArgs(f, ["--runs", "1"]), env);
 
-    expect(code).not.toBe(0);
-    await expect(readFile(join(outDir, "index.md"), "utf8")).rejects.toThrow();
+    expect(await readFile(join(f.out, "system", "base.md"), "utf8")).toBe("# base rules\n");
+    expect(await readFile(join(f.out, "system", "b.md"), "utf8")).toBe("# candidate rules\n");
+    const hash = (t: string) => createHash("sha256").update(t).digest("hex");
+    expect(await readFile(join(f.out, "system", "sha256.txt"), "utf8")).toBe(
+      `${hash("# base rules\n")}  base.md\n${hash("# candidate rules\n")}  b.md\n`,
+    );
   });
 
-  test("exits non-zero with the runner's error when the with-core call fails", async () => {
-    const dir = await tempDir();
-    const promptPath = await writePromptFile(dir);
-    const corePath = await writeCoreFile(dir);
-    const outDir = join(dir, "out");
-    const { env } = recordingEnv([
-      { code: 0, stdout: "plain", stderr: "" },
-      { code: 1, stdout: "", stderr: "claude: not authenticated" },
-    ]);
+  test("saves run-n.md and run-n.json per pane", async () => {
+    const f = await fixture();
+    const { env } = recordingEnv((cmd) => json(`answer from ${paneOf(cmd)}`));
 
-    const code = await runCompare([promptPath, "--core", corePath, "--out", outDir], env);
+    await runCompare(baseArgs(f, ["--runs", "2"]), env);
 
-    expect(code).not.toBe(0);
-    await expect(readFile(join(outDir, "index.md"), "utf8")).rejects.toThrow();
-  });
-
-  test("failure message shows stdout and the exit code when stderr is empty", async () => {
-    const dir = await tempDir();
-    const promptPath = await writePromptFile(dir);
-    const corePath = await writeCoreFile(dir);
-    const outDir = join(dir, "out");
-    const { env } = recordingEnv([{ code: 1, stdout: "Not logged in · Please run /login", stderr: "" }]);
-
-    const written: string[] = [];
-    const originalWrite = process.stderr.write.bind(process.stderr);
-    process.stderr.write = ((chunk: string | Uint8Array) => {
-      written.push(chunk.toString());
-      return true;
-    }) as typeof process.stderr.write;
-
-    try {
-      const code = await runCompare([promptPath, "--core", corePath, "--out", outDir], env);
-      expect(code).not.toBe(0);
-      const message = written.join("");
-      expect(message).toContain("exit 1");
-      expect(message).toContain("Not logged in");
-    } finally {
-      process.stderr.write = originalWrite;
+    for (const pane of ["A", "A-base", "B"]) {
+      for (const n of [1, 2]) {
+        expect(await readFile(join(f.out, pane, `run-${n}.md`), "utf8")).toBe(`answer from ${pane}`);
+        const raw = JSON.parse(await readFile(join(f.out, pane, `run-${n}.json`), "utf8"));
+        expect(raw.result).toBe(`answer from ${pane}`);
+      }
     }
   });
 
-  test("usage error when the prompt file does not exist", async () => {
-    const { env } = recordingEnv([]);
-    const code = await runCompare(["/does/not/exist.md"], env);
-    expect(code).toBe(2);
+  test("a failing pane exits failed and writes no index", async () => {
+    const f = await fixture();
+    const { env } = recordingEnv((cmd) =>
+      paneOf(cmd) === "B" ? { code: 1, stdout: "", stderr: "claude: not authenticated" } : json("ok"),
+    );
+
+    const { value, text } = await captureStderr(() => runCompare(baseArgs(f, ["--runs", "1"]), env));
+
+    expect(value).toBe(EXIT.failed);
+    expect(text).toContain("exit 1");
+    expect(text).toContain("not authenticated");
+    await expect(readFile(join(f.out, "index.md"), "utf8")).rejects.toThrow();
   });
 
-  test("environment error when the core file does not exist", async () => {
-    const dir = await tempDir();
-    const promptPath = await writePromptFile(dir);
-    const { env } = recordingEnv([]);
-    const code = await runCompare([promptPath, "--core", "/does/not/exist/AGENTS.md"], env);
-    expect(code).toBe(3);
+  test("unparseable JSON exits failed", async () => {
+    const f = await fixture();
+    const { env } = recordingEnv(() => ({ code: 0, stdout: "not json", stderr: "" }));
+    const { value, text } = await captureStderr(() => runCompare(baseArgs(f, ["--runs", "1"]), env));
+    expect(value).toBe(EXIT.failed);
+    expect(text).toContain("unparseable");
+  });
+
+  test("uses transcript metrics when the session file exists", async () => {
+    const f = await fixture();
+    const projectDir = join(home, ".claude", "projects", "proj");
+    await mkdir(projectDir, { recursive: true });
+    const { env } = recordingEnv(async (cmd) => {
+      const lines = [
+        { type: "user", timestamp: "2026-01-01T00:00:00.000Z", message: { role: "user", content: "hi" } },
+        {
+          type: "assistant",
+          timestamp: "2026-01-01T00:00:07.000Z",
+          requestId: "r1",
+          message: { usage: { input_tokens: 10, cache_read_input_tokens: 90, cache_creation_input_tokens: 0, output_tokens: 40 } },
+        },
+      ];
+      await writeFile(join(projectDir, `${sessionOf(cmd)}.jsonl`), lines.map((l) => JSON.stringify(l)).join("\n"));
+      return json("answer", { duration_ms: 99000 });
+    });
+
+    await runCompare(baseArgs(f, ["--runs", "1"]), env);
+
+    const index = await readFile(join(f.out, "index.md"), "utf8");
+    expect(index).toMatch(/\| seconds \| 7 \| 7 \| 7 \|/);
+    expect(index).toMatch(/\| context \| 100 \| 100 \| 100 \|/);
+    expect(index).toMatch(/\| output \| 40 \| 40 \| 40 \|/);
+  });
+
+  test("falls back to duration_ms and n/a when no transcript exists", async () => {
+    const f = await fixture();
+    const { env } = recordingEnv(() => json("answer", { duration_ms: 4500 }));
+
+    await runCompare(baseArgs(f, ["--runs", "1"]), env);
+
+    const index = await readFile(join(f.out, "index.md"), "utf8");
+    expect(index).toMatch(/\| seconds \| 4\.5 \| 4\.5 \| 4\.5 \|/);
+    expect(index).toMatch(/\| context \| n\/a \| n\/a \| n\/a \|/);
+    expect(index).toMatch(/\| output \| n\/a \| n\/a \| n\/a \|/);
+    expect(index).toMatch(/\| cost \| \$0\.0100 \| \$0\.0100 \| \$0\.0100 \|/);
+  });
+
+  test("table cells and verdict when B is clearly shorter", async () => {
+    const f = await fixture();
+    const long = (n: number) => Array.from({ length: n }, () => "word").join(" ");
+    const { env } = recordingEnv((cmd, i) => {
+      const run = Math.floor(i / 3);
+      const pane = paneOf(cmd);
+      if (pane === "B") return json(long(5 + run));
+      return json(long(50 + run * 2));
+    });
+
+    const code = await runCompare(baseArgs(f, ["--runs", "2"]), env);
+
+    expect(code).toBe(EXIT.ok);
+    const index = await readFile(join(f.out, "index.md"), "utf8");
+    expect(index).toContain("| words | 51 [50..52] | 51 [50..52] | 5.5 [5..6] | B better |");
+    expect(index).toContain("| em-dashes | 0 [0..0] | 0 [0..0] | 0 [0..0] | same |");
+    expect(index).toContain("Your verdict:");
+    expect(index).toContain("## Run 2");
+  });
+});
+
+describe("mate-doc compare --set", () => {
+  test("runs every .md in the dir, one folder per prompt, plus a top index", async () => {
+    const f = await fixture();
+    const setDir = join(f.dir, "set");
+    await mkdir(setDir);
+    await writeFile(join(setDir, "alpha.md"), "First prompt.");
+    await writeFile(join(setDir, "beta.md"), "Second prompt.");
+    await writeFile(join(setDir, "notes.txt"), "ignored");
+    const { env, calls } = recordingEnv(() => json("answer"));
+
+    const code = await runCompare(
+      ["--set", setDir, "--system", f.system, "--base-system", f.base, "--print", "--runs", "1", "--out", f.out],
+      env,
+    );
+
+    expect(code).toBe(EXIT.ok);
+    expect(calls).toHaveLength(6);
+    expect(calls.slice(0, 3).every((c) => c.opts?.input === "First prompt.")).toBe(true);
+    expect(calls.slice(3).every((c) => c.opts?.input === "Second prompt.")).toBe(true);
+    expect(await readFile(join(f.out, "alpha", "B", "run-1.md"), "utf8")).toBe("answer");
+    expect(await readFile(join(f.out, "beta", "index.md"), "utf8")).toContain("Second prompt.");
+    expect(await readFile(join(f.out, "system", "b.md"), "utf8")).toBe("# candidate rules\n");
+    const top = await readFile(join(f.out, "index.md"), "utf8");
+    expect(top).toContain("[alpha](alpha/index.md)");
+    expect(top).toContain("[beta](beta/index.md)");
+    expect(top).toContain("words: single run");
+  });
+
+  test("defaults to the bundled prompts", async () => {
+    const f = await fixture();
+    const { env, calls } = recordingEnv(() => json("answer"));
+
+    const code = await runCompare(
+      ["--set", "--system", f.system, "--base-system", f.base, "--print", "--runs", "1", "--out", f.out],
+      env,
+    );
+
+    expect(code).toBe(EXIT.ok);
+    expect(calls).toHaveLength(9);
+    const top = await readFile(join(f.out, "index.md"), "utf8");
+    for (const name of ["prompt-debug", "prompt-recommend", "prompt-review"]) {
+      expect(top).toContain(`[${name}](${name}/index.md)`);
+    }
   });
 });
