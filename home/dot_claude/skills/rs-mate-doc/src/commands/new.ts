@@ -23,7 +23,7 @@ function copyRecursive(src: string, dest: string): void {
   }
 }
 
-export async function runNew(argv: string[]): Promise<number> {
+export async function runNew(argv: string[], gitName?: () => string): Promise<number> {
   const [path, ...rest] = argv;
   const shapeIdx = rest.indexOf("--shape");
   const shape = shapeIdx !== -1 ? rest[shapeIdx + 1] : undefined;
@@ -58,7 +58,7 @@ export async function runNew(argv: string[]): Promise<number> {
   const ledgerPath = join(path, "claims.yaml");
   if (existsSync(ledgerPath)) {
     const raw = readFileSync(ledgerPath, "utf8");
-    writeFileSync(ledgerPath, raw.replace(/^author:.*$/m, () => `author: ${detectActor()}`));
+    writeFileSync(ledgerPath, raw.replace(/^author:.*$/m, () => `author: ${detectActor(process.env, gitName)}`));
   }
   process.stdout.write(`mate-doc new: wrote ${path}/\n`);
   return EXIT.ok;

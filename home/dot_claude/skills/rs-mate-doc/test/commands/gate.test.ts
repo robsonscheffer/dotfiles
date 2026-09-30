@@ -81,6 +81,18 @@ describe("gate command: exit codes", () => {
     expect(text).toContain("approved_by: Sam"); // untouched fields survive the surgical write
   });
 
+  test("rewrites an official doc to draft when a verdict is not independent", async () => {
+    const dir = await tempDir();
+    writeFileSync(join(dir, "claims.yaml"), CLEAN_CLAIM.replace("verifier:fixture", "agent:claude"));
+    writeFileSync(
+      join(dir, "index.md"),
+      "---\ntitle: Checkout\nstatus: official\napproved_by: Sam\nledger_hash: not-the-real-hash\n---\n\nSelf-serve pricing starts at $40 a month. {C1}\n",
+    );
+    const env = fakeEnv({ fetch: async () => ({ status: 200, body: "Self-serve pricing starts at $40/month." }) });
+    expect(await main(["gate", dir], { env })).toBe(EXIT.failed);
+    expect(readFileSync(join(dir, "index.md"), "utf8")).toContain("status: draft");
+  });
+
   test("usage error when no path is given", async () => {
     expect(await main(["gate"])).toBe(EXIT.usage);
   });
