@@ -10,7 +10,7 @@ describe("runChecks", () => {
   });
 
   test("count matches an em-dash", () => {
-    expect(one("a — b — c", { name: "d", kind: "count", pattern: "—" }).value).toBe(2);
+    expect(one("a \u2014 b \u2014 c", { name: "d", kind: "count", pattern: "\u2014" }).value).toBe(2);
   });
 
   test("count returns -1 for an invalid pattern", () => {
