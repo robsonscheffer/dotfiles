@@ -107,34 +107,29 @@ Code refs cite the PR's head commit SHA (`<repo>@<sha>:<file>:<line>`), so `mate
 
 When `context.json` has items, the composed doc gets a "Related notes" section rendering each as a wikilink (no vault path, just the note name).
 
-## Comparing a prompt with and without the core
+## Comparing a core rules file across three panes
 
-`mate-doc compare <prompt-file>` runs the same prompt through an agent CLI twice, once bare and
-once with a core rules file (default `~/.claude/AGENTS.md`) appended as a system prompt, and
-writes both outputs side by side.
+`mate-doc compare` shows one prompt answered three ways: A (your everyday agent), A-base (isolated,
+base rules `--base-system`, default `~/.claude/AGENTS.md`), B (isolated, candidate `--system`).
+A-base and B differ only in the appended file, so that pair is the comparison; A is context.
 
 ```
-mate-doc compare prompt.md                          # default core, one run, timestamped out dir
-mate-doc compare prompt.md --core other.md --runs 3 --model opus --out compare-dir
+mate-doc compare prompt.md --system new-rules.md                  # interactive: 3 cmux panes, one run
+mate-doc compare send <ts> "follow-up"; mate-doc compare report <ts>   # type into all panes; numbers per turn
+mate-doc compare prompt.md --system new-rules.md --print --runs 3 # batch: N runs per pane, verdict page
+mate-doc compare --set [dir] --system new-rules.md --print       # batch over a folder of prompts
 ```
 
-The default agent invocation is `claude -p --safe-mode` (with core: `... --append-system-prompt-file
-<core>`), not `--bare`: `--bare` skips keychain and OAuth reads, so a normal logged-in user gets
-an auth error instead of an answer. `--safe-mode` keeps the login and disables CLAUDE.md, skills,
-plugins, and hooks, which is the isolation compare needs. Override the base command with the
-`compare:` key of `${XDG_CONFIG_HOME:-~/.config}/mate-doc/config.yaml`
-(`compare.command: codex exec --json`) when comparing against a different agent CLI, and its
-`compare.core_flag` (default `--append-system-prompt-file`) when that CLI's system-prompt flag has
-a different name, for example:
+Workflow: watch one interactive run, then run the batch. Interactive shows numbers per turn and
+never a verdict; a `Your verdict:` line is left for you. Flags: `--model`, `--runs` (default 3),
+`--out <dir>`. Config is `compare:` in `${XDG_CONFIG_HOME:-~/.config}/mate-doc/config.yaml`:
+`command`, `system_flag`, `isolate_flags`, and `checks` (name plus `kind`: `words` [max], `count`
+[pattern], `phrases` [list], `long_paragraphs` [max_lines], `ends_with` [pattern]).
 
-```yaml
-compare:
-  command: codex exec --json
-  core_flag: --system-prompt-file
-```
-
-The out dir gets `without.md`, `with.md` (numbered per run when `--runs` > 1), and an `index.md`
-with the prompt, both outputs in a `:::tabs` block, word counts, and the core's path and sha256.
+Verdict rule (batch only, per check): with 2+ runs each, if the A-base and B min..max ranges
+overlap the verdict is `same`; otherwise `B better` or `B worse` (`ends_with` is higher-is-better,
+all others lower-is-better); with one run it is `single run`. Cost comes from the batch JSON only.
+Run folders: `system/`, `A/`, `A-base/`, `B/`, `index.md`, and `panes.json` when interactive.
 
 ## Reporting back
 
