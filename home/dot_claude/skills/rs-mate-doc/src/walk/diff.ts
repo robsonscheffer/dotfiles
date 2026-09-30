@@ -54,24 +54,25 @@ export interface FileChange {
 
 const HUNK_RE = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
 
-// Finds the best line to anchor a code claim to, for one file in a unified diff. Prefers the
-// first added line (it survives at the PR's head commit, where every claim is normally
-// checked). Only when a file's whole diff has no added line at all - a pure removal - falls
-// back to the first removed line, which the caller must then anchor at the base commit instead,
-// since it no longer exists at head. Best-effort: it walks hunk headers to track line numbers,
-// which drifts on the "\ No newline at end of file" marker and similar edge cases a real patch
-// parser would handle - acceptable here since this only has to point close enough for a human
-// to confirm.
-export function firstFileChange(diff: string, filepath: string): FileChange {
+// Finds the line an agent chose as evidence, for one file in a unified diff. Searches the file's
+// added lines first (they exist at the PR's head commit, where claims are normally checked) and
+// returns the first whose trimmed body contains the trimmed excerpt. Only when no added line
+// matches does it search removed lines, which the caller must anchor at the base commit. The
+// returned excerpt is the agent's own text, so audit looks for what the agent chose. Best-effort
+// line numbers: hunk headers are tracked, which drifts on "\ No newline at end of file" and
+// similar edge cases a real patch parser would handle.
+export function findAnchorLine(diff: string, filepath: string, excerpt: string): FileChange {
+  const needle = excerpt.trim();
+  if (needle.length === 0) return { found: false };
+
   let inFile = false;
   let oldLine = 0;
   let newLine = 0;
-  let removedFallback: FileChange | undefined;
+  let removedMatch: FileChange | undefined;
 
-  const lines = diff.split("\n");
-  for (const raw of lines) {
+  for (const raw of diff.split("\n")) {
     if (raw.startsWith("diff --git ")) {
-      if (inFile) break; // left the target file's section with no added line found
+      if (inFile) break;
       inFile = raw.includes(filepath);
       continue;
     }
@@ -87,17 +88,15 @@ export function firstFileChange(diff: string, filepath: string): FileChange {
     if (METADATA_PREFIXES.some((p) => raw.startsWith(p))) continue;
 
     if (raw.startsWith("+")) {
-      const body = raw.slice(1).trim();
-      if (body.length > 0) return { found: true, excerpt: body, line: newLine, side: "added" };
+      if (raw.slice(1).trim().includes(needle)) return { found: true, excerpt: needle, line: newLine, side: "added" };
       newLine++;
     } else if (raw.startsWith("-")) {
-      const body = raw.slice(1).trim();
-      if (body.length > 0 && !removedFallback) removedFallback = { found: true, excerpt: body, line: oldLine, side: "removed" };
+      if (!removedMatch && raw.slice(1).trim().includes(needle)) removedMatch = { found: true, excerpt: needle, line: oldLine, side: "removed" };
       oldLine++;
     } else {
       newLine++;
       oldLine++;
     }
   }
-  return removedFallback ?? { found: false };
+  return removedMatch ?? { found: false };
 }

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { validateLedger } from "../../src/ledger/index.ts";
 import { lint } from "../../src/lint/index.ts";
 import type { Doc, Ledger, LintIssue } from "../../src/types.ts";
 
@@ -26,7 +27,7 @@ function rulesOf(issues: LintIssue[]): string[] {
 
 const ledgerWithC7: Ledger = {
   path: "guide/claims.yaml",
-  claims: [{ id: "C7", claim: "x", status: "verified", evidence: { kind: "link", url: "https://example.com", needs: "http" }, verdict: "supports", checked_by: "agent:claude", checked_at: "2026-09-25" }],
+  claims: [{ id: "C7", claim: "x", status: "verified", evidence: { kind: "link", url: "https://example.com", needs: "http" }, verdict: "supports", verdict_hash: "h", checked_by: "verifier:fixture", checked_at: "2026-09-25" }],
 };
 
 describe("lint: claim-unresolved", () => {
@@ -231,5 +232,108 @@ describe("lint: secret and PII in evidence excerpts", () => {
     const issues = lint([], ledger);
     expect(rulesOf(issues)).not.toContain("secret-in-excerpt");
     expect(rulesOf(issues)).not.toContain("pii-in-excerpt");
+  });
+});
+
+function ledgerOf(claims: unknown[]): Ledger {
+  return { path: "guide/claims.yaml", claims: claims as never };
+}
+function proposed(id: string, claim: string, excerpt?: string) {
+  return {
+    id,
+    claim,
+    status: "proposed",
+    evidence: { kind: "link", url: "https://example.com/a", needs: "http", ...(excerpt === undefined ? {} : { excerpt }) },
+  };
+}
+
+describe("lint: claim-is-instruction", () => {
+  test("errors on reading directions", () => {
+    const issues = lint([], ledgerOf([proposed("C1", "Read this first: the service layer"), proposed("C2", "1. Skim the tests")]));
+    expect(issues.filter((i) => i.rule === "claim-is-instruction").map((i) => i.claim)).toEqual(["C1", "C2"]);
+  });
+
+  test("passes real claims", () => {
+    const issues = lint([], ledgerOf([proposed("C1", "Retries run three times"), proposed("C2", "6. The PR body describes the rounding rule")]));
+    expect(rulesOf(issues)).not.toContain("claim-is-instruction");
+  });
+});
+
+describe("lint: weak-excerpt and excerpt-local-ref", () => {
+  test("errors on a bare quote mark and on a two-token excerpt", () => {
+    const issues = lint([], ledgerOf([proposed("C1", "Retries run three times", '"""'), proposed("C2", "Retries run twice", "a;b")]));
+    expect(issues.filter((i) => i.rule === "weak-excerpt").map((i) => i.claim)).toEqual(["C1", "C2"]);
+  });
+
+  test("passes a real excerpt", () => {
+    const issues = lint([], ledgerOf([proposed("C1", "Retries run three times", "track('checkout_clicked')")]));
+    expect(rulesOf(issues)).not.toContain("weak-excerpt");
+  });
+
+  test("errors on a local fetch file reference", () => {
+    const issues = lint([], ledgerOf([proposed("C1", "Retries run three times", "see diff.patch:12")]));
+    expect(rulesOf(issues)).toContain("excerpt-local-ref");
+  });
+});
+
+describe("lint: verified-without-verdict", () => {
+  test("errors when a verified claim has no verdict", () => {
+    const claim = { ...proposed("C1", "Retries run three times", "retries: 3 times"), status: "verified", checked_by: "verifier:x", checked_at: "2026-09-25" };
+    expect(rulesOf(lint([], ledgerOf([claim])))).toContain("verified-without-verdict");
+  });
+});
+
+describe("lint: new issues carry a real line on disk", () => {
+  test("every new rule points past line 1", async () => {
+    const { mkdtemp, writeFile, rm } = await import("node:fs/promises");
+    const { tmpdir } = await import("node:os");
+    const { join } = await import("node:path");
+    const dir = await mkdtemp(join(tmpdir(), "mate-doc-lint-"));
+    try {
+      const path = join(dir, "claims.yaml");
+      await writeFile(
+        path,
+        [
+          "author: agent:claude",
+          "claims:",
+          "  - id: C1",
+          '    claim: "Read this first: the service layer"',
+          "    status: proposed",
+          `    evidence: { kind: link, url: https://example.com/a, excerpt: '${'"'.repeat(3)}', needs: http }`,
+          "  - id: C2",
+          "    claim: Retries run three times",
+          "    status: proposed",
+          "    evidence: { kind: link, url: https://example.com/a, excerpt: 'see diff.patch:12', needs: http }",
+          "  - id: C3",
+          "    claim: Retries run twice",
+          "    status: verified",
+          "    checked_by: verifier:x",
+          "    checked_at: 2026-09-25",
+          "    evidence: { kind: link, url: https://example.com/a, excerpt: 'retries: 2 times', needs: http }",
+          "",
+        ].join("\n"),
+      );
+      const ledger = { ...ledgerOf((Bun.YAML.parse(await Bun.file(path).text()) as { claims: unknown[] }).claims), path };
+      const issues = lint([], ledger).filter((i) =>
+        ["claim-is-instruction", "weak-excerpt", "excerpt-local-ref", "verified-without-verdict"].includes(i.rule),
+      );
+      expect(issues.map((i) => i.rule).sort()).toEqual(
+        ["claim-is-instruction", "excerpt-local-ref", "verified-without-verdict", "weak-excerpt"],
+      );
+      for (const i of issues) expect(i.pos?.start.line).toBeGreaterThan(1);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("schema: verified needs a verdict hash", () => {
+  test("a verified claim with no verdict_hash is rejected", () => {
+    const claim = { ...proposed("C1", "x"), status: "verified", verdict: "supports", checked_by: "verifier:x", checked_at: "2026-09-25" };
+    expect(validateLedger(ledgerOf([claim])).valid).toBe(false);
+  });
+
+  test("a proposed claim with evidence and no checked_by is accepted", () => {
+    expect(validateLedger(ledgerOf([proposed("C1", "x")])).valid).toBe(true);
   });
 });

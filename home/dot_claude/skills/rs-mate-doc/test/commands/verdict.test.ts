@@ -2,7 +2,8 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { main } from "../../src/cli.ts";
-import { loadLedger } from "../../src/ledger/index.ts";
+import { runVerdict } from "../../src/commands/verdict.ts";
+import { claimHash, loadLedger } from "../../src/ledger/index.ts";
 import { EXIT } from "../../src/types.ts";
 import { mkTmpDir, rmTmpDir } from "./util.ts";
 
@@ -32,19 +33,28 @@ const LEDGER_TEXT = `claims:
     owner: Sam
 `;
 
+const HUMAN_ALEX = { envVars: {}, isTTY: true, gitName: () => "Alex" };
+
+async function setup(ledger = LEDGER_TEXT): Promise<{ dir: string; path: string }> {
+  const dir = await tempDir();
+  writeFileSync(join(dir, "index.md"), "---\ntitle: Doc\n---\n\nBody. {C1}\n");
+  writeFileSync(join(dir, "claims.yaml"), ledger);
+  return { dir, path: join(dir, "claims.yaml") };
+}
+
 describe("verdict: round trip", () => {
   test("writes verdict, checked_by, checked_at into the target claim only", async () => {
     const dir = await tempDir();
     writeFileSync(join(dir, "index.md"), "---\ntitle: Doc\n---\n\nBody. {C1}\n");
     writeFileSync(join(dir, "claims.yaml"), LEDGER_TEXT);
 
-    const code = await main(["verdict", dir, "C1", "--supports", "--by", "Alex"]);
+    const code = await runVerdict([dir, "C1", "--supports"], HUMAN_ALEX);
     expect(code).toBe(EXIT.ok);
 
     const ledger = await loadLedger(dir);
     const c1 = ledger?.claims.find((c) => c.id === "C1");
     expect(c1?.verdict).toBe("supports");
-    expect(c1?.checked_by).toBe("Alex");
+    expect(c1?.checked_by).toBe("human:Alex");
     expect(c1?.checked_at).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 
     // C2 must be byte-for-byte untouched: same claim text, same owner, same status, no
@@ -100,5 +110,92 @@ describe("verdict: round trip", () => {
     writeFileSync(join(dir, "claims.yaml"), LEDGER_TEXT);
 
     expect(await main(["verdict", dir, "C1"])).toBe(EXIT.usage);
+  });
+});
+
+describe("verdict: who may say what", () => {
+  test("--supports from an agent is refused and the file is untouched", async () => {
+    const { dir, path } = await setup();
+    const before = readFileSync(path, "utf8");
+    const deps = { ...HUMAN_ALEX, envVars: { CLAUDECODE: "1" } };
+    expect(await runVerdict([dir, "C1", "--supports"], deps)).toBe(EXIT.failed);
+    expect(readFileSync(path, "utf8")).toBe(before);
+  });
+
+  test("--supports without a terminal is refused", async () => {
+    const { dir, path } = await setup();
+    const before = readFileSync(path, "utf8");
+    expect(await runVerdict([dir, "C1", "--supports"], { ...HUMAN_ALEX, isTTY: false })).toBe(EXIT.failed);
+    expect(readFileSync(path, "utf8")).toBe(before);
+  });
+
+  test("the author cannot support their own doc", async () => {
+    const { dir, path } = await setup(`author: human:Sam\n${LEDGER_TEXT}`);
+    const before = readFileSync(path, "utf8");
+    const deps = { envVars: {}, isTTY: true, gitName: () => "Sam" };
+    expect(await runVerdict([dir, "C1", "--supports"], deps)).toBe(EXIT.failed);
+    expect(readFileSync(path, "utf8")).toBe(before);
+  });
+
+  test("--overstates from an agent writes agent:claude and a hash", async () => {
+    const { dir } = await setup();
+    const deps = { ...HUMAN_ALEX, envVars: { CLAUDECODE: "1" }, isTTY: false };
+    expect(await runVerdict([dir, "C1", "--overstates"], deps)).toBe(EXIT.ok);
+    const c1 = (await loadLedger(dir))!.claims.find((c) => c.id === "C1")!;
+    expect(c1.checked_by).toBe("agent:claude");
+    expect(c1.verdict).toBe("overstates");
+    expect(c1.verdict_hash).toBe(claimHash(c1));
+    expect(c1.status).toBe("proposed");
+  });
+
+  test("a human --supports with a reason writes status, reason, and hash", async () => {
+    const { dir } = await setup();
+    expect(await runVerdict([dir, "C1", "--supports", "--reason", "matches line 12: yes # ok"], HUMAN_ALEX)).toBe(EXIT.ok);
+    const c1 = (await loadLedger(dir))!.claims.find((c) => c.id === "C1")!;
+    expect(c1.checked_by).toBe("human:Alex");
+    expect(c1.status).toBe("verified");
+    expect(c1.verdict_reason).toBe("matches line 12: yes # ok");
+    expect(c1.verdict_hash).toBe(claimHash(c1));
+  });
+
+  test("--uncheckable is accepted", async () => {
+    const { dir } = await setup();
+    expect(await runVerdict([dir, "C1", "--uncheckable"], HUMAN_ALEX)).toBe(EXIT.ok);
+    expect((await loadLedger(dir))!.claims[0]!.verdict).toBe("uncheckable");
+  });
+
+  test("a second verdict replaces the reason instead of leaving a stale one", async () => {
+    const { dir } = await setup();
+    await runVerdict([dir, "C1", "--overstates", "--reason", "too strong"], HUMAN_ALEX);
+    await runVerdict([dir, "C1", "--unrelated"], HUMAN_ALEX);
+    const c1 = (await loadLedger(dir))!.claims[0]!;
+    expect(c1.verdict).toBe("unrelated");
+    expect(c1.verdict_reason).toBeUndefined();
+  });
+});
+
+describe("verdict: flags", () => {
+  test("--by is removed: usage error, file untouched", async () => {
+    const { dir, path } = await setup();
+    const before = readFileSync(path, "utf8");
+    expect(await runVerdict([dir, "C1", "--overstates", "--by", "x"], HUMAN_ALEX)).toBe(EXIT.usage);
+    expect(readFileSync(path, "utf8")).toBe(before);
+  });
+
+  test("--excerpt-file hashes the claim with the new excerpt", async () => {
+    const { dir } = await setup();
+    const excerptFile = join(dir, "excerpt.txt");
+    writeFileSync(excerptFile, "the real excerpt text\n");
+    expect(await runVerdict([dir, "C1", "--overstates", "--excerpt-file", excerptFile], HUMAN_ALEX)).toBe(EXIT.ok);
+    const c1 = (await loadLedger(dir))!.claims[0]!;
+    const expected = claimHash({
+      claim: c1.claim,
+      evidence: { kind: "link", url: "https://example.com/one", excerpt: "the real excerpt text", needs: "http" },
+    });
+    expect(c1.verdict_hash).toBe(expected);
+  });
+
+  test("verify without a path is a usage error", async () => {
+    expect(await main(["verify"])).toBe(EXIT.usage);
   });
 });

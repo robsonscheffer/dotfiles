@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { writeApproval } from "../../src/commands/approve.ts";
 import { gate } from "../../src/gate/index.ts";
-import { ledgerHash } from "../../src/ledger/index.ts";
+import { claimHash, ledgerHash } from "../../src/ledger/index.ts";
 import { parse } from "../../src/parser/index.ts";
 import type { Env, RunResult } from "../../src/types.ts";
 
@@ -28,13 +28,17 @@ function fakeEnv(overrides: Partial<Env> = {}): Env {
   };
 }
 
+const CLEAN_BASE = {
+  claim: "Self-serve pricing starts at $40 a month.",
+  evidence: { kind: "link", url: "https://example.com/pricing", excerpt: "starts at $40", needs: "http" },
+} as const;
 const CLEAN_CLAIM = {
   id: "C1",
-  claim: "Self-serve pricing starts at $40 a month.",
+  ...CLEAN_BASE,
   status: "verified",
-  evidence: { kind: "link", url: "https://example.com/pricing", excerpt: "$40", needs: "http" },
   verdict: "supports",
-  checked_by: "agent:claude",
+  verdict_hash: claimHash(CLEAN_BASE as never),
+  checked_by: "verifier:fixture",
   checked_at: "2026-09-20",
   ttl_days: 30,
 };
@@ -46,7 +50,7 @@ async function writePage(dir: string, frontmatterExtra = ""): Promise<void> {
   );
 }
 async function writeClaimsYaml(dir: string, claims: unknown[]): Promise<void> {
-  await writeFile(join(dir, "claims.yaml"), `claims:\n${claims.map((c) => "  - " + JSON.stringify(c)).join("\n")}`);
+  await writeFile(join(dir, "claims.yaml"), `author: agent:claude\nclaims:\n${claims.map((c) => "  - " + JSON.stringify(c)).join("\n")}`);
 }
 
 // Every gate reason must be locatable: a non-empty file, and a real line number.
@@ -292,5 +296,188 @@ describe("gate: summary.open counts not_verified claims, same as status", () => 
     expect(result.pass).toBe(false);
     expect(result.reasons.some((r) => r.kind === "no-owner" && r.claim === "C2")).toBe(true);
     expect(result.summary.open).toBe(1);
+  });
+});
+
+const PRICING_ENV = () =>
+  fakeEnv({ fetch: async () => ({ status: 200, body: "Self-serve pricing starts at $40/month." }) });
+
+async function writeLedgerRaw(dir: string, authorLine: string, claims: unknown[]): Promise<void> {
+  await writeFile(
+    join(dir, "claims.yaml"),
+    `${authorLine}claims:\n${claims.map((c) => "  - " + JSON.stringify(c)).join("\n")}`,
+  );
+}
+
+function kindsOf(result: { reasons: { kind: string }[] }): string[] {
+  return result.reasons.map((r) => r.kind);
+}
+
+describe("gate: no-author", () => {
+  test("a ledger with no author fails once with no-author", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeLedgerRaw(dir, "", [CLEAN_CLAIM, { ...CLEAN_CLAIM, id: "C2" }]);
+    const result = await gate(dir, PRICING_ENV());
+    expect(result.pass).toBe(false);
+    expect(kindsOf(result).filter((k) => k === "no-author")).toHaveLength(1);
+    expectFileLine(result.reasons);
+  });
+
+  test("a TODO author fails once with no-author", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeLedgerRaw(dir, 'author: "TODO: set by mate-doc new"\n', [CLEAN_CLAIM]);
+    const result = await gate(dir, PRICING_ENV());
+    expect(kindsOf(result).filter((k) => k === "no-author")).toHaveLength(1);
+  });
+});
+
+describe("gate: verdict-not-independent", () => {
+  test("a supports verdict by agent:claude fails", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [{ ...CLEAN_CLAIM, checked_by: "agent:claude" }]);
+    const result = await gate(dir, PRICING_ENV());
+    expect(result.reasons.some((r) => r.claim === "C1" && r.kind === "verdict-not-independent")).toBe(true);
+    expectFileLine(result.reasons);
+  });
+
+  test("a human verdict by the ledger author fails", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeLedgerRaw(dir, "author: human:Sam\n", [{ ...CLEAN_CLAIM, checked_by: "human:Sam" }]);
+    const result = await gate(dir, PRICING_ENV());
+    expect(kindsOf(result)).toEqual(["verdict-not-independent"]);
+  });
+
+  test("a missing checked_by fails", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [{ ...CLEAN_CLAIM, checked_by: undefined }]);
+    const result = await gate(dir, PRICING_ENV());
+    expect(kindsOf(result)).toContain("verdict-not-independent");
+  });
+});
+
+describe("gate: verdict-stale", () => {
+  test("changing the claim text after the verdict fails", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [{ ...CLEAN_CLAIM, claim: "Self-serve pricing starts at $50 a month." }]);
+    const result = await gate(dir, PRICING_ENV());
+    expect(result.reasons.some((r) => r.claim === "C1" && r.kind === "verdict-stale")).toBe(true);
+  });
+
+  test("changing the excerpt after the verdict fails", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [
+      { ...CLEAN_CLAIM, evidence: { ...CLEAN_CLAIM.evidence, excerpt: "starts at $45" } },
+    ]);
+    const result = await gate(dir, PRICING_ENV());
+    expect(kindsOf(result)).toContain("verdict-stale");
+  });
+
+  test("a missing verdict_hash fails", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [{ ...CLEAN_CLAIM, verdict_hash: undefined }]);
+    const result = await gate(dir, PRICING_ENV());
+    expect(kindsOf(result)).toContain("verdict-stale");
+  });
+});
+
+describe("gate: mcp-needs-human", () => {
+  const mcpBase = {
+    claim: "The orders team agreed to keep the label rule.",
+    evidence: {
+      kind: "mcp",
+      source: "https://chat.example.test/archives/C000/p1700000000",
+      excerpt: "Agreed, we keep it.",
+      needs: "mcp:slack",
+    },
+  };
+  const mcpClaim = (checkedBy: string) => ({
+    id: "C1",
+    ...mcpBase,
+    status: "verified",
+    verdict: "supports",
+    verdict_hash: claimHash(mcpBase as never),
+    checked_by: checkedBy,
+    checked_at: "2026-09-20",
+    ttl_days: 30,
+  });
+
+  test("a verifier verdict on mcp evidence fails", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [mcpClaim("verifier:x")]);
+    const result = await gate(dir, fakeEnv());
+    expect(kindsOf(result)).toEqual(["mcp-needs-human"]);
+  });
+
+  test("a human verdict passes and no check is run", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [mcpClaim("human:Sam")]);
+    let ran = 0;
+    const env = fakeEnv({
+      run: async () => {
+        ran++;
+        return { code: 0, stdout: "", stderr: "" };
+      },
+      fetch: async () => {
+        ran++;
+        return { status: 200, body: "" };
+      },
+    });
+    const result = await gate(dir, env);
+    expect(result.pass).toBe(true);
+    expect(ran).toBe(0);
+  });
+});
+
+describe("gate: reason order", () => {
+  test("a claim with two problems reports only the first", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    // Both not independent and stale: independence comes first.
+    await writeClaimsYaml(dir, [{ ...CLEAN_CLAIM, checked_by: "agent:claude", claim: "Changed text here." }]);
+    const result = await gate(dir, PRICING_ENV());
+    const claimKinds = result.reasons.filter((r) => r.claim === "C1").map((r) => r.kind);
+    expect(claimKinds).toEqual(["verdict-not-independent"]);
+  });
+});
+
+describe("gate: official demotion on integrity failure", () => {
+  test("an official doc with a matching hash and an agent verdict drops to draft", async () => {
+    const dir = await tempDir();
+    const claim = { ...CLEAN_CLAIM, checked_by: "agent:claude" };
+    await writeClaimsYaml(dir, [claim]);
+    const bodyOnly = "Self-serve pricing starts at $40 a month. {C1}\n";
+    const path = join(dir, "index.md");
+    await writeFile(path, `---\ntitle: Checkout\n---\n\n${bodyOnly}`);
+    const docForHash = parse(await Bun.file(path).text(), path);
+    const hash = ledgerHash([docForHash], { path: join(dir, "claims.yaml"), author: "agent:claude", claims: [claim as never] }, dir);
+    await writeFile(path, `---\ntitle: Checkout\nstatus: official\napproved_by: Sam\nledger_hash: ${hash}\n---\n\n${bodyOnly}`);
+    const result = await gate(dir, PRICING_ENV());
+    expect(result.levelBefore).toBe("official");
+    expect(result.levelAfter).toBe("draft");
+    expect(kindsOf(result)).toContain("verdict-not-independent");
+  });
+});
+
+describe("gate: summary.verified", () => {
+  test("counts only verified claims with no reason in this run", async () => {
+    const dir = await tempDir();
+    await writeFile(
+      join(dir, "index.md"),
+      "---\ntitle: Checkout\n---\n\nSelf-serve pricing starts at $40 a month. {C1} Also this. {C2}\n",
+    );
+    await writeClaimsYaml(dir, [CLEAN_CLAIM, { ...CLEAN_CLAIM, id: "C2", verdict_hash: "stale" }]);
+    const result = await gate(dir, PRICING_ENV());
+    expect(result.summary.claims).toBe(2);
+    expect(result.summary.verified).toBe(1);
   });
 });

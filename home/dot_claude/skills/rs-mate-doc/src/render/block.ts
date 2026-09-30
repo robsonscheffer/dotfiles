@@ -2,7 +2,8 @@ import type { Block, BlockquoteNode, CodeBlockNode, ErrorNode, HeadingNode, List
 import type { Ctx } from "./ctx.ts";
 import { renderDirective } from "./directives.ts";
 import { highlightCode } from "./highlight.ts";
-import { collectClaimRefs, excerptFor, renderInline, sourceLinkFor } from "./inline.ts";
+import { renderClaimRow } from "./claims.ts";
+import { collectClaimRefs, renderInline } from "./inline.ts";
 import { escapeAttr, escapeHtml } from "./util.ts";
 
 export function renderBlocks(nodes: Block[], ctx: Ctx): string {
@@ -44,28 +45,8 @@ function renderHeading(n: HeadingNode, ctx: Ctx): string {
 function renderParagraph(n: ParagraphNode, ctx: Ctx): string {
   const html = renderInline(n.children, ctx);
   const refs = collectClaimRefs(n.children);
-  const evidence = refs.map((r) => renderClaimEvidence(r.id, ctx)).join("");
+  const evidence = refs.map((r) => renderClaimRow(r.id, ctx)).join("");
   return `<p>${html}</p>${evidence}`;
-}
-
-function renderClaimEvidence(id: string, ctx: Ctx): string {
-  const claim = ctx.ledger?.claims.find((c) => c.id === id);
-  if (!claim) {
-    return `<div class="claim-evidence claim-evidence-missing">Missing claim ${escapeHtml(id)}</div>`;
-  }
-  const excerpt = claim.evidence ? excerptFor(claim.evidence) : "";
-  const source = claim.evidence ? sourceLinkFor(claim.evidence) : "";
-  const date = claim.checked_at ?? "";
-  const verdict = claim.verdict ?? claim.status;
-  return (
-    `<div class="claim-evidence">` +
-    `<span class="claim-id">${escapeHtml(claim.id)}</span>` +
-    (excerpt ? `<code class="claim-excerpt">${escapeHtml(excerpt)}</code>` : "") +
-    source +
-    (date ? `<time class="claim-date">${escapeHtml(date)}</time>` : "") +
-    `<span class="verdict-badge verdict-${escapeAttr(verdict)}">${escapeHtml(verdict)}</span>` +
-    `</div>`
-  );
 }
 
 function renderList(n: ListNode, ctx: Ctx): string {

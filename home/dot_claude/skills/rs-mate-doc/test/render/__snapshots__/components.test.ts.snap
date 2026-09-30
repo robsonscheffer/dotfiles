@@ -6,19 +6,7 @@ exports[`means / warn / note callouts warn renders a warning callout 1`] = `"<as
 
 exports[`means / warn / note callouts note renders a note callout 1`] = `"<aside class="callout callout-note"><p class="callout-title">Note</p><p>Only applies to new accounts.</p></aside>"`;
 
-exports[`tiles parses label: value {Cn} lines into stat tiles 1`] = `"<div class="tiles"><div class="tile"><div class="tile-value">918<sup class="claim-marker claim-verified" title="918 qualify.">C12</sup></div><div class="tile-label">Qualifying</div></div><div class="tile"><div class="tile-value">42</div><div class="tile-label">Excluded</div></div></div>"`;
-
-exports[`flow builds an SVG from A -> B : label lines 1`] = `"<svg class="flow-diagram" viewBox="0 0 648 96" width="648" height="96" role="img" aria-label="flow diagram"><defs><marker id="flow-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="currentColor"/></marker></defs><g class="flow-node"><rect x="24" y="24" width="140" height="48" rx="6" fill="var(--flow-fill)" stroke="currentColor" stroke-width="1.5"/><text x="94" y="48" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="13">cart</text></g><g class="flow-node"><rect x="254" y="24" width="140" height="48" rx="6" fill="var(--flow-fill)" stroke="currentColor" stroke-width="1.5"/><text x="324" y="48" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="13">checkout</text></g><g class="flow-node"><rect x="484" y="24" width="140" height="48" rx="6" fill="var(--flow-fill)" stroke="currentColor" stroke-width="1.5"/><text x="554" y="48" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="13">paid</text></g><g class="flow-edge"><path d="M 164 48 L 248 48" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#flow-arrowhead)"/></g><g class="flow-edge"><path d="M 394 48 L 478 48" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#flow-arrowhead)"/></g><g class="flow-label"><rect x="185.5" y="22" width="47" height="16" fill="var(--bg)"/><text x="209" y="30" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="11">submit</text></g><g class="flow-label"><rect x="412.25" y="22" width="53.5" height="16" fill="var(--bg)"/><text x="439" y="30" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="11">confirm</text></g></svg>"`;
-
-exports[`steps / tabs / cards steps render as a numbered list 1`] = `"<ol class="steps"><li class="step"><span class="step-number">1</span><div class="step-body"><p>First do this.</p></div></li><li class="step"><span class="step-number">2</span><div class="step-body"><p>Then do that.</p></div></li></ol>"`;
-
-exports[`decide renders an open question with an owner 1`] = `"<aside class="callout callout-decide"><p class="callout-title">Open question</p><p>Which ID does the lab record split by?</p><p class="decide-owner">Decide with: Sam</p></aside>"`;
-
-exports[`diff code fence styles added and removed lines with a file title 1`] = `
-"<figure class="code-block diff"><figcaption>src/orders.ts</figcaption><pre><code><span class="diff-add">+added line</span>
-<span class="diff-del">-removed line</span>
-<span class="diff-ctx"> context line</span></code></pre></figure>"
-`;
+exports[`tiles parses label: value {Cn} lines into stat tiles 1`] = `"<div class="tiles"><div class="tile"><div class="tile-value">918<sup><a class="claim-marker claim-verified" href="#claim-C12" aria-label="Claim C12: 918 qualify.">C12</a></sup></div><div class="tile-label">Qualifying</div></div><div class="tile"><div class="tile-value">42</div><div class="tile-label">Excluded</div></div></div>"`;
 
 exports[`tiles: stat delta renders a good delta when direction matches good-when 1`] = `"<div class="tiles"><div class="tile"><div class="tile-value">1,204</div><div class="tile-delta tile-delta-good" data-direction="up">▲ +12%</div><div class="tile-label">Signups</div></div></div>"`;
 
@@ -32,7 +20,11 @@ exports[`inline badge renders the info tone 1`] = `"<span class="badge badge-inf
 
 exports[`inline badge renders the neutral tone 1`] = `"<span class="badge badge-neutral">Blocked</span>"`;
 
-exports[`rail renders a plain key: value line 1`] = `"<aside class="rail" aria-label="Summary"><dl class="rail-list"><dt class="rail-key">Branch</dt><dd class="rail-value">refactor/portal-storeless</dd></dl></aside>"`;
+exports[`flow builds an SVG from A -> B : label lines 1`] = `"<svg class="flow-diagram" viewBox="0 0 648 96" width="648" height="96" role="img" aria-label="flow diagram"><defs><marker id="flow-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="currentColor"/></marker></defs><g class="flow-node"><rect x="24" y="24" width="140" height="48" rx="6" fill="var(--flow-fill)" stroke="currentColor" stroke-width="1.5"/><text x="94" y="48" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="13">cart</text></g><g class="flow-node"><rect x="254" y="24" width="140" height="48" rx="6" fill="var(--flow-fill)" stroke="currentColor" stroke-width="1.5"/><text x="324" y="48" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="13">checkout</text></g><g class="flow-node"><rect x="484" y="24" width="140" height="48" rx="6" fill="var(--flow-fill)" stroke="currentColor" stroke-width="1.5"/><text x="554" y="48" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="13">paid</text></g><g class="flow-edge"><path d="M 164 48 L 248 48" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#flow-arrowhead)"/></g><g class="flow-edge"><path d="M 394 48 L 478 48" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#flow-arrowhead)"/></g><g class="flow-label"><rect x="185.5" y="22" width="47" height="16" fill="var(--bg)"/><text x="209" y="30" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="11">submit</text></g><g class="flow-label"><rect x="412.25" y="22" width="53.5" height="16" fill="var(--bg)"/><text x="439" y="30" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="11">confirm</text></g></svg>"`;
+
+exports[`steps / tabs / cards steps render as a numbered list 1`] = `"<ol class="steps"><li class="step"><span class="step-number">1</span><div class="step-body"><p>First do this.</p></div></li><li class="step"><span class="step-number">2</span><div class="step-body"><p>Then do that.</p></div></li></ol>"`;
+
+exports[`decide renders an open question with an owner 1`] = `"<aside class="callout callout-decide"><p class="callout-title">Open question</p><p>Which ID does the lab record split by?</p><p class="decide-owner">Decide with: Sam</p></aside>"`;
 
 exports[`risks each row becomes a card with a severity-colored left border, the class the dark theme keys off 1`] = `"<div class="risks"><div class="risk-cards"><div class="risk-card risk-high"><span class="risk-field"><span class="risk-field-label">Risk</span>Data loss on retry</span><span class="risk-badge risk-high">HIGH</span><span class="risk-field"><span class="risk-field-label">Owner</span>Alex</span></div><div class="risk-card risk-med"><span class="risk-field"><span class="risk-field-label">Risk</span>Slow rollout</span><span class="risk-badge risk-med">MED</span><span class="risk-field"><span class="risk-field-label">Owner</span>Priya</span></div></div></div>"`;
 
@@ -43,6 +35,14 @@ exports[`checks maps each status to its badge tone 1`] = `"<table class="checks"
 exports[`timeline renders one item per date | text line, in order 1`] = `"<ol class="timeline"><li class="timeline-item"><time class="timeline-date">2026-08-01</time><div class="timeline-text">Feature flag created</div></li><li class="timeline-item"><time class="timeline-date">2026-09-01</time><div class="timeline-text">Rolled out to 100%</div></li></ol>"`;
 
 exports[`progress renders an accessible progress bar from done/total 1`] = `"<div class="progress" role="progressbar" aria-valuenow="7" aria-valuemin="0" aria-valuemax="12" aria-label="Refund automation rollout"><div class="progress-track"><div class="progress-fill" style="width:58%"></div></div><span class="progress-label">Refund automation rollout (7/12)</span></div>"`;
+
+exports[`rail renders a plain key: value line 1`] = `"<aside class="rail" aria-label="Summary"><dl class="rail-list"><dt class="rail-key">Branch</dt><dd class="rail-value">refactor/portal-storeless</dd></dl></aside>"`;
+
+exports[`diff code fence styles added and removed lines with a file title 1`] = `
+"<figure class="code-block diff"><figcaption>src/orders.ts</figcaption><pre><code><span class="diff-add">+added line</span>
+<span class="diff-del">-removed line</span>
+<span class="diff-ctx"> context line</span></code></pre></figure>"
+`;
 
 exports[`diff code fence file= and start= together number added, removed, and context lines from start 1`] = `
 "<figure class="code-block diff"><div class="diff-file">src/analytics/label.ts</div><pre><code><span class="diff-add"><span class="diff-num diff-num-new">40</span>+added</span>

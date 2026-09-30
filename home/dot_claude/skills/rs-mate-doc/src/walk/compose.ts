@@ -3,11 +3,10 @@
 // the same "each diff/ticket statement gets a claim" discipline, but written as markdown-plus-
 // ledger instead of a standalone HTML document, and rendered later by mate-doc's own renderer.
 import type { Claim, ClaimId } from "../types.ts";
-import { firstFileChange, renderDiffFence } from "./diff.ts";
-import type { AcceptanceCriterion, ComposedWalk, ContextData, FetchedPr, JudgmentData, QuestionItem, RiskItem, StoryData, StoryGroup, TicketFit, WalkInputs } from "./types.ts";
+import { findAnchorLine, renderDiffFence } from "./diff.ts";
+import type { AcceptanceCriterion, ComposedWalk, ContextData, FetchedPr, JudgmentData, QuestionItem, RiskItem, StoryData, StoryGroup, TicketFit, WalkAnchor, WalkInputs } from "./types.ts";
 
 const MAX_DIFF_LINES = 80;
-const CHECKED_BY = "agent:mate-doc-walk";
 const CODE_REF_TTL_DAYS = 14;
 const TICKET_TAG_RE = /[A-Z]+-\d+/g;
 const BOLD_RE = /\*\*(.+?)\*\*/g;
@@ -15,6 +14,7 @@ const BOLD_RE = /\*\*(.+?)\*\*/g;
 interface ClaimBuild {
   claims: Claim[];
   nextId: number;
+  warnings: string[];
 }
 
 function nextClaimId(build: ClaimBuild): ClaimId {
@@ -108,44 +108,45 @@ function renderStorySection(story: StoryData): string {
   return lines.join("\n").trimEnd();
 }
 
-// One claim per group, anchored to the group's framing statement - the "what this stop in the
-// reading order is claiming about the diff." The claim cites the first file in the group whose
-// diff a code excerpt can actually be found for; a group whose files carry no diff at all (a
-// rename-only stop, or upstream data that never landed a hunk) falls back to not_verified with
-// the PR author as owner, per the brief's rule for statements the composer can't back with an
-// excerpt.
-function buildGroupClaim(pr: FetchedPr, group: StoryGroup, build: ClaimBuild, checkedAt: string): ClaimId {
-  const id = nextClaimId(build);
-  let claim: Claim | undefined;
-  for (const file of group.files) {
-    const change = firstFileChange(pr.diff, file);
-    if (change.found && change.excerpt) {
-      // An added line only exists at head; a pure-removal fallback only exists at base.
-      const sha = change.side === "removed" ? pr.meta.baseRefOid : pr.meta.headRefOid;
-      const ref = `${pr.repo}@${sha}:${file}:${change.line ?? 1}`;
-      claim = {
-        id,
-        claim: group.framing,
-        status: "verified",
-        evidence: { kind: "code", ref, excerpt: change.excerpt, needs: "gh" },
-        checked_by: CHECKED_BY,
-        checked_at: checkedAt,
-        ttl_days: CODE_REF_TTL_DAYS,
-      };
-      break;
-    }
+// Returns the code evidence for the first anchor the diff can locate, or undefined. The agent
+// picks the line; compose only finds it. An added line only exists at head, a removed line only
+// at base.
+function findAnchorEvidence(pr: FetchedPr, anchors: WalkAnchor[]): Claim["evidence"] | undefined {
+  for (const anchor of anchors) {
+    const change = findAnchorLine(pr.diff, anchor.file, anchor.excerpt);
+    if (!change.found || !change.excerpt) continue;
+    const sha = change.side === "removed" ? pr.meta.baseRefOid : pr.meta.headRefOid;
+    return { kind: "code", ref: `${pr.repo}@${sha}:${anchor.file}:${change.line ?? 1}`, excerpt: change.excerpt, needs: "gh" };
   }
-  if (!claim) {
-    claim = { id, claim: group.framing, status: "not_verified", owner: pr.meta.author.login };
+  return undefined;
+}
+
+// Compose only proposes: a claim with a located anchor is `proposed`, anything else is
+// `not_verified` with the PR author as owner. A verifier or a person settles it later.
+function buildProposedClaim(pr: FetchedPr, id: ClaimId, text: string, anchors: WalkAnchor[]): Claim {
+  const evidence = findAnchorEvidence(pr, anchors);
+  if (!evidence) return { id, claim: text, status: "not_verified", owner: pr.meta.author.login };
+  return { id, claim: text, status: "proposed", evidence, ttl_days: CODE_REF_TTL_DAYS };
+}
+
+// One claim per group that has a framing statement. Reading directions belong in the group lead,
+// which is never a claim, so a group without framing gets no claim and no marker.
+function buildGroupClaim(pr: FetchedPr, group: StoryGroup, index: number, build: ClaimBuild): ClaimId | undefined {
+  if (!group.framing) return undefined;
+  const id = nextClaimId(build);
+  const anchors = (group.anchors ?? []).filter((a) => group.files.includes(a.file));
+  const claim = buildProposedClaim(pr, id, group.framing, anchors);
+  if (claim.status === "not_verified") {
+    build.warnings.push(`group ${String(index).padStart(2, "0")} "${group.title}": no anchor matched the diff; claim ${id} is not_verified`);
   }
   build.claims.push(claim);
   return id;
 }
 
-function renderGroupSection(group: StoryGroup, index: number, claimId: ClaimId, diff: string): string {
+function renderGroupSection(group: StoryGroup, index: number, claimId: ClaimId | undefined, diff: string): string {
   const lines = [`## ${String(index).padStart(2, "0")}. ${group.title}`, ""];
   if (group.lead) lines.push(`**${group.lead}**`, "");
-  lines.push(`${group.framing} {${claimId}}`, "");
+  if (group.framing && claimId) lines.push(`${group.framing} {${claimId}}`, "");
   if (group.note) lines.push(":::note", group.note, ":::", "");
   for (const file of group.files) lines.push(renderDiffFence(file, diff, MAX_DIFF_LINES), "");
   return lines.join("\n").trimEnd();
@@ -154,7 +155,7 @@ function renderGroupSection(group: StoryGroup, index: number, claimId: ClaimId, 
 // One claim per acceptance criterion - "what the ticket asks," per the brief. Verified only
 // when the agent output carried non-empty evidence text for that criterion; otherwise
 // not_verified with the PR author as owner, same rule as the diff claims above.
-function renderTicketFitSection(pr: FetchedPr, ticketFit: TicketFit | undefined, build: ClaimBuild, checkedAt: string): string {
+function renderTicketFitSection(pr: FetchedPr, ticketFit: TicketFit | undefined, build: ClaimBuild): string {
   if (!ticketFit) {
     return ["## Ticket fit", "", "No ticket linked to this PR."].join("\n");
   }
@@ -164,7 +165,7 @@ function renderTicketFitSection(pr: FetchedPr, ticketFit: TicketFit | undefined,
   if (ticketFit.acceptance_criteria.length > 0) {
     lines.push("| Criterion | Status | Evidence |", "|---|---|---|");
     for (const ac of ticketFit.acceptance_criteria) {
-      const id = buildAcClaim(pr, ac, ticketFit.ticket_key, build, checkedAt);
+      const id = buildAcClaim(pr, ac, build);
       lines.push(`| ${escapeTableCell(ac.criterion)} {${id}} | ${ac.status} | ${escapeTableCell(ac.evidence)} |`);
     }
     lines.push("");
@@ -176,19 +177,21 @@ function renderTicketFitSection(pr: FetchedPr, ticketFit: TicketFit | undefined,
   return lines.join("\n").trimEnd();
 }
 
-function buildAcClaim(pr: FetchedPr, ac: AcceptanceCriterion, ticketKey: string, build: ClaimBuild, checkedAt: string): ClaimId {
+const AC_LABEL: Record<AcceptanceCriterion["status"], string> = {
+  Met: "Met",
+  "Partially Met": "Partially met",
+  "Not Met": "Not met",
+  "Unplanned Deviation": "Unplanned deviation",
+};
+
+function buildAcClaim(pr: FetchedPr, ac: AcceptanceCriterion, build: ClaimBuild): ClaimId {
   const id = nextClaimId(build);
-  const hasEvidence = ac.evidence.trim().length > 0;
-  const claim: Claim = hasEvidence
-    ? {
-        id,
-        claim: ac.criterion,
-        status: "verified",
-        evidence: { kind: "mcp", source: `mcp:jira:${ticketKey}`, excerpt: ac.evidence, needs: "mcp:jira" },
-        checked_by: CHECKED_BY,
-        checked_at: checkedAt,
-      }
-    : { id, claim: ac.criterion, status: "not_verified", owner: pr.meta.author.login };
+  const text = `${AC_LABEL[ac.status]}: ${ac.criterion}`;
+  const refs = ac.refs ?? [];
+  const claim: Claim = ac.status === "Met" ? buildProposedClaim(pr, id, text, refs) : { id, claim: text, status: "not_verified", owner: pr.meta.author.login };
+  if (ac.status === "Met" && refs.length > 0 && claim.status === "not_verified") {
+    build.warnings.push(`criterion "${ac.criterion}": no ref matched the diff; claim ${id} is not_verified`);
+  }
   build.claims.push(claim);
   return id;
 }
@@ -315,28 +318,30 @@ function renderClaimBlock(claim: Claim): string {
   return lines.join("\n");
 }
 
-function renderClaimsYaml(claims: Claim[]): string {
-  if (claims.length === 0) return "claims: []\n";
-  return "claims:\n" + claims.map(renderClaimBlock).join("\n") + "\n";
+function renderClaimsYaml(claims: Claim[], author: string): string {
+  const head = `author: ${yamlString(author)}\n`;
+  if (claims.length === 0) return `${head}claims: []\n`;
+  return `${head}claims:\n` + claims.map(renderClaimBlock).join("\n") + "\n";
 }
 
 export interface ComposeOptions {
+  author: string; // who wrote this ledger, from detectActor()
   now?: Date; // build-walk.py required WALK_TODAY for the same reason: agents can't compute dates
 }
 
-export function composeWalk(pr: FetchedPr, inputs: WalkInputs, opts: ComposeOptions = {}): ComposedWalk {
+export function composeWalk(pr: FetchedPr, inputs: WalkInputs, opts: ComposeOptions): ComposedWalk {
   const now = opts.now ?? new Date();
   const checkedAt = now.toISOString().slice(0, 10);
-  const build: ClaimBuild = { claims: [], nextId: 1 };
+  const build: ClaimBuild = { claims: [], nextId: 1, warnings: [] };
 
   const parts: string[] = [renderRailSection(pr, inputs, inputs.ticketFit), renderHeader(pr), renderStorySection(inputs.story)];
 
   inputs.story.groups.forEach((group, gi) => {
-    const claimId = buildGroupClaim(pr, group, build, checkedAt);
+    const claimId = buildGroupClaim(pr, group, gi + 1, build);
     parts.push(renderGroupSection(group, gi + 1, claimId, pr.diff));
   });
 
-  parts.push(renderTicketFitSection(pr, inputs.ticketFit, build, checkedAt));
+  parts.push(renderTicketFitSection(pr, inputs.ticketFit, build));
   parts.push(renderQuestionsSection(inputs.questions));
   parts.push(renderRisksSection(inputs.risks));
   parts.push(renderContextSection(inputs.context));
@@ -346,5 +351,5 @@ export function composeWalk(pr: FetchedPr, inputs: WalkInputs, opts: ComposeOpti
   const body = parts.filter((p) => p.length > 0).join("\n\n");
   const md = `${renderFrontmatter(pr, inputs, checkedAt)}\n\n${body}\n`;
 
-  return { files: { "index.md": md, "claims.yaml": renderClaimsYaml(build.claims) } };
+  return { files: { "index.md": md, "claims.yaml": renderClaimsYaml(build.claims, opts.author) }, warnings: build.warnings };
 }

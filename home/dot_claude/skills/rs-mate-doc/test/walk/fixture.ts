@@ -4,9 +4,8 @@
 // neutral repo (acme/console), a placeholder ticket key (ABC-12), and "Sam" instead of a real
 // login.
 //
-// Group 2 deliberately references a file with no matching diff entry, so the fixture exercises
-// both branches of claim building: found -> verified code claim, not found -> not_verified with
-// an owner.
+// Group 1 anchors on an added line, group 2 on a file with no diff entry (unmatched), group 3 has
+// no framing (no claim), group 4 anchors on a line that was only removed (base SHA).
 import type { FetchedPr, StoryGroup, WalkInputs } from "../../src/walk/types.ts";
 
 export const GROUPS: StoryGroup[] = [
@@ -23,6 +22,7 @@ export const GROUPS: StoryGroup[] = [
       "src/shared/lib/BannerProvider.tsx",
       "src/shared/lib/__tests__/BannerProvider.test.tsx",
     ],
+    anchors: [{ file: "src/shared/analytics/routeTracking.ts", excerpt: "import { useSession } from '@shared/providers/SessionProvider';" }],
     note: "Everything after this depends on it.",
   },
   {
@@ -30,17 +30,18 @@ export const GROUPS: StoryGroup[] = [
     framing: "Redirect handling was reading straight from the store. Untangling it turned out to be the widest part of the change.",
     // Deliberately absent from the fixture diff below.
     files: ["src/shared/lib/router/navigate.ts"],
+    anchors: [{ file: "src/shared/lib/router/navigate.ts", excerpt: "const { pendingRoute } = useSession();" }],
   },
   {
     title: "The app drops the store and boots",
     lead: "The payoff commit",
-    framing: "The payoff commit. Six files, and the app comes up without a store.",
     files: ["src/apps/portal/components/App/App.tsx", "src/apps/portal/index.tsx", "src/apps/portal/register.ts", "src/apps/portal/stores/routeStore.tsx"],
   },
   {
     title: "The last store readers move to useSession",
     framing: "Leaf components that still read user state. Mechanical, but worth a skim for the ones that changed behavior rather than just imports.",
     files: ["src/apps/portal/components/App/ImpersonationBanner.tsx", "src/apps/portal/components/TenancyRedirectHandler.tsx"],
+    anchors: [{ file: "src/apps/portal/components/TenancyRedirectHandler.tsx", excerpt: "const user = useSelector((state) => state.session.currentUser);" }],
   },
 ];
 
@@ -171,7 +172,11 @@ export const WALK_INPUTS: WalkInputs = {
     ticket_key: "ABC-12",
     ticket_quality: { score: "adequate", notes: "Clear who/what/why, but the AC only covers the happy path." },
     acceptance_criteria: [
-      { criterion: "Portal boots with no global store", status: "Met", evidence: "src/apps/portal/index.tsx" },
+      {
+        criterion: "Portal boots with no global store", status: "Met",
+        evidence: "index.tsx no longer creates a store",
+        refs: [{ file: "src/apps/portal/index.tsx", excerpt: "const { currentUser } = useSession();" }],
+      },
       { criterion: "No regression in the impersonation flow", status: "Partially Met", evidence: "" },
       { criterion: "Shared layer stays backward-compatible for other consumers", status: "Not Met", evidence: "" },
     ],

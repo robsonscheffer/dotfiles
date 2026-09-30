@@ -72,10 +72,12 @@ export function collectClaimRefs(nodes: (Inline | { children?: unknown[] })[]): 
 
 export function renderClaimMarker(n: ClaimRefNode, ctx: Ctx): string {
   const claim = ctx.ledger?.claims.find((c) => c.id === n.id);
+  const href = `#claim-${escapeAttr(n.id)}`;
   if (!claim) {
-    return `<sup class="claim-marker claim-missing" title="claim ${escapeAttr(n.id)} not found in ledger">${escapeHtml(n.id)}</sup>`;
+    return `<sup><a class="claim-marker claim-missing" href="${href}" aria-label="Claim ${escapeAttr(n.id)}: not in the ledger">${escapeHtml(n.id)}</a></sup>`;
   }
-  return `<sup class="claim-marker claim-${escapeAttr(claim.status)}" title="${escapeAttr(claim.claim)}">${escapeHtml(n.id)}</sup>`;
+  const verdict = claim.verdict ? ` verdict-${escapeAttr(claim.verdict)}` : "";
+  return `<sup><a class="claim-marker claim-${escapeAttr(claim.status)}${verdict}" href="${href}" aria-label="Claim ${escapeAttr(n.id)}: ${escapeAttr(claim.claim)}">${escapeHtml(n.id)}</a></sup>`;
 }
 
 export function excerptFor(ev: Evidence): string {
