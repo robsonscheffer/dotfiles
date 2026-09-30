@@ -2,7 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { loadLedger } from "../../src/ledger/index.ts";
 import { lint } from "../../src/lint/index.ts";
 import { parse } from "../../src/parser/index.ts";
-import { composeCompare, wordCount } from "../../src/compare/render.ts";
+import {
+  composeCompare,
+  composeSetIndex,
+  wordCount,
+  type CompareRun,
+  type PaneRun,
+} from "../../src/compare/render.ts";
+import type { CheckSpec } from "../../src/compare/types.ts";
 
 describe("wordCount", () => {
   test("counts words separated by any whitespace", () => {
@@ -14,75 +21,113 @@ describe("wordCount", () => {
   });
 });
 
-describe("composeCompare", () => {
-  function basicInput(runs: { without: string; with: string }[]) {
-    return {
-      promptFile: "prompt.md",
-      prompt: "Explain the refund policy.",
-      corePath: "/config/AGENTS.md",
-      coreHash: "deadbeef",
-      runs,
-    };
-  }
+const checks: CheckSpec[] = [{ name: "words", kind: "words" }];
 
-  test("single run writes without.md and with.md, unnumbered", () => {
-    const result = composeCompare(basicInput([{ without: "plain answer", with: "core answer" }]));
-    expect(Object.keys(result.files).sort()).toEqual(["index.md", "with.md", "without.md"]);
-    expect(result.files["without.md"]).toBe("plain answer");
-    expect(result.files["with.md"]).toBe("core answer");
+function pane(text: string, words: number, over: Partial<PaneRun> = {}): PaneRun {
+  return { text, checks: [{ name: "words", value: words }], seconds: 3, context: 100, output: 20, cost: 0.02, ...over };
+}
+
+function run(a: PaneRun, base: PaneRun, b: PaneRun): CompareRun {
+  return { A: a, "A-base": base, B: b };
+}
+
+function input(runs: CompareRun[]) {
+  return {
+    promptFile: "prompt.md",
+    prompt: "Explain the refund policy.",
+    basePath: "rules/base.md",
+    baseHash: "deadbeef",
+    bPath: "rules/candidate.md",
+    bHash: "cafef00d",
+    checks,
+    runs,
+  };
+}
+
+describe("composeCompare", () => {
+  test("index.md shows the prompt, both system files with hashes, and tabs per run", () => {
+    const result = composeCompare(input([run(pane("a", 1), pane("base", 1), pane("b", 1))]));
+    const index = result.files["index.md"]!;
+    expect(Object.keys(result.files)).toEqual(["index.md"]);
+    expect(index).toContain("Explain the refund policy.");
+    expect(index).toContain("rules/base.md");
+    expect(index).toContain("deadbeef");
+    expect(index).toContain("rules/candidate.md");
+    expect(index).toContain("cafef00d");
+    expect(index).toContain(":::tabs");
+    expect(index).toContain("## A\n");
+    expect(index).toContain("## A-base\n");
+    expect(index).toContain("## B\n");
+    expect(index).toContain("Your verdict:");
   });
 
-  test("multiple runs are numbered", () => {
+  test("a single run shows values only and the verdict is single run", () => {
+    const result = composeCompare(input([run(pane("a", 10), pane("base", 20), pane("b", 5))]));
+    const index = result.files["index.md"]!;
+    expect(index).toContain("| words | 10 | 20 | 5 | single run |");
+    expect(index).toContain("| seconds | 3 | 3 | 3 | - |");
+    expect(index).toContain("| cost | $0.0200 | $0.0200 | $0.0200 | - |");
+    expect(result.verdicts).toEqual([{ check: "words", verdict: "single run" }]);
+  });
+
+  test("median and range cells, and B better when ranges do not overlap", () => {
     const result = composeCompare(
-      basicInput([
-        { without: "a1", with: "a2" },
-        { without: "b1", with: "b2" },
+      input([
+        run(pane("a", 30), pane("base", 40), pane("b", 10)),
+        run(pane("a", 34), pane("base", 44), pane("b", 12)),
       ]),
     );
-    expect(Object.keys(result.files).sort()).toEqual([
-      "index.md",
-      "with-1.md",
-      "with-2.md",
-      "without-1.md",
-      "without-2.md",
-    ]);
+    const index = result.files["index.md"]!;
+    expect(index).toContain("| words | 32 [30..34] | 42 [40..44] | 11 [10..12] | B better |");
+    expect(result.verdicts[0]!.verdict).toBe("B better");
   });
 
-  test("index.md shows the prompt, core path and hash, and word counts", () => {
-    const result = composeCompare(basicInput([{ without: "one two", with: "one two three" }]));
-    const index = result.files["index.md"]!;
-    expect(index).toContain("Explain the refund policy.");
-    expect(index).toContain("/config/AGENTS.md");
-    expect(index).toContain("deadbeef");
-    expect(index).toContain("Without core: 2 words");
-    expect(index).toContain("With core: 3 words");
-    expect(index).toContain(":::tabs");
-    expect(index).toContain("## Without core");
-    expect(index).toContain("## With core");
+  test("overlapping ranges are the same", () => {
+    const result = composeCompare(
+      input([
+        run(pane("a", 30), pane("base", 40), pane("b", 38)),
+        run(pane("a", 34), pane("base", 44), pane("b", 42)),
+      ]),
+    );
+    expect(result.verdicts[0]!.verdict).toBe("same");
+  });
+
+  test("null metrics render n/a", () => {
+    const p = pane("x", 1, { context: null, output: null });
+    const index = composeCompare(input([run(p, p, p)])).files["index.md"]!;
+    expect(index).toContain("| context | n/a | n/a | n/a | - |");
   });
 
   test("agent output containing directive-shaped and heading-shaped lines does not break the doc", () => {
     const hostile = "## Fake heading\n\n:::note\nnested\n:::\n\n:::\n";
-    const result = composeCompare(basicInput([{ without: hostile, with: "safe" }]));
-    const index = result.files["index.md"]!;
-    const doc = parse(index, "index.md");
+    const result = composeCompare(input([run(pane(hostile, 3), pane("safe", 1), pane("safe", 1))]));
+    const doc = parse(result.files["index.md"]!, "index.md");
     expect(doc.errors).toEqual([]);
   });
 
-  test("index.md passes mate-doc lint", () => {
-    const result = composeCompare(basicInput([{ without: "plain answer", with: "core answer" }]));
+  test("index.md passes mate-doc lint, with and without a ledger", async () => {
+    const result = composeCompare(
+      input([
+        run(pane("a", 3), pane("base", 4), pane("b", 2)),
+        run(pane("a", 3), pane("base", 4), pane("b", 2)),
+      ]),
+    );
     const doc = parse(result.files["index.md"]!, "index.md");
-    const issues = lint([doc], null);
-    const errors = issues.filter((i) => i.severity === "error");
-    expect(errors).toEqual([]);
-  });
-
-  test("index.md with a ledger present still lints clean (no claims referenced)", async () => {
-    const result = composeCompare(basicInput([{ without: "plain answer", with: "core answer" }]));
-    const doc = parse(result.files["index.md"]!, "index.md");
+    expect(lint([doc], null).filter((i) => i.severity === "error")).toEqual([]);
     const ledger = await loadLedger("/does/not/exist");
-    const issues = lint([doc], ledger);
-    const errors = issues.filter((i) => i.severity === "error");
-    expect(errors).toEqual([]);
+    expect(lint([doc], ledger).filter((i) => i.severity === "error")).toEqual([]);
+  });
+});
+
+describe("composeSetIndex", () => {
+  test("links each prompt folder with its verdict row", () => {
+    const index = composeSetIndex([
+      { name: "alpha", verdicts: [{ check: "words", verdict: "B better" }] },
+      { name: "beta", verdicts: [{ check: "words", verdict: "same" }] },
+    ]);
+    expect(index).toContain("| [alpha](alpha/index.md) | words: B better |");
+    expect(index).toContain("| [beta](beta/index.md) | words: same |");
+    const doc = parse(index, "index.md");
+    expect(doc.errors).toEqual([]);
   });
 });
