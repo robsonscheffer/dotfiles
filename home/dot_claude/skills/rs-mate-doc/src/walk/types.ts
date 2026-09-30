@@ -39,10 +39,16 @@ export interface RawComments {
 // ---------------------------------------------------------------------------------------------
 // Agent outputs (AGENT-PROMPTS.md schemas) - these stay agent work; this is just the shape.
 
+export interface WalkAnchor {
+  file: string;
+  excerpt: string;
+}
+
 export interface StoryGroup {
   title: string;
   lead?: string;
-  framing: string;
+  framing?: string;
+  anchors?: WalkAnchor[];
   files: string[];
   note?: string;
 }
@@ -86,7 +92,8 @@ export interface TicketQuality {
 export interface AcceptanceCriterion {
   criterion: string;
   status: AcStatus;
-  evidence: string;
+  evidence: string; // the agent's prose for the table; not claim evidence
+  refs?: WalkAnchor[];
 }
 
 export interface TicketFit {
@@ -133,4 +140,5 @@ export interface WalkInputs {
 
 export interface ComposedWalk {
   files: Record<string, string>; // "index.md" and "claims.yaml"
+  warnings: string[];
 }

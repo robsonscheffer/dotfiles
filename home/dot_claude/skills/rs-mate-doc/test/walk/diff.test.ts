@@ -1,9 +1,9 @@
 // Regression coverage for the excerpt/anchor mismatch: a modify hunk's first changed line is
 // almost always the removed line, but that line only exists at the PR's base commit, not the
-// head commit compose.ts anchors every code claim to. firstFileChange has to say which image
+// head commit compose.ts anchors every code claim to. findAnchorLine has to say which image
 // (added -> head, removed -> base) its excerpt belongs to.
 import { describe, expect, test } from "bun:test";
-import { firstFileChange } from "../../src/walk/diff.ts";
+import { findAnchorLine } from "../../src/walk/diff.ts";
 
 const MODIFY_DIFF = [
   "diff --git a/src/widget.ts b/src/widget.ts",
@@ -31,48 +31,71 @@ const PURE_REMOVAL_DIFF = [
 
 const NO_CHANGE_DIFF = ["diff --git a/src/other.ts b/src/other.ts", "index 8f2a1c4..b93e017 100644", "--- a/src/other.ts", "+++ b/src/other.ts", ""].join("\n");
 
-describe("firstFileChange", () => {
-  test("a modify hunk yields the added line, at the new-file line number, anchored at head", () => {
-    const change = firstFileChange(MODIFY_DIFF, "src/widget.ts");
-    expect(change.found).toBe(true);
-    expect(change.excerpt).toBe("return 'new label';");
-    expect(change.side).toBe("added");
+const SEARCH_DIFF = [
+  "diff --git a/src/search.ts b/src/search.ts",
+  "index 8f2a1c4..b93e017 100644",
+  "--- a/src/search.ts",
+  "+++ b/src/search.ts",
+  "@@ -10,5 +10,6 @@",
+  " import a from 'a';",
+  "-import old from 'old';",
+  "+import fresh from 'fresh';",
+  " const x = 1;",
+  " const y = 2;",
+  "+export const target = compute(x, y);",
+  "",
+].join("\n");
+
+describe("findAnchorLine", () => {
+  test("counts lines past earlier hunk content, so a later match gets the right number", () => {
+    const change = findAnchorLine(SEARCH_DIFF, "src/search.ts", "export const target = compute(x, y);");
+    expect(change).toEqual({ found: true, excerpt: "export const target = compute(x, y);", line: 14, side: "added" });
+  });
+
+  test("an added match after a removed line counts newLine correctly", () => {
+    const change = findAnchorLine(SEARCH_DIFF, "src/search.ts", "import fresh");
     expect(change.line).toBe(11);
+    expect(change.excerpt).toBe("import fresh");
   });
 
-  test("a pure-removal hunk yields the removed line, at the old-file line number, anchored at base", () => {
-    const change = firstFileChange(PURE_REMOVAL_DIFF, "src/legacy.ts");
-    expect(change.found).toBe(true);
-    expect(change.excerpt).toBe("export const UNUSED_FLAG = false;");
-    expect(change.side).toBe("removed");
-    expect(change.line).toBe(10);
+  test("a removed-only match is anchored on the old-file line", () => {
+    const change = findAnchorLine(SEARCH_DIFF, "src/search.ts", "  import old from 'old';  ");
+    expect(change).toEqual({ found: true, excerpt: "import old from 'old';", line: 11, side: "removed" });
   });
 
-  test("a file with no content change is not found", () => {
-    const change = firstFileChange(NO_CHANGE_DIFF, "src/other.ts");
-    expect(change.found).toBe(false);
+  test("added lines win over removed lines that also match", () => {
+    const diff = [
+      "diff --git a/src/w.ts b/src/w.ts",
+      "--- a/src/w.ts",
+      "+++ b/src/w.ts",
+      "@@ -1,2 +1,2 @@",
+      "-const label = 'a';",
+      "+const label = 'b';",
+      "",
+    ].join("\n");
+    const change = findAnchorLine(diff, "src/w.ts", "const label");
+    expect(change.side).toBe("added");
+    expect(change.line).toBe(1);
+  });
+
+  test("an empty excerpt is not found", () => {
+    expect(findAnchorLine(SEARCH_DIFF, "src/search.ts", "   ").found).toBe(false);
+  });
+
+  test("an excerpt that matches nothing is not found", () => {
+    expect(findAnchorLine(SEARCH_DIFF, "src/search.ts", "nope").found).toBe(false);
   });
 
   test("a file absent from the diff is not found", () => {
-    const change = firstFileChange(MODIFY_DIFF, "src/missing.ts");
-    expect(change.found).toBe(false);
+    expect(findAnchorLine(SEARCH_DIFF, "src/missing.ts", "import").found).toBe(false);
   });
 
-  test("a multi-hunk file with an added line in a later hunk still prefers added over an earlier removed line", () => {
-    const diff = [
-      "diff --git a/src/multi.ts b/src/multi.ts",
-      "index 8f2a1c4..b93e017 100644",
-      "--- a/src/multi.ts",
-      "+++ b/src/multi.ts",
-      "@@ -1,2 +1,1 @@",
-      "-export const A = 1;",
-      "@@ -20,1 +19,2 @@",
-      "+export const B = 2;",
-      "",
-    ].join("\n");
-    const change = firstFileChange(diff, "src/multi.ts");
-    expect(change.side).toBe("added");
-    expect(change.excerpt).toBe("export const B = 2;");
-    expect(change.line).toBe(19);
+  test("a context line is never an anchor", () => {
+    expect(findAnchorLine(SEARCH_DIFF, "src/search.ts", "const x = 1;").found).toBe(false);
+  });
+
+  test("the match does not leak into the next file's section", () => {
+    const diff = [SEARCH_DIFF.trimEnd(), "diff --git a/src/next.ts b/src/next.ts", "@@ -1,1 +1,1 @@", "+only in next", ""].join("\n");
+    expect(findAnchorLine(diff, "src/search.ts", "only in next").found).toBe(false);
   });
 });

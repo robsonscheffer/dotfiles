@@ -7,10 +7,11 @@ import { composeWalk } from "../../src/walk/compose.ts";
 import { FETCHED_PR, WALK_INPUTS } from "./fixture.ts";
 
 const NOW = new Date("2026-09-25T00:00:00Z");
+const AUTHOR = "agent:claude";
 
 describe("composeWalk rail", () => {
   test("emits a :::rail block with author, PR link, branch, ticket, comment count, and risk count", () => {
-    const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
+    const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW, author: AUTHOR });
     const md = composed.files["index.md"]!;
     expect(md).toContain(":::rail");
     expect(md).toContain("Author: sam");
@@ -23,14 +24,14 @@ describe("composeWalk rail", () => {
 
   test("omits the Ticket line when the PR has no linked ticket", () => {
     const inputsWithoutTicket = { ...WALK_INPUTS, ticketFit: undefined };
-    const composed = composeWalk(FETCHED_PR, inputsWithoutTicket, { now: NOW });
+    const composed = composeWalk(FETCHED_PR, inputsWithoutTicket, { now: NOW, author: AUTHOR });
     const md = composed.files["index.md"]!;
     expect(md).toContain(":::rail");
     expect(md).not.toContain("Ticket:");
   });
 
   test("the composed rail parses and renders as a sticky panel", () => {
-    const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW });
+    const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW, author: AUTHOR });
     const doc = parse(composed.files["index.md"]!, "index.md");
     expect(doc.errors).toHaveLength(0);
     const html = render(doc, null, { theme: "auto" });

@@ -13,16 +13,19 @@
   "groups": [
     {
       "title": "Shared layer goes store-optional",
-      "lead": "Optional short lead.",
+      "lead": "Optional short lead. Reading directions go here.",
       "framing": "One factual sentence about what these files change. It becomes a claim.",
       "files": ["src/shared/AppWrapper.tsx"],
+      "anchors": [{ "file": "src/shared/AppWrapper.tsx", "excerpt": "a line copied from the diff" }],
       "note": "Optional reviewer note."
     }
   ]
 }
 ```
 
-Each group's `framing` becomes a claim. When a file in the group has a hunk in the diff, the composer turns it into a verified code claim with an excerpt from the diff; otherwise it is not_verified with the PR author as owner. So write `framing` as a plain factual statement about the change, not an opinion.
+`framing` is optional. When present it is one factual sentence a reader could be wrong about, and it becomes a claim. Reading directions ("Read this first", "Skim last") go in the group `lead`, which is never a claim. A group with no `framing` gets no claim.
+
+`anchors` is a list of `{ "file", "excerpt" }`. Copy a line from the diff that backs the framing; the file must be one of the group's `files`. The composer finds that line (added lines first, then removed lines) and writes a `proposed` code claim pointing at it. A missing anchor, or one that matches no line in the diff, makes the claim `not_verified` with the PR author as owner, and `mate-doc walk` prints a warning. The composer never picks a line for you and never marks a claim `verified`.
 
 `questions.json`: what the reviewer should ask.
 
@@ -44,16 +47,15 @@ Each group's `framing` becomes a claim. When a file in the group has a hunk in t
 
 ## Optional
 
-- `ticket-fit.json`: `{ "ticket_key", "ticket_quality": { "score": "good|adequate|thin|missing", "notes" }, "acceptance_criteria": [{ "criterion", "status": "Met|Partially Met|Not Met|Unplanned Deviation", "evidence" }], "scope_delta" }`
+- `ticket-fit.json`: `{ "ticket_key", "ticket_quality": { "score": "good|adequate|thin|missing", "notes" }, "acceptance_criteria": [{ "criterion", "status": "Met|Partially Met|Not Met|Unplanned Deviation", "evidence", "refs" }], "scope_delta" }`
+  - `criterion` is the ticket's own text, copied word for word. Put your findings in `evidence`; it fills the table's Evidence column and is not claim evidence.
+  - `refs: [{ "file", "excerpt" }]` backs a `Met` criterion with a line copied from the diff (any file in the diff). The claim reads `Met: <criterion>` and is `proposed`. Any other status, or a `Met` with no matching ref, is `not_verified`.
 - `comment-triage.json`: `[{ "author", "author_kind": "bot|human", "human_authenticity": "genuine|bot-posing-as-human|uncertain", "summary", "resolved" }]`
 - `context.json`: `{ "mode": "qmd|grep", "items": [...] }`. Each item is either a bare string or `{ "path", "score", "snippet" }`. Renders as a "Related notes" section, one wikilink per item built from the note's file name only (no folder, no extension), plus its snippet when present.
 
 ## Output
 
-`--out <walk-dir>` gets `index.md` and `claims.yaml`. Run `mate-doc lint` on it. Then record a verdict for every
-claim in `claims.yaml`: `mate-doc verdict <walk-dir> <Cn> --supports|--overstates|--contradicts|--unrelated --by
-<name>`, once per claim ID. `mate-doc gate <walk-dir>` fails with "has no verdict yet" until every claim has one -
-that's a missing command to run, not a source problem to fix. Once gate passes, `mate-doc open` it for Robson.
+`--out <walk-dir>` gets `index.md` and `claims.yaml`. The ledger starts with `author:`, the actor that ran the compose, and holds only `proposed` and `not_verified` claims. Run `mate-doc lint` on it, then `mate-doc verify <walk-dir>`, which asks a fresh verifier agent about each `proposed` claim. Claims it cannot settle need a human `mate-doc verdict`. Do not record verdicts on your own claims. Once `mate-doc gate <walk-dir>` passes, `mate-doc open` it for Robson.
 
 ## Submit
 
