@@ -15,6 +15,7 @@
 // "submit" and "close" are dispatched here, on the literal first token, rather than in
 // src/cli.ts: neither collides with a real PR reference (parsePrRef always requires a "/" or
 // "#"), so `mate-doc walk` keeps its single entry point.
+import { detectActor } from "../identity.ts";
 import { EXIT } from "../types.ts";
 import type { Env } from "../types.ts";
 import { runWalkClose } from "./close.ts";
@@ -116,7 +117,8 @@ export async function runWalk(argv: string[], env: Env): Promise<number> {
   }
 
   const inputs: WalkInputs = { story, questions, risks, judgment, context, ticketFit, commentTriage };
-  const composed = composeWalk(fetched, inputs, { now: env.now() });
+  const composed = composeWalk(fetched, inputs, { now: env.now(), author: detectActor() });
+  for (const w of composed.warnings) process.stderr.write(`mate-doc walk: warning: ${w}\n`);
 
   const outDir = args.outDir ?? `./walk-${ref.number}`;
   await writeFilesTo(outDir, composed.files);

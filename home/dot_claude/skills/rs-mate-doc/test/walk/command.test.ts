@@ -60,6 +60,37 @@ describe("runWalk", () => {
     }
   });
 
+  test("writes the author from detectActor and prints a warning for the unmatched anchor", async () => {
+    const inputsDir = await tempDir();
+    const outDir = await tempDir();
+    const saved = process.env.MATE_DOC_AGENT;
+    const realWrite = process.stderr.write.bind(process.stderr);
+    let err = "";
+    try {
+      await writeFile(join(inputsDir, "story.json"), JSON.stringify(WALK_INPUTS.story));
+      await writeFile(join(inputsDir, "questions.json"), JSON.stringify(WALK_INPUTS.questions));
+      await writeFile(join(inputsDir, "risks.json"), JSON.stringify(WALK_INPUTS.risks));
+      await writeFile(join(inputsDir, "judgment.json"), JSON.stringify(WALK_INPUTS.judgment));
+      process.env.MATE_DOC_AGENT = "x";
+      process.stderr.write = ((chunk: string | Uint8Array) => {
+        err += String(chunk);
+        return true;
+      }) as typeof process.stderr.write;
+      const code = await runWalk(["acme/console#4242", "--inputs", inputsDir, "--out", outDir], fakeGhEnv());
+      process.stderr.write = realWrite;
+      expect(code).toBe(EXIT.ok);
+      const yaml = await Bun.file(join(outDir, "claims.yaml")).text();
+      expect(yaml.startsWith('author: "agent:x"\n')).toBe(true);
+      expect(err).toContain("mate-doc walk: warning: group 02");
+    } finally {
+      process.stderr.write = realWrite;
+      if (saved === undefined) delete process.env.MATE_DOC_AGENT;
+      else process.env.MATE_DOC_AGENT = saved;
+      await rm(inputsDir, { recursive: true, force: true });
+      await rm(outDir, { recursive: true, force: true });
+    }
+  });
+
   test("accepts a full PR URL too", async () => {
     const inputsDir = await tempDir();
     const outDir = await tempDir();
