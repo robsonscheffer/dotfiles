@@ -453,6 +453,7 @@ export const COMMANDS = [
   "lint",
   "audit",
   "verdict",
+  "verify",
   "gate",
   "approve",
   "publish",

@@ -14,6 +14,7 @@ import { runPublish } from "./commands/publish.ts";
 import { runSetup } from "./commands/setup.ts";
 import { runStatus } from "./commands/status.ts";
 import { runVerdict } from "./commands/verdict.ts";
+import { runVerify } from "./commands/verify.ts";
 import { createEnv } from "./env.ts";
 import { runWalk } from "./walk/command.ts";
 
@@ -28,6 +29,7 @@ Usage: mate-doc <command> [args]
   lint <path>                check pages and ledger
   audit <path> [--json]      run evidence checks, list what needs a verdict
   verdict <path> <Cn> ...    record a judgment for one claim
+  verify <path> [--claims ..]  ask a fresh agent to check claims
   gate <path>                pass or fail, with reasons
   approve <path>             mark official (a person, never an agent)
   publish <path> --to <t>    share an official, fresh doc
@@ -69,6 +71,8 @@ export async function main(argv: string[], deps: MainDeps = {}): Promise<number>
       return deps.env ? runAudit(rest, deps.env) : runAudit(rest);
     case "verdict":
       return runVerdict(rest);
+    case "verify":
+      return runVerify(rest, deps.env ?? createEnv());
     case "gate":
       return deps.env ? runGate(rest, deps.env) : runGate(rest);
     case "approve":
