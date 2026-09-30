@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { canonicalize, ledgerHash, loadLedger, validateLedger } from "../../src/ledger/index.ts";
+import { canonicalize, claimHash, ledgerHash, loadLedger, validateLedger } from "../../src/ledger/index.ts";
 import type { Doc, Ledger } from "../../src/types.ts";
 
 const dirs: string[] = [];
@@ -218,5 +218,64 @@ describe("ledgerHash", () => {
       ],
     };
     expect(ledgerHash(docs, base, docDir)).not.toBe(ledgerHash(docs, editedExcerpt, docDir));
+  });
+});
+
+const linkEvidence = { kind: "link", url: "https://example.com/x", excerpt: "x happened here", needs: "http" } as const;
+
+describe("claimHash", () => {
+  const base = { claim: "x happened", evidence: linkEvidence };
+
+  test("is stable across key order", () => {
+    const reordered = {
+      evidence: { needs: "http", excerpt: "x happened here", url: "https://example.com/x", kind: "link" },
+      claim: "x happened",
+    };
+    expect(claimHash(base as never)).toBe(claimHash(reordered as never));
+    expect(claimHash(base as never)).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  test("changes when the claim text or the excerpt changes", () => {
+    expect(claimHash({ ...base, claim: "y happened" } as never)).not.toBe(claimHash(base as never));
+    expect(claimHash({ ...base, evidence: { ...linkEvidence, excerpt: "other" } } as never)).not.toBe(
+      claimHash(base as never),
+    );
+  });
+
+  test("ignores status, verdict, and checked_by", () => {
+    const verdicted = {
+      ...base,
+      status: "verified",
+      verdict: "supports",
+      checked_by: "verifier:sonnet",
+      checked_at: "2026-09-01",
+    };
+    expect(claimHash(verdicted as never)).toBe(claimHash(base as never));
+  });
+
+  test("treats missing evidence as null", () => {
+    expect(claimHash({ claim: "x" } as never)).toBe(claimHash({ claim: "x", evidence: undefined } as never));
+  });
+});
+
+describe("ledgerHash and verdict fields", () => {
+  test("does not change when only verdict_hash or verdict_reason is added", () => {
+    const docDir = "/tmp/acme-docs";
+    const docs = [doc(`${docDir}/a.md`)];
+    const claim = { id: "C1", claim: "x happened", status: "verified", evidence: linkEvidence } as const;
+    const before: Ledger = { path: "claims.yaml", claims: [claim as never] };
+    const after: Ledger = {
+      path: "claims.yaml",
+      claims: [{ ...claim, verdict_hash: "abc", verdict_reason: "excerpt matches" } as never],
+    };
+    expect(ledgerHash(docs, after, docDir)).toBe(ledgerHash(docs, before, docDir));
+  });
+});
+
+describe("author", () => {
+  test("loadLedger exposes the top-level author", async () => {
+    const dir = await tempDir();
+    await writeFile(join(dir, "claims.yaml"), "author: human:Alex\nclaims: []\n");
+    expect((await loadLedger(dir))?.author).toBe("human:Alex");
   });
 });
