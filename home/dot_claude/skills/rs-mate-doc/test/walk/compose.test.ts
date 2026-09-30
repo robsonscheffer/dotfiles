@@ -175,14 +175,14 @@ describe("composeWalk", () => {
   test("Met with a matching ref is a proposed code claim; other statuses are not_verified", () => {
     const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW, author: AUTHOR });
     const claims = claimsFromYaml(composed.files["claims.yaml"]!);
-    const met = claims.find((c) => c.claim === "Met: Portal boots with no global store")!;
+    const met = claims.find((c) => c.claim === "Portal boots with no global store")!;
     expect(met.status).toBe("proposed");
     expect(met.ttl_days).toBe(14);
     expect(met.evidence?.kind).toBe("code");
-    const partial = claims.find((c) => c.claim === "Partially met: No regression in the impersonation flow")!;
+    const partial = claims.find((c) => c.claim === "No regression in the impersonation flow")!;
     expect(partial.status).toBe("not_verified");
     expect(partial.owner).toBe("sam");
-    expect(claims.find((c) => c.claim.startsWith("Not met: "))?.status).toBe("not_verified");
+    expect(claims.find((c) => c.claim === "Shared layer stays backward-compatible for other consumers")?.status).toBe("not_verified");
     // The ticket-fit table still shows the agent's own evidence prose.
     expect(composed.files["index.md"]).toContain("index.tsx no longer creates a store");
   });
@@ -192,7 +192,7 @@ describe("composeWalk", () => {
     ticketFit.acceptance_criteria[0]!.refs = [{ file: "src/apps/portal/index.tsx", excerpt: "no such line anywhere" }];
     const composed = composeWalk(FETCHED_PR, { ...WALK_INPUTS, ticketFit }, { now: NOW, author: AUTHOR });
     const claims = claimsFromYaml(composed.files["claims.yaml"]!);
-    expect(claims.find((c) => c.claim.startsWith("Met: "))?.status).toBe("not_verified");
+    expect(claims.find((c) => c.claim === "Portal boots with no global store")?.status).toBe("not_verified");
     expect(composed.warnings.some((w) => w.startsWith('criterion "Portal boots with no global store"'))).toBe(true);
   });
 

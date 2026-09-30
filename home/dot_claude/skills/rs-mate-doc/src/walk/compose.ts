@@ -177,16 +177,9 @@ function renderTicketFitSection(pr: FetchedPr, ticketFit: TicketFit | undefined,
   return lines.join("\n").trimEnd();
 }
 
-const AC_LABEL: Record<AcceptanceCriterion["status"], string> = {
-  Met: "Met",
-  "Partially Met": "Partially met",
-  "Not Met": "Not met",
-  "Unplanned Deviation": "Unplanned deviation",
-};
-
 function buildAcClaim(pr: FetchedPr, ac: AcceptanceCriterion, build: ClaimBuild): ClaimId {
   const id = nextClaimId(build);
-  const text = `${AC_LABEL[ac.status]}: ${ac.criterion}`;
+  const text = ac.criterion;
   const refs = ac.refs ?? [];
   const claim: Claim = ac.status === "Met" ? buildProposedClaim(pr, id, text, refs) : { id, claim: text, status: "not_verified", owner: pr.meta.author.login };
   if (ac.status === "Met" && refs.length > 0 && claim.status === "not_verified") {
