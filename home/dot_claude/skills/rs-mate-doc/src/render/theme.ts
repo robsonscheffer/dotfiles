@@ -195,9 +195,47 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
 .callout-collide { border-left-color: var(--badge-med-text); }
 .callout-decide { border-left-color: var(--badge-med-text); }
 .term-chip { border-bottom: 1px dotted var(--accent); cursor: help; }
-.claim-marker { cursor: help; }
-.claim-marker.claim-not_verified, .claim-marker.claim-missing { color: var(--badge-high-text); font-weight: 700; }
+.claim-marker { text-decoration: none; }
+.claim-marker:hover { text-decoration: underline; }
+.claim-marker.claim-verified, .claim-marker.verdict-supports,
+.claim-status-verified, .verdict-badge.verdict-supports { color: var(--badge-low-text); }
+.claim-marker.claim-proposed, .claim-marker.claim-inferred,
+.claim-marker.verdict-unrelated, .claim-marker.verdict-uncheckable,
+.claim-status-proposed, .claim-status-inferred,
+.verdict-badge.verdict-unrelated, .verdict-badge.verdict-uncheckable { color: var(--badge-med-text); }
+.claim-marker.claim-not_verified, .claim-marker.claim-missing,
+.claim-marker.verdict-overstates, .claim-marker.verdict-contradicts,
+.claim-status-not_verified, .verdict-badge.verdict-overstates, .verdict-badge.verdict-contradicts { color: var(--badge-high-text); }
+.claim-marker.claim-not_verified, .claim-marker.claim-missing { font-weight: 700; }
 .claim-marker.claim-missing::after { content: " !"; }
+.claim-status {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+.claim-text { color: var(--fg); }
+.claims-list { margin-top: 2rem; }
+.claims-list .claim-row { margin: 0.4rem 0; padding: 0.4rem 0.6rem; }
+.claims-list .claim-row:target { background: var(--callout-bg); border-left-color: var(--accent); }
+.claim-panel {
+  display: block;
+  position: absolute;
+  z-index: 20;
+  max-width: 28rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.claim-panel .claim-evidence { margin: 0.4rem 0; }
+.claim-panel .claim-excerpt { white-space: pre-wrap; }
+.claim-panel-close { float: right; margin-left: 0.5rem; cursor: pointer; }
 .claim-evidence {
   font-size: 0.85rem;
   color: var(--muted);
@@ -361,7 +399,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .left-nav-disclosure summary { cursor: pointer; font-weight: 600; padding: 0.25rem 0; }
 @media print {
   .breadcrumbs, .left-nav, .prev-next, .side-col, .theme-toggle,
-  .notes-toolbar, .note-control {
+  .notes-toolbar, .note-control, .claim-panel {
     display: none !important;
   }
   /* Print has no interaction, so a collapsed <details> (e.g. the walk lane's judgment reveal)
