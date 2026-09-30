@@ -282,11 +282,10 @@ end on a real PR. Say that plainly to the user before running it.
 3. Compose the walk: `mate-doc walk <url> --inputs <dir> --out <walk-dir>`.
 4. Lint it: `mate-doc lint <walk-dir>`. Fix the source and re-run on a failure before
    continuing.
-5. Record a verdict for every claim: `mate-doc verdict <walk-dir> <Cn>
-   --supports|--overstates|--contradicts|--unrelated --by <name>`, once per claim ID in
-   `claims.yaml`. Then run `mate-doc gate <walk-dir>`; it fails with "has no verdict yet" until
-   every claim has one, and that failure has no "fix the source" step, only a missing verdict
-   command to run. Fix any other gate failure at the source and re-run before opening.
+5. Verify the claims: `mate-doc verify <walk-dir>`, then `mate-doc gate <walk-dir>`. A fresh agent
+   judges each claim from evidence mate-doc fetches itself; you do not record verdicts. Claims that
+   are MCP or need a human `supports` go to Robson, who runs `mate-doc verdict` at his own terminal.
+   Fix any other gate failure at the source and re-run before opening.
 6. Open it for reading: `mate-doc open <walk-dir>`.
 7. After the user has read the walk and written notes, ask (AskUserQuestion) the same "Ready to
    submit?" question as Step 7: Approve, Request changes, Comment only, or Skip for now. Export

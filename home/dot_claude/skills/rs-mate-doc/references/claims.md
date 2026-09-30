@@ -3,17 +3,23 @@
 The ledger sits next to the pages, one per doc folder. The schema lives at `schema/claims.schema.json` in the rs-mate-doc skill folder; `mate-doc lint` validates against it.
 
 ```yaml
+author: human:Alex              # who wrote the ledger; `mate-doc new` fills it
 claims:
   - id: C1                     # C<number>, referenced in prose as {C1}
     claim: <the fact, worded like the page sentence>
-    status: verified | inferred | not_verified
-    evidence: { ... }          # required for verified and inferred
-    checked_by: agent:claude   # required for verified and inferred
-    checked_at: 2026-09-25     # required for verified and inferred
+    status: proposed | inferred | verified | not_verified
+    evidence: { ... }          # required except for not_verified
     ttl_days: 30               # after this many days the claim is stale
     owner: <person>            # required for not_verified; a real name, never TODO
-    verdict: supports          # written by `mate-doc verdict`, do not hand-edit
+    # written by `mate-doc verify` or a human, never by the author:
+    verdict: supports          # supports | overstates | contradicts | unrelated | uncheckable
+    verdict_reason: <one line from the verifier>
+    verdict_hash: <hash of claim and evidence when judged>
+    checked_by: verifier:claude-sonnet-x   # verifier:<model> or human:<name>
+    checked_at: 2026-09-25
 ```
+
+The author writes `proposed` with only `evidence` and `ttl_days`. `verify` moves it to `verified` on `supports`. A gate pass needs `checked_by` to start with `verifier:` or `human:` and differ from `author`.
 
 Use `inferred` when the evidence exists but the sentence is a reasonable reading of it rather than a quote (for example, "this runs on every deploy" read from a CI config). It needs evidence like `verified` does.
 
@@ -81,7 +87,7 @@ evidence:
   needs: mcp:jira
 ```
 
-Audit does not run mcp checks; they always land on the verdict worklist for you to check by hand with the MCP tool.
+Neither audit nor `verify` can fetch MCP sources. `verify` reports "needs a human verdict", and the claim passes the gate only with a `human:` verdict (`mate-doc verdict ... --supports`, run by a person).
 
 ## Choosing ttl_days
 
@@ -100,9 +106,24 @@ Match it to how fast the fact can change:
 | Reason | Fix |
 | --- | --- |
 | `lint` | run `mate-doc lint`, fix what it names |
-| `no-verdict` | read evidence vs sentence, run `mate-doc verdict` |
-| `verdict-not-supports` | fix the sentence or the evidence, then re-verdict |
-| `stale` | re-read the source, update excerpt or line, bump `checked_at` |
+| `no-verdict` | run `mate-doc verify <folder>` |
+| `verdict-not-supports` | read `verdict_reason`, fix the sentence or the evidence, re-run `verify` |
+| `no-author` | set a real `author:` in the ledger (`mate-doc new` fills it) |
+| `verdict-not-independent` | the author or an agent gave the verdict: remove it and run `verify` |
+| `verdict-stale` | the claim or evidence changed after the verdict: re-run `verify` |
+| `mcp-needs-human` | Robson runs `mate-doc verdict ... --supports` at his terminal |
+| `stale` | re-read the source, update excerpt or line, re-run `verify` |
 | `check-failed` | the excerpt moved or changed: find it again, or the fact is no longer true |
 | `capability-missing` | the machine cannot run that check; pick another evidence kind or downgrade |
 | `no-owner` | name a real owner for the not_verified claim |
+
+An integrity reason (`no-author`, `verdict-not-independent`, `verdict-stale`, `mcp-needs-human`) demotes an `official` doc to `draft`.
+
+## Lint rules for claims
+
+| Rule | Fix |
+| --- | --- |
+| `claim-is-instruction` | the claim reads as advice or a reading direction: rewrite it as a checkable fact, or drop the `{Cn}` ref |
+| `weak-excerpt` | excerpt under 8 characters or without real words: copy a longer exact line |
+| `excerpt-local-ref` | excerpt names a fetch file such as `diff.patch:12`: cite the source file and line |
+| `verified-without-verdict` | a `verified` claim has no verdict: set it back to `proposed` and run `verify` |
