@@ -130,14 +130,14 @@ describe("mate-doc compare usage errors", () => {
     expect(await runCompare(baseArgs(f, ["--runs", "abc"]), env)).toBe(EXIT.usage);
   });
 
-  test("no --print says interactive mode is not built yet", async () => {
+  test("--set without --print is a usage error", async () => {
     const f = await fixture();
     const { env, calls } = recordingEnv(() => json("x"));
     const { value, text } = await captureStderr(() =>
-      runCompare([f.prompt, "--system", f.system, "--base-system", f.base], env),
+      runCompare(["--set", f.dir, "--system", f.system, "--base-system", f.base], env),
     );
     expect(value).toBe(EXIT.usage);
-    expect(text).toContain("interactive mode not built yet, use --print");
+    expect(text).toContain("--set needs --print");
     expect(calls).toHaveLength(0);
   });
 

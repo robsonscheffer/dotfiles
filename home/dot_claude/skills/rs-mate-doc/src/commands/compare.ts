@@ -8,25 +8,41 @@
 // stdin, run in the current directory through env.run so tests never spawn a real process.
 // Run folder: system/{base.md,b.md,sha256.txt}, <pane>/run-<n>.{md,json}, index.md. With --set,
 // one sub-folder per prompt file plus a top index.md; system/ stays at the top.
-// --base-system defaults to ~/.claude/AGENTS.md, --runs to 3. Without --print the interactive
-// mode is not built yet.
+// --base-system defaults to ~/.claude/AGENTS.md, --runs to 3.
+//
+// Without --print it is interactive: one cmux workspace with three panes (A, A-base, B) that
+// each start `<pane argv> --session-id <uuid> <prompt>`, and panes.json in the run folder.
+// `compare send <ts> <text>` types text into all three panes; `compare report <ts>` reads the
+// transcripts and writes index.md with numbers per turn and no verdict.
 import { createHash, randomUUID } from "node:crypto";
 import { copyFile, mkdir, readdir, readFile, stat } from "node:fs/promises";
 import { homedir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, isAbsolute, join } from "node:path";
+import { openPanes, readAnswers, sendText, shellQuote, type PaneRecord } from "../compare/cmux.ts";
 import { loadCompareConfig } from "../compare/config.ts";
 import { paneCommands } from "../compare/panes.ts";
-import { composeCompare, composeSetIndex, type CompareRun, type PaneRun, type SetEntry } from "../compare/render.ts";
+import {
+  composeCompare,
+  composeInteractiveReport,
+  composeSetIndex,
+  type CompareRun,
+  type PaneRun,
+  type ReportTurn,
+  type SetEntry,
+} from "../compare/render.ts";
 import { runChecks } from "../compare/checks.ts";
 import { readTurnMetrics } from "../compare/transcript.ts";
-import type { CompareConfig, Pane } from "../compare/types.ts";
+import { PANES, type CompareConfig, type Pane } from "../compare/types.ts";
 import { createEnv } from "../env.ts";
 import { defaultStateDir } from "../serve/state.ts";
 import { EXIT, type Env } from "../types.ts";
 
 const USAGE =
   "usage: mate-doc compare <prompt-file> --system <file> [--base-system <file>] --print [--runs N] [--model M] [--out <dir>]\n" +
-  "       mate-doc compare --set [dir] --system <file> --print [--runs N] [--model M] [--out <dir>]";
+  "       mate-doc compare --set [dir] --system <file> --print [--runs N] [--model M] [--out <dir>]\n" +
+  "       mate-doc compare <prompt-file> --system <file> [--base-system <file>] [--model M] [--out <dir>]   (interactive)\n" +
+  "       mate-doc compare send <ts> <text...>\n" +
+  "       mate-doc compare report <ts>";
 
 interface ParsedArgs {
   promptFile?: string;
@@ -166,13 +182,120 @@ async function runPrompt(
   return { verdicts: composed.verdicts };
 }
 
+// <ts> is a folder name under <state dir>/compare/ or a path to a run folder.
+async function resolveRun(ts: string | undefined): Promise<string | null> {
+  if (!ts) return null;
+  for (const dir of [join(defaultStateDir(), "compare", ts), ...(isAbsolute(ts) || ts.includes("/") ? [ts] : [])]) {
+    if (await exists(join(dir, "panes.json"))) return dir;
+  }
+  return null;
+}
+
+async function readPanes(dir: string): Promise<PaneRecord[]> {
+  return JSON.parse(await readFile(join(dir, "panes.json"), "utf8")) as PaneRecord[];
+}
+
+async function runSend(argv: string[], env: Env): Promise<number> {
+  const dir = await resolveRun(argv[0]);
+  if (!dir) return usage(`no interactive run ${argv[0] ?? "(missing <ts>)"} (no panes.json)\n${USAGE}`);
+  const text = argv.slice(1).join(" ");
+  if (text.length === 0) return usage(`nothing to send\n${USAGE}`);
+  try {
+    await sendText(env, await readPanes(dir), text);
+  } catch (error) {
+    process.stderr.write(`mate-doc compare: ${(error as Error).message}\n`);
+    return EXIT.failed;
+  }
+  return EXIT.ok;
+}
+
+async function runReport(argv: string[], env: Env): Promise<number> {
+  const dir = await resolveRun(argv[0]);
+  if (!dir) return usage(`no interactive run ${argv[0] ?? "(missing <ts>)"} (no panes.json)\n${USAGE}`);
+  const home = process.env.HOME || homedir();
+  const cfg = await loadCompareConfig(process.env);
+  const records = await readPanes(dir);
+
+  const perPane = await Promise.all(
+    PANES.map(async (name) => {
+      const record = records.find((r) => r.name === name);
+      const metrics = record ? await readTurnMetrics(record.session_id, home) : null;
+      const answers = record ? await readAnswers(record.session_id, home) : null;
+      return { metrics: metrics ?? [], answers: answers ?? [] };
+    }),
+  );
+  const count = Math.max(...perPane.map((p) => p.metrics.length));
+  const turns: ReportTurn[] = [];
+  for (let i = 0; i < count; i++) {
+    const panes = {} as ReportTurn["panes"];
+    PANES.forEach((name, p) => {
+      const metric = perPane[p]!.metrics[i];
+      const text = perPane[p]!.answers[i] ?? "";
+      panes[name] = metric
+        ? { text, checks: runChecks(text, cfg.checks), seconds: metric.seconds, context: metric.context, output: metric.output }
+        : null;
+    });
+    const prompt = perPane.map((p) => p.metrics[i]?.prompt).find((t) => t !== undefined) ?? "";
+    turns.push({ prompt, panes });
+  }
+
+  const path = join(dir, "index.md");
+  await Bun.write(path, composeInteractiveReport({ name: basename(dir), checks: cfg.checks, turns }));
+  process.stdout.write(`${path}\n`);
+  await env.run(["mate-doc", "open", path]);
+  return EXIT.ok;
+}
+
+async function runInteractive(
+  env: Env,
+  args: ParsedArgs,
+  outDir: string,
+  panes: Pane[],
+  promptText: string,
+): Promise<number> {
+  const launches = panes.map((pane) => ({ name: pane.name, argv: pane.argv, sessionId: randomUUID() }));
+  let records: PaneRecord[];
+  try {
+    records = await openPanes(env, {
+      title: `compare ${basename(outDir)}`,
+      cwd: process.cwd(),
+      prompt: promptText,
+      launches,
+    });
+  } catch (error) {
+    process.stderr.write(`mate-doc compare: ${(error as Error).message}\n`);
+    return EXIT.failed;
+  }
+  await Bun.write(
+    join(outDir, "panes.json"),
+    JSON.stringify(records.map(({ name, session_id, workspace, surface, argv }) => ({ name, session_id, workspace, surface, argv })), null, 2) + "\n",
+  );
+  const ref = args.out ? outDir : basename(outDir);
+  const rerun = ["mate-doc", "compare", shellWord(args.promptFile!), "--system", shellWord(args.system!)];
+  if (args.baseSystem) rerun.push("--base-system", shellWord(args.baseSystem));
+  if (args.model) rerun.push("--model", shellWord(args.model));
+  process.stdout.write(
+    `${outDir}\n` +
+      `send:   mate-doc compare send ${ref} "<text>"\n` +
+      `report: mate-doc compare report ${ref}\n` +
+      `batch:  ${rerun.join(" ")} --print\n`,
+  );
+  return EXIT.ok;
+}
+
+function shellWord(text: string): string {
+  return /^[\w@%+=:,./-]+$/.test(text) ? text : shellQuote(text);
+}
+
 export async function runCompare(argv: string[], env: Env = createEnv()): Promise<number> {
+  if (argv[0] === "send") return runSend(argv.slice(1), env);
+  if (argv[0] === "report") return runReport(argv.slice(1), env);
   const args = parseArgs(argv);
   if (args.core) return usage("--core was removed, use --system <file>");
   if (args.set ? args.promptFile !== undefined : !args.promptFile) return usage(USAGE.replace(/^usage: /, ""));
   if (!args.system) return usage(`--system <file> is required\n${USAGE}`);
   if (!Number.isInteger(args.runs) || args.runs < 1) return usage("--runs must be a positive integer");
-  if (!args.print) return usage("interactive mode not built yet, use --print");
+  if (!args.print && args.set) return usage("--set needs --print");
 
   const systemPath = args.system;
   const basePath = args.baseSystem ?? join(homedir(), ".claude", "AGENTS.md");
@@ -209,6 +332,8 @@ export async function runCompare(argv: string[], env: Env = createEnv()): Promis
   const cfg = await loadCompareConfig(process.env);
   const panes = paneCommands(cfg, { basePath: baseCopy, bPath: bCopy, model: args.model });
   const system = { basePath, baseHash, bPath: systemPath, bHash };
+
+  if (!args.print) return runInteractive(env, args, outDir, panes, await readFile(prompts[0]!.file, "utf8"));
 
   const entries: SetEntry[] = [];
   for (const prompt of prompts) {

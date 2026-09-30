@@ -156,3 +156,45 @@ export function composeSetIndex(entries: SetEntry[]): string {
     `${lines.join("\n")}\n`
   );
 }
+
+export interface TurnCell {
+  text: string;
+  checks: CheckValue[];
+  seconds: number;
+  context: number;
+  output: number;
+}
+
+export interface ReportTurn {
+  prompt: string;
+  panes: Record<PaneName, TurnCell | null>; // null when that pane has no such turn or no transcript
+}
+
+// The interactive report: per turn a table of check values and metrics, no verdict column, then
+// a blank "Your verdict:" line and the three answers in tabs. Numbers only; the reader decides.
+export function composeInteractiveReport(input: { name: string; checks: CheckSpec[]; turns: ReportTurn[] }): string {
+  const sections = input.turns.map((turn, i) => {
+    const lines = [row(["", ...PANES]), row(["---", "---", "---", "---"])];
+    const cells = (pick: (c: TurnCell) => string) => PANES.map((pane) => (turn.panes[pane] ? pick(turn.panes[pane]!) : "n/a"));
+    for (const spec of input.checks) {
+      lines.push(row([spec.name, ...cells((c) => num(c.checks.find((v) => v.name === spec.name)?.value ?? 0))]));
+    }
+    lines.push(row(["seconds", ...cells((c) => num(c.seconds))]));
+    lines.push(row(["context", ...cells((c) => num(c.context))]));
+    lines.push(row(["output", ...cells((c) => num(c.output))]));
+    lines.push(row(["cost", "n/a", "n/a", "n/a"]));
+    const tabs = PANES.map((pane) => `## ${pane}\n\n${fenced(turn.panes[pane]?.text ?? "(no answer)")}\n`).join("\n");
+    return (
+      `## Turn ${i + 1}\n\n${fenced(turn.prompt)}\n\n${lines.join("\n")}\n\n` +
+      `Your verdict:\n\n:::tabs\n${tabs}:::\n`
+    );
+  });
+  return (
+    `---\n` +
+    `title: "Compare (interactive): ${input.name}"\n` +
+    `summary: One prompt in three panes, numbers per turn.\n` +
+    `---\n\n` +
+    `# Compare (interactive): ${input.name}\n\n` +
+    (sections.length > 0 ? sections.join("\n") : "No turns found in the transcripts yet.\n")
+  );
+}
