@@ -40,12 +40,20 @@ function phaseSection(fromDir: string, group: PhaseGroup, phaseTitles: Record<nu
     })
     .join("\n");
 
+  const mark = total > 0 && done === total ? "✓" : `(${done} of ${total} done)`;
+  const ids = group.tickets.map((t) => t.id).join(", ");
+  const label = ids.length > 80 ? `${total} tickets` : ids;
+
   return [
-    `## ${phaseTitle(group, phaseTitles)} (${done}/${total})`,
+    `## ${phaseTitle(group, phaseTitles)} ${mark}`,
+    "",
+    `:::reveal ${label}`,
     "",
     "| ID | Title | Status | Needs | Depends |",
     "| --- | --- | --- | --- | --- |",
     rows,
+    "",
+    ":::",
   ].join("\n");
 }
 
