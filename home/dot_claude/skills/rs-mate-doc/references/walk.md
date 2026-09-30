@@ -25,7 +25,7 @@
 
 `framing` is optional. When present it is one factual sentence a reader could be wrong about, and it becomes a claim. Reading directions ("Read this first", "Skim last") go in the group `lead`, which is never a claim. A group with no `framing` gets no claim.
 
-`anchors` is a list of `{ "file", "excerpt" }`. Copy a line from the diff that backs the framing; the file must be one of the group's `files`. The composer finds that line (added lines first, then removed lines) and writes a `proposed` code claim pointing at it. A missing anchor, or one that matches no line in the diff, makes the claim `not_verified` with the PR author as owner, and `mate-doc walk` prints a warning. The composer never picks a line for you and never marks a claim `verified`.
+`anchors` is a list of `{ "file", "excerpt" }`. Copy a line from the diff that backs the framing; the file must be one of the group's `files`. The composer finds that line (added lines first, then removed lines) and writes a `proposed` code claim pointing at it. Only the first matching anchor backs a claim; each later anchor adds a warning. A missing anchor, or one that matches no line in the diff, makes the claim `not_verified` with the PR author as owner, and `mate-doc walk` prints a warning. The composer never picks a line for you and never marks a claim `verified`.
 
 `questions.json`: what the reviewer should ask.
 

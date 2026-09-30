@@ -153,6 +153,26 @@ describe("composeWalk", () => {
     expect(composed.warnings).toEqual([`group 02 "The redirectTo/navigate rabbit hole": no anchor matched the diff; claim ${c.id} is not_verified`]);
   });
 
+  test("only the first matching anchor backs a claim; later anchors warn", () => {
+    const first = WALK_INPUTS.story.groups[0]!.anchors![0]!;
+    const second = WALK_INPUTS.story.groups[3]!.anchors![0]!;
+    const missing = { file: first.file, excerpt: "no such line anywhere" };
+    const build = (extra: typeof first) => {
+      const groups = WALK_INPUTS.story.groups.map((g, i) => (i === 0 ? { ...g, files: [...g.files, extra.file], anchors: [first, extra] } : g));
+      return composeWalk(FETCHED_PR, { ...WALK_INPUTS, story: { ...WALK_INPUTS.story, groups } }, { now: NOW, author: AUTHOR });
+    };
+    const title = WALK_INPUTS.story.groups[0]!.title;
+    const used = build(second);
+    const claim = claimsFromYaml(used.files["claims.yaml"]!).find((x) => x.claim === WALK_INPUTS.story.groups[0]!.framing)!;
+    if (claim.evidence?.kind !== "code") throw new Error("expected code evidence");
+    expect(claim.evidence.excerpt).toBe(first.excerpt);
+    expect(used.warnings.filter((w) => w.includes("anchor 2"))).toEqual([
+      `group 01 "${title}": anchor 2 (${second.file}) not used; one claim uses one anchor, split the framing to back more lines`,
+    ]);
+    const unmatched = build(missing);
+    expect(unmatched.warnings).toContain(`group 01 "${title}": anchor 2 (${first.file}) did not match the diff`);
+  });
+
   test("a group with framing but no anchors is not_verified", () => {
     const groups = WALK_INPUTS.story.groups.map((g, i) => (i === 0 ? { ...g, anchors: undefined } : g));
     const inputs = { ...WALK_INPUTS, story: { ...WALK_INPUTS.story, groups } };
