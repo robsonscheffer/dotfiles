@@ -337,7 +337,11 @@ export type LintRule =
   | "unknown-directive"
   | "parse-error"
   | "unclaimed-fact" // warn only, see Q-e
-  | "badge-tone"; // warn only, unknown badge tone falls back to neutral at render time
+  | "badge-tone" // warn only, unknown badge tone falls back to neutral at render time
+  | "verified-without-verdict"
+  | "claim-is-instruction"
+  | "weak-excerpt"
+  | "excerpt-local-ref";
 
 export interface LintIssue {
   rule: LintRule;
@@ -355,7 +359,11 @@ export type GateReason =
   | "stale"
   | "capability-missing"
   | "check-failed"
-  | "no-owner";
+  | "no-owner"
+  | "no-author"
+  | "verdict-not-independent"
+  | "verdict-stale"
+  | "mcp-needs-human";
 
 export interface GateReasonItem {
   kind: GateReason;
