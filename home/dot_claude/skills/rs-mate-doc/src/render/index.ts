@@ -1,6 +1,7 @@
 import type { Block, Doc, HeadingNode, Ledger, RenderOptions } from "../types.ts";
 import { renderBanner } from "./banner.ts";
 import { renderBlock, renderBlocks } from "./block.ts";
+import { CLAIM_PANEL_SCRIPT, renderClaimsList } from "./claims.ts";
 import { createCtx } from "./ctx.ts";
 import { extractRail, renderDirective } from "./directives.ts";
 import { renderNav } from "./nav.ts";
@@ -56,7 +57,8 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
       return `<section class="doc-section" data-slug="${s.heading.id}">\n${blocksHtml}\n${control}\n</section>`;
     })
     .join("\n");
-  const body = [preHtml, sectionsHtml].filter((s) => s.length > 0).join("\n");
+  const claimsHtml = renderClaimsList(doc.claimRefs.map((r) => r.id), ctx);
+  const body = [preHtml, sectionsHtml, claimsHtml].filter((s) => s.length > 0).join("\n");
 
   const toc = renderToc(doc.headings);
   const sideContent = railHtml + toc;
@@ -65,6 +67,7 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
 
   const themeAttr = opts.theme === "light" || opts.theme === "dark" ? ` data-theme="${opts.theme}"` : "";
   const liveReload = opts.liveReload ? renderLiveReloadScript(opts.liveReload) : "";
+  const claimScript = claimsHtml ? `<script>${CLAIM_PANEL_SCRIPT}</script>\n` : "";
   const notesScript = notesEnabled ? `<script>${renderNotesScript(doc.path, noteHeadings)}</script>\n` : "";
 
   return (
@@ -84,6 +87,7 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
     side +
     `</div>\n` +
     `<script>${THEME_TOGGLE_SCRIPT}</script>\n` +
+    claimScript +
     notesScript +
     liveReload +
     `</body>\n` +
