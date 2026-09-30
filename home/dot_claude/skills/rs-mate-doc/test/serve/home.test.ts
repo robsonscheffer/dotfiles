@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { writeFile } from "node:fs/promises";
+import { rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { collectHomeEntries, createHomeCache } from "../../src/index/collect.ts";
 import { INDEX_KINDS } from "../../src/index/types.ts";
@@ -227,6 +227,30 @@ describe("collectHomeEntries: cache", () => {
     await writeFile(join(docSet, "index.md"), "---\ntitle: Orders guide v2\n---\nbody");
     await collectHomeEntries(folders, countingParse, cache);
     expect(parseCalls).toBe(2);
+  });
+
+  test("a registered folder deleted from disk is skipped, and the home page still lists the rest", async () => {
+    const stateDir = await mkTmpDir("mate-doc-home-state-");
+    const docSet = await makeDocSet();
+    const gone = await makeLoosePages();
+    await addFolder(stateDir, docSet);
+    await addFolder(stateDir, gone);
+    await rm(gone, { recursive: true, force: true });
+
+    handle = await serve({
+      host: "127.0.0.1",
+      port: 0,
+      stateDir,
+      parse: stubParse,
+      render: stubRenderPlain,
+      loadLedger: nullLedger,
+    });
+
+    const res = await fetch(`${handle.url}/`);
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain("Orders guide");
+    expect(html).not.toContain("Checkout");
   });
 });
 

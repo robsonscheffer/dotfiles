@@ -197,7 +197,16 @@ export async function collectHomeEntries(
 ): Promise<IndexEntry[]> {
   const all: IndexEntry[] = [];
   for (const folder of folders) {
-    const listing = await listDir(folder.path);
+    let listing: DirListing;
+    try {
+      listing = await listDir(folder.path);
+    } catch (err) {
+      // A registered folder deleted from disk drops off the home page instead of failing it.
+      const code = (err as NodeJS.ErrnoException).code;
+      if (code !== "ENOENT" && code !== "ENOTDIR") throw err;
+      cache.delete(folder.path);
+      continue;
+    }
     const mtime = await newestMtime(folder.path, listing.names);
     const cached = cache.get(folder.path);
     if (cached && cached.mtime === mtime) {
