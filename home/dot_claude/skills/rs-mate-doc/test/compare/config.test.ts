@@ -6,9 +6,11 @@ import {
   DEFAULT_COMPARE_COMMAND,
   DEFAULT_CORE_FLAG,
   loadCompareCommand,
+  loadCompareConfig,
   loadCompareCoreFlag,
   splitCommand,
 } from "../../src/compare/config.ts";
+import type { CompareConfig } from "../../src/compare/types.ts";
 
 const dirs: string[] = [];
 async function tempDir(): Promise<string> {
@@ -72,5 +74,82 @@ describe("loadCompareCoreFlag", () => {
     );
     const flag = await loadCompareCoreFlag({ XDG_CONFIG_HOME: configDir });
     expect(flag).toBe("--system-prompt-file");
+  });
+});
+
+async function writeConfig(yaml: string): Promise<string> {
+  const configDir = await tempDir();
+  const { mkdir } = await import("node:fs/promises");
+  await mkdir(join(configDir, "mate-doc"), { recursive: true });
+  await writeFile(join(configDir, "mate-doc", "config.yaml"), yaml);
+  return configDir;
+}
+
+describe("loadCompareConfig", () => {
+  const defaults: CompareConfig = {
+    command: ["claude", "--permission-mode", "bypassPermissions"],
+    systemFlag: "--append-system-prompt-file",
+    isolateFlags: ["--setting-sources", "project,local"],
+    checks: [
+      { name: "words", kind: "words" },
+      { name: "em-dashes", kind: "count", pattern: "\u2014" },
+    ],
+  };
+
+  test("returns defaults with no file", async () => {
+    const configDir = await tempDir();
+    expect(await loadCompareConfig({ XDG_CONFIG_HOME: configDir })).toEqual(defaults);
+  });
+
+  test("returns defaults when compare key is missing", async () => {
+    const configDir = await writeConfig("adapters: {}\n");
+    expect(await loadCompareConfig({ XDG_CONFIG_HOME: configDir })).toEqual(defaults);
+  });
+
+  test("overrides command", async () => {
+    const configDir = await writeConfig("compare:\n  command: codex exec\n");
+    const cfg = await loadCompareConfig({ XDG_CONFIG_HOME: configDir });
+    expect(cfg.command).toEqual(["codex", "exec"]);
+    expect(cfg.systemFlag).toBe(defaults.systemFlag);
+  });
+
+  test("overrides system_flag", async () => {
+    const configDir = await writeConfig("compare:\n  system_flag: --system-file\n");
+    expect((await loadCompareConfig({ XDG_CONFIG_HOME: configDir })).systemFlag).toBe("--system-file");
+  });
+
+  test("overrides isolate_flags", async () => {
+    const configDir = await writeConfig("compare:\n  isolate_flags: --bare --no-hooks\n");
+    expect((await loadCompareConfig({ XDG_CONFIG_HOME: configDir })).isolateFlags).toEqual(["--bare", "--no-hooks"]);
+  });
+
+  test("overrides checks and drops bad entries", async () => {
+    const configDir = await writeConfig(
+      [
+        "compare:",
+        "  checks:",
+        "    - {name: short, kind: words, max: 120}",
+        "    - {name: hedges, kind: phrases, list: [perhaps, maybe]}",
+        "    - {name: wall, kind: long_paragraphs, max_lines: 5}",
+        "    - {name: ask, kind: ends_with, pattern: '\\?$'}",
+        "    - {name: bad-kind, kind: sentiment}",
+        "    - {name: no-pattern, kind: count}",
+        "    - {kind: words}",
+        "    - {name: bad-list, kind: phrases, list: [1, 2]}",
+        "",
+      ].join("\n"),
+    );
+    const cfg = await loadCompareConfig({ XDG_CONFIG_HOME: configDir });
+    expect(cfg.checks).toEqual([
+      { name: "short", kind: "words", max: 120 },
+      { name: "hedges", kind: "phrases", list: ["perhaps", "maybe"] },
+      { name: "wall", kind: "long_paragraphs", max_lines: 5 },
+      { name: "ask", kind: "ends_with", pattern: "\\?$" },
+    ]);
+  });
+
+  test("falls back to default checks when every entry is bad", async () => {
+    const configDir = await writeConfig("compare:\n  checks:\n    - {name: x, kind: nope}\n");
+    expect((await loadCompareConfig({ XDG_CONFIG_HOME: configDir })).checks).toEqual(defaults.checks);
   });
 });
