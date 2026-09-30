@@ -1,9 +1,10 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { main } from "../../src/cli.ts";
+import { runNew } from "../../src/commands/new.ts";
 import { EXIT } from "../../src/types.ts";
-import { mkTmpDir, rmTmpDir } from "./util.ts";
+import { fakeEnv, mkTmpDir, rmTmpDir } from "./util.ts";
 
 const dirs: string[] = [];
 async function tempDir(): Promise<string> {
@@ -82,5 +83,62 @@ describe("new: unbuildable shapes", () => {
     const dir = await tempDir();
     const target = join(dir, "doc.md");
     expect(await main(["new", target, "--shape", "mystery"])).toBe(EXIT.usage);
+  });
+});
+
+const savedEnv: Record<string, string | undefined> = {};
+const ACTOR_VARS = ["CLAUDECODE", "CODEX_SANDBOX", "MATE_DOC_AGENT"];
+beforeEach(() => {
+  for (const v of ACTOR_VARS) {
+    savedEnv[v] = process.env[v];
+    delete process.env[v];
+  }
+});
+afterEach(() => {
+  for (const v of ACTOR_VARS) {
+    if (savedEnv[v] === undefined) delete process.env[v];
+    else process.env[v] = savedEnv[v];
+  }
+});
+
+describe("new: ledger author", () => {
+  test("a human run writes author: human:<git name>", async () => {
+    const dir = await tempDir();
+    const target = join(dir, "brief");
+    expect(await runNew([target, "--shape", "brief"], () => "Alex")).toBe(EXIT.ok);
+    const text = readFileSync(join(target, "claims.yaml"), "utf8");
+    expect(text.split("\n")[0]).toBe("author: human:Alex");
+    expect(text).toContain("owner: \"TODO: who to ask\"");
+  });
+
+  test("an agent run writes author: agent:claude", async () => {
+    process.env.CLAUDECODE = "1";
+    const dir = await tempDir();
+    const target = join(dir, "guide");
+    expect(await main(["new", target, "--shape", "guide"])).toBe(EXIT.ok);
+    expect(readFileSync(join(target, "claims.yaml"), "utf8").split("\n")[0]).toBe("author: agent:claude");
+  });
+
+  test("new then gate reports no no-author, only the TODO owner", async () => {
+    process.env.CLAUDECODE = "1";
+    const dir = await tempDir();
+    const target = join(dir, "brief");
+    await main(["new", target, "--shape", "brief"]);
+    const chunks: string[] = [];
+    const originalWrite = process.stdout.write.bind(process.stdout);
+    process.stdout.write = ((chunk: string) => {
+      chunks.push(String(chunk));
+      return true;
+    }) as typeof process.stdout.write;
+    let code: number;
+    try {
+      code = await main(["gate", target], { env: fakeEnv() });
+    } finally {
+      process.stdout.write = originalWrite;
+    }
+    expect(code).toBe(EXIT.failed);
+    const out = chunks.join("");
+    expect(out).not.toContain("no author");
+    expect(out).toContain("placeholder, not a real owner");
   });
 });

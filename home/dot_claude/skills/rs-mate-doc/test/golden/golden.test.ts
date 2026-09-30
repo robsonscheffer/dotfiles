@@ -294,6 +294,10 @@ describe("golden: lint-failures", () => {
       "not-verified-without-owner",
       "secret-in-excerpt",
       "pii-in-excerpt",
+      "verified-without-verdict",
+      "claim-is-instruction",
+      "weak-excerpt",
+      "excerpt-local-ref",
     ];
     for (const rule of expectedRules) {
       const found = issues.find((i) => i.rule === rule);

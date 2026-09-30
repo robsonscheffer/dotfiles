@@ -2,7 +2,8 @@
 import { stat } from "node:fs/promises";
 import { dirname } from "node:path";
 import { audit } from "../audit/index.ts";
-import { ledgerHash, loadLedger } from "../ledger/index.ts";
+import { isIndependent } from "../identity.ts";
+import { claimHash, ledgerHash, loadLedger } from "../ledger/index.ts";
 import { lint } from "../lint/index.ts";
 import { parse } from "../parser/index.ts";
 import type { Doc, Env, GateReasonItem, GateResult, Level, Span } from "../types.ts";
@@ -38,6 +39,13 @@ function posForClaim(docs: Doc[], claimId: string): Span {
   return FALLBACK_POS;
 }
 
+const INTEGRITY_REASONS = new Set<GateReasonItem["kind"]>([
+  "no-author",
+  "verdict-not-independent",
+  "verdict-stale",
+  "mcp-needs-human",
+]);
+
 function ttlExpiredClaimIds(freshnessStale: { claim: string; reason: string }[]): Set<string> {
   return new Set(freshnessStale.filter((s) => s.reason === "ttl").map((s) => s.claim));
 }
@@ -70,6 +78,16 @@ export async function gate(target: string, env: Env): Promise<GateResult> {
     }));
 
   const claimReasons: GateReasonItem[] = [];
+  if (ledger && (!ledger.author || ledger.author.startsWith("TODO"))) {
+    claimReasons.push({
+      kind: "no-author",
+      message: ledger.author
+        ? `ledger author "${ledger.author}" is a placeholder, not a real author`
+        : "ledger has no author",
+      path,
+      pos: FALLBACK_POS,
+    });
+  }
   for (const claim of ledger?.claims ?? []) {
     const pos = posForClaim(docs, claim.id);
 
@@ -111,6 +129,39 @@ export async function gate(target: string, env: Env): Promise<GateResult> {
       claimReasons.push({
         kind: "verdict-not-supports",
         message: `${claim.id} verdict is "${claim.verdict}", not "supports"`,
+        path,
+        pos,
+        claim: claim.id,
+      });
+      continue;
+    }
+
+    if (!isIndependent(claim.checked_by, ledger?.author)) {
+      claimReasons.push({
+        kind: "verdict-not-independent",
+        message: `${claim.id} verdict was not given by an independent checker (checked_by: ${claim.checked_by ?? "none"})`,
+        path,
+        pos,
+        claim: claim.id,
+      });
+      continue;
+    }
+
+    if (!claim.verdict_hash || claim.verdict_hash !== claimHash(claim)) {
+      claimReasons.push({
+        kind: "verdict-stale",
+        message: `${claim.id} changed since its verdict was recorded`,
+        path,
+        pos,
+        claim: claim.id,
+      });
+      continue;
+    }
+
+    if (claim.evidence?.kind === "mcp" && !claim.checked_by?.startsWith("human:")) {
+      claimReasons.push({
+        kind: "mcp-needs-human",
+        message: `${claim.id} uses mcp evidence, so its verdict must come from a human`,
         path,
         pos,
         claim: claim.id,
@@ -164,14 +215,19 @@ export async function gate(target: string, env: Env): Promise<GateResult> {
   if (levelBefore === "official") {
     const hashChanged = recordedHash !== undefined && currentHash !== undefined && recordedHash !== currentHash;
     // World staleness (ttl, drift) never demotes an official doc on its own: only a hash
-    // mismatch (the page itself changed underneath the approval) does.
-    levelAfter = hashChanged ? (pass ? "audited" : "draft") : "official";
+    // mismatch (the page itself changed underneath the approval) does. The exception is an
+    // integrity failure (no author, non-independent or stale verdict, mcp without a human),
+    // which drops the doc to draft even when the hash is unchanged.
+    const integrityFailed = reasons.some((r) => INTEGRITY_REASONS.has(r.kind));
+    levelAfter = integrityFailed ? "draft" : hashChanged ? (pass ? "audited" : "draft") : "official";
   } else {
     levelAfter = pass ? "audited" : "draft";
   }
 
   const claims = ledger?.claims.length ?? 0;
-  const verified = ledger?.claims.filter((c) => c.status === "verified").length ?? 0;
+  const failedClaims = new Set([...lintReasons, ...claimReasons].map((r) => r.claim).filter((id) => id !== undefined));
+  const verified =
+    ledger?.claims.filter((c) => c.status === "verified" && !failedClaims.has(c.id)).length ?? 0;
   // "open" means the same thing here and in `status`: a not_verified claim, full stop, not
   // "however many distinct claims currently have a failing gate reason" (those overlap, but
   // a not_verified claim with a real owner is still open even when it isn't a gate failure).

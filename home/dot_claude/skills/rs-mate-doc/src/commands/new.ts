@@ -1,8 +1,9 @@
 // `mate-doc new <path> --shape plain|guide|brief|dashboard`: copy a shape skeleton to <path>. Refuses to
 // overwrite anything that already exists. `--shape walk` is not a buildable shape: it points at
 // the `walk` command instead.
-import { existsSync, mkdirSync, readdirSync, statSync, copyFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { detectActor } from "../identity.ts";
 import { EXIT } from "../types.ts";
 
 const SHAPES_ROOT = new URL("../shapes/", import.meta.url);
@@ -22,7 +23,7 @@ function copyRecursive(src: string, dest: string): void {
   }
 }
 
-export async function runNew(argv: string[]): Promise<number> {
+export async function runNew(argv: string[], gitName?: () => string): Promise<number> {
   const [path, ...rest] = argv;
   const shapeIdx = rest.indexOf("--shape");
   const shape = shapeIdx !== -1 ? rest[shapeIdx + 1] : undefined;
@@ -54,6 +55,11 @@ export async function runNew(argv: string[]): Promise<number> {
   }
 
   copyRecursive(shapePath(shape), path);
+  const ledgerPath = join(path, "claims.yaml");
+  if (existsSync(ledgerPath)) {
+    const raw = readFileSync(ledgerPath, "utf8");
+    writeFileSync(ledgerPath, raw.replace(/^author:.*$/m, () => `author: ${detectActor(process.env, gitName)}`));
+  }
   process.stdout.write(`mate-doc new: wrote ${path}/\n`);
   return EXIT.ok;
 }

@@ -1,3 +1,4 @@
+author: agent:claude
 claims:
   - id: C1
     claim: Which owner reviews refund disputes.
@@ -11,7 +12,8 @@ claims:
       excerpt: "const key = 'AKIAEXAMPLEEXAMPLE00'"
       needs: git
     verdict: supports
-    checked_by: agent:claude
+    checked_by: verifier:fixture
+    verdict_hash: fc5c42d809b5cdce41950fd022cc80a0833f275a0c4b96e7d2bb74fd0ab4f2e0
     checked_at: 2026-09-25
   - id: C3
     claim: Support contacts customers directly for refund disputes.
@@ -22,5 +24,44 @@ claims:
       excerpt: "contact sam@example.com for help"
       needs: http
     verdict: supports
-    checked_by: agent:claude
+    checked_by: verifier:fixture
+    verdict_hash: 32a983a8182b4751e44c0782a083361e0fe8c41dd2a763035fcb243b33c9d2b9
+    checked_at: 2026-09-25
+  - id: C4
+    claim: "Read this first: the service layer."
+    status: not_verified
+    owner: Alex
+  - id: C5
+    claim: The retry helper wraps every outbound call.
+    status: verified
+    evidence:
+      kind: code
+      ref: acme/web@origin/main:src/http/retry.ts:9
+      excerpt: '"""'
+      needs: git
+    verdict: supports
+    checked_by: verifier:fixture
+    verdict_hash: 1a12452c4a8ec2200411fde1cf308be7ff3ed94d640170bd9b41ee352b20110c
+    checked_at: 2026-09-25
+  - id: C6
+    claim: The PR changes the rounding rule.
+    status: verified
+    evidence:
+      kind: link
+      url: https://example.com/acme/pull/12
+      excerpt: "see diff.patch:12"
+      needs: http
+    verdict: supports
+    checked_by: verifier:fixture
+    verdict_hash: 79b73a8ebc046155b3bfa3b29579805b52c1d4ed5927c453b4df7090a2129756
+    checked_at: 2026-09-25
+  - id: C7
+    claim: The cache is cleared on deploy.
+    status: verified
+    evidence:
+      kind: code
+      ref: acme/web@origin/main:src/cache/clear.ts:3
+      excerpt: "cache.clear() on deploy"
+      needs: git
+    checked_by: verifier:fixture
     checked_at: 2026-09-25
