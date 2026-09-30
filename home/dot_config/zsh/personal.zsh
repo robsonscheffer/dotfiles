@@ -63,6 +63,7 @@ alias cc='claude'
 alias dcc='claude --permission-mode bypassPermissions'
 alias fcc='claude --permission-mode bypassPermissions --print'
 alias jcc='claude --permission-mode bypassPermissions --output-format stream-json --include-partial-messages --verbose --print'
+alias rs-claude-cost='~/.claude/skills/rs-claude-cost/bin/rs-claude-cost'
 
 tmpd() { cd "$(mktemp -d)"; }
 markd() { cmux markdown open "$@"; }
