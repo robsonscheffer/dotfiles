@@ -5,7 +5,7 @@
 // verdict page.
 //
 // Each call is `<pane argv> -p --output-format json --session-id <uuid>` with the prompt on
-// stdin, run in the current directory through env.run so tests never spawn a real process.
+// stdin, run in an empty <out>/work folder through env.run so tests never spawn a real process.
 // Run folder: system/{base.md,b.md,sha256.txt}, <pane>/run-<n>.{md,json}, index.md. With --set,
 // one sub-folder per prompt file plus a top index.md; system/ stays at the top.
 // --base-system defaults to ~/.claude/AGENTS.md, --runs to 3.
@@ -137,6 +137,7 @@ async function runPrompt(
   prompt: string,
   args: ParsedArgs,
   dir: string,
+  workDir: string,
   system: { basePath: string; baseHash: string; bPath: string; bHash: string },
 ): Promise<PromptOutcome | null> {
   const runs: CompareRun[] = [];
@@ -145,7 +146,7 @@ async function runPrompt(
     for (const pane of panes) {
       const sessionId = randomUUID();
       const cmd = [...pane.argv, "-p", "--output-format", "json", "--session-id", sessionId];
-      const result = await env.run(cmd, { input: prompt, cwd: process.cwd() });
+      const result = await env.run(cmd, { input: prompt, cwd: workDir });
       if (result.code !== 0) {
         process.stderr.write(`mate-doc compare: ${cmd.join(" ")} failed: ${describeFailure(result)}\n`);
         return null;
@@ -250,6 +251,7 @@ async function runInteractive(
   env: Env,
   args: ParsedArgs,
   outDir: string,
+  workDir: string,
   panes: Pane[],
   promptText: string,
 ): Promise<number> {
@@ -258,7 +260,7 @@ async function runInteractive(
   try {
     records = await openPanes(env, {
       title: `compare ${basename(outDir)}`,
-      cwd: process.cwd(),
+      cwd: workDir,
       prompt: promptText,
       launches,
     });
@@ -276,6 +278,7 @@ async function runInteractive(
   if (args.model) rerun.push("--model", shellWord(args.model));
   process.stdout.write(
     `${outDir}\n` +
+      `work:   ${workDir}\n` +
       `send:   mate-doc compare send ${ref} "<text>"\n` +
       `report: mate-doc compare report ${ref}\n` +
       `batch:  ${rerun.join(" ")} --print\n`,
@@ -323,6 +326,8 @@ export async function runCompare(argv: string[], env: Env = createEnv()): Promis
   const baseHash = sha256(baseText);
   const bHash = sha256(bText);
   await mkdir(join(outDir, "system"), { recursive: true });
+  const workDir = join(outDir, "work");
+  await mkdir(workDir, { recursive: true });
   const baseCopy = join(outDir, "system", "base.md");
   const bCopy = join(outDir, "system", "b.md");
   await copyFile(basePath, baseCopy);
@@ -333,13 +338,14 @@ export async function runCompare(argv: string[], env: Env = createEnv()): Promis
   const panes = paneCommands(cfg, { basePath: baseCopy, bPath: bCopy, model: args.model });
   const system = { basePath, baseHash, bPath: systemPath, bHash };
 
-  if (!args.print) return runInteractive(env, args, outDir, panes, await readFile(prompts[0]!.file, "utf8"));
+  if (!args.print) return runInteractive(env, args, outDir, workDir, panes, await readFile(prompts[0]!.file, "utf8"));
 
+  process.stderr.write(`mate-doc compare: panes run in ${workDir}\n`);
   const entries: SetEntry[] = [];
   for (const prompt of prompts) {
     const promptText = await readFile(prompt.file, "utf8");
     const dir = args.set ? join(outDir, prompt.name) : outDir;
-    const outcome = await runPrompt(env, cfg, panes, prompt.file, promptText, args, dir, system);
+    const outcome = await runPrompt(env, cfg, panes, prompt.file, promptText, args, dir, workDir, system);
     if (!outcome) return EXIT.failed;
     entries.push({ name: prompt.name, verdicts: outcome.verdicts });
   }

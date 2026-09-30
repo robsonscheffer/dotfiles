@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { createHash } from "node:crypto";
+import { readdirSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -157,6 +158,18 @@ describe("mate-doc compare usage errors", () => {
 });
 
 describe("mate-doc compare batch", () => {
+  test("every pane runs in an empty work folder that exists before the first run", async () => {
+    const f = await fixture();
+    let listing: string[] | undefined;
+    const { env } = recordingEnv((_cmd, call) => {
+      if (call === 0) listing = readdirSync(join(f.out, "work"));
+      return json("answer");
+    });
+
+    expect(await runCompare(baseArgs(f, []), env)).toBe(EXIT.ok);
+    expect(listing).toEqual([]);
+  });
+
   test("3 panes x 2 runs calls the right argv with the prompt as input and the cwd", async () => {
     const f = await fixture();
     const { env, calls } = recordingEnv(() => json("answer"));
@@ -172,7 +185,7 @@ describe("mate-doc compare batch", () => {
       expect(tail[3]).toBe("--session-id");
       expect(tail[4]).toMatch(/^[0-9a-f-]{36}$/);
       expect(call.opts?.input).toBe("Explain the refund policy.");
-      expect(call.opts?.cwd).toBe(process.cwd());
+      expect(call.opts?.cwd).toBe(join(f.out, "work"));
     }
     expect(new Set(calls.map((c) => sessionOf(c.cmd))).size).toBe(6);
     expect(calls[0]!.cmd.join(" ")).not.toContain(".md");

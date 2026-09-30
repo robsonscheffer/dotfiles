@@ -112,6 +112,7 @@ When `context.json` has items, the composed doc gets a "Related notes" section r
 `mate-doc compare` shows one prompt answered three ways: A (your everyday agent), A-base (isolated,
 base rules `--base-system`, default `~/.claude/AGENTS.md`), B (isolated, candidate `--system`).
 A-base and B differ only in the appended file, so that pair is the comparison; A is context.
+All three panes run in an empty `work/` folder under the output folder, so no project file or memory loads.
 
 ```
 mate-doc compare prompt.md --system new-rules.md                  # interactive: 3 cmux panes, one run
