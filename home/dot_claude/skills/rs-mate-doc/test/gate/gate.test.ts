@@ -385,6 +385,7 @@ describe("gate: verdict-stale", () => {
     await writeClaimsYaml(dir, [{ ...CLEAN_CLAIM, verdict_hash: undefined }]);
     const result = await gate(dir, PRICING_ENV());
     expect(kindsOf(result)).toContain("verdict-stale");
+    expect(kindsOf(result)).not.toContain("claim-incomplete");
   });
 });
 
