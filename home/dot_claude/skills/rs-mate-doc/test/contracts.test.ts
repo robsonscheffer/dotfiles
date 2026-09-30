@@ -118,6 +118,11 @@ describe("claim integrity schema", () => {
     expect(validate({ claims: [claim] })).toBe(true);
   });
 
+  test("accepts a verified claim without verdict_hash so the gate can demote it", () => {
+    const claim = { ...proposed, status: "verified", verdict: "supports", checked_by: "verifier:sonnet", checked_at: "2026-09-20" };
+    expect(validate({ claims: [claim] })).toBe(true);
+  });
+
   test("rejects a checked_by without a known prefix", () => {
     expect(validate({ claims: [{ ...proposed, checked_by: "claude" }] })).toBe(false);
     expect(validate({ claims: [{ ...proposed, checked_by: "verifier:sonnet" }] })).toBe(true);

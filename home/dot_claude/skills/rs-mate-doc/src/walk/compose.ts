@@ -110,21 +110,28 @@ function renderStorySection(story: StoryData): string {
 
 // Returns the code evidence for the first anchor the diff can locate, or undefined. The agent
 // picks the line; compose only finds it. An added line only exists at head, a removed line only
-// at base.
-function findAnchorEvidence(pr: FetchedPr, anchors: WalkAnchor[]): Claim["evidence"] | undefined {
-  for (const anchor of anchors) {
+// at base. Every later anchor is checked too, so the agent learns which ones were not used.
+function findAnchorEvidence(pr: FetchedPr, anchors: WalkAnchor[], where: string, noun: string, warnings: string[]): Claim["evidence"] | undefined {
+  let evidence: Claim["evidence"] | undefined;
+  anchors.forEach((anchor, i) => {
     const change = findAnchorLine(pr.diff, anchor.file, anchor.excerpt);
-    if (!change.found || !change.excerpt) continue;
+    const located = change.found && !!change.excerpt;
+    if (evidence) {
+      const why = located ? `not used; one claim uses one ${noun}, split the framing to back more lines` : "did not match the diff";
+      warnings.push(`${where}: ${noun} ${i + 1} (${anchor.file}) ${why}`);
+      return;
+    }
+    if (!located || !change.excerpt) return;
     const sha = change.side === "removed" ? pr.meta.baseRefOid : pr.meta.headRefOid;
-    return { kind: "code", ref: `${pr.repo}@${sha}:${anchor.file}:${change.line ?? 1}`, excerpt: change.excerpt, needs: "gh" };
-  }
-  return undefined;
+    evidence = { kind: "code", ref: `${pr.repo}@${sha}:${anchor.file}:${change.line ?? 1}`, excerpt: change.excerpt, needs: "gh" };
+  });
+  return evidence;
 }
 
 // Compose only proposes: a claim with a located anchor is `proposed`, anything else is
 // `not_verified` with the PR author as owner. A verifier or a person settles it later.
-function buildProposedClaim(pr: FetchedPr, id: ClaimId, text: string, anchors: WalkAnchor[]): Claim {
-  const evidence = findAnchorEvidence(pr, anchors);
+function buildProposedClaim(pr: FetchedPr, id: ClaimId, text: string, anchors: WalkAnchor[], where: string, noun: string, warnings: string[]): Claim {
+  const evidence = findAnchorEvidence(pr, anchors, where, noun, warnings);
   if (!evidence) return { id, claim: text, status: "not_verified", owner: pr.meta.author.login };
   return { id, claim: text, status: "proposed", evidence, ttl_days: CODE_REF_TTL_DAYS };
 }
@@ -135,9 +142,10 @@ function buildGroupClaim(pr: FetchedPr, group: StoryGroup, index: number, build:
   if (!group.framing) return undefined;
   const id = nextClaimId(build);
   const anchors = (group.anchors ?? []).filter((a) => group.files.includes(a.file));
-  const claim = buildProposedClaim(pr, id, group.framing, anchors);
+  const where = `group ${String(index).padStart(2, "0")} "${group.title}"`;
+  const claim = buildProposedClaim(pr, id, group.framing, anchors, where, "anchor", build.warnings);
   if (claim.status === "not_verified") {
-    build.warnings.push(`group ${String(index).padStart(2, "0")} "${group.title}": no anchor matched the diff; claim ${id} is not_verified`);
+    build.warnings.push(`${where}: no anchor matched the diff; claim ${id} is not_verified`);
   }
   build.claims.push(claim);
   return id;
@@ -177,18 +185,11 @@ function renderTicketFitSection(pr: FetchedPr, ticketFit: TicketFit | undefined,
   return lines.join("\n").trimEnd();
 }
 
-const AC_LABEL: Record<AcceptanceCriterion["status"], string> = {
-  Met: "Met",
-  "Partially Met": "Partially met",
-  "Not Met": "Not met",
-  "Unplanned Deviation": "Unplanned deviation",
-};
-
 function buildAcClaim(pr: FetchedPr, ac: AcceptanceCriterion, build: ClaimBuild): ClaimId {
   const id = nextClaimId(build);
-  const text = `${AC_LABEL[ac.status]}: ${ac.criterion}`;
+  const text = ac.criterion;
   const refs = ac.refs ?? [];
-  const claim: Claim = ac.status === "Met" ? buildProposedClaim(pr, id, text, refs) : { id, claim: text, status: "not_verified", owner: pr.meta.author.login };
+  const claim: Claim = ac.status === "Met" ? buildProposedClaim(pr, id, text, refs, `criterion "${ac.criterion}"`, "ref", build.warnings) : { id, claim: text, status: "not_verified", owner: pr.meta.author.login };
   if (ac.status === "Met" && refs.length > 0 && claim.status === "not_verified") {
     build.warnings.push(`criterion "${ac.criterion}": no ref matched the diff; claim ${id} is not_verified`);
   }

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { readdirSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -67,9 +68,14 @@ async function start(): Promise<{ calls: string[][]; out: string; env: Env; prom
 }
 
 describe("compare interactive", () => {
+  test("the work folder exists and is empty", async () => {
+    const { out } = await start();
+    expect(readdirSync(join(out, "work"))).toEqual([]);
+  });
+
   test("creates the workspace, two splits, and three pane commands", async () => {
     const { calls, out, prompt } = await start();
-    expect(calls[0]!.slice(0, 6)).toEqual(["cmux", "new-workspace", "--name", "compare out", "--cwd", process.cwd()]);
+    expect(calls[0]!.slice(0, 6)).toEqual(["cmux", "new-workspace", "--name", "compare out", "--cwd", join(out, "work")]);
     const quoted = `'Review it, it'\\''s short.\nSecond line.'`;
     const commandA = calls[0]![calls[0]!.indexOf("--command") + 1]!;
     expect(commandA).toMatch(/^'claude' .*'--session-id' '[0-9a-f-]{36}' /);

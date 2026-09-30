@@ -45,7 +45,7 @@
         },
         {
           "if": { "properties": { "status": { "const": "verified" } } },
-          "then": { "required": ["evidence", "verdict", "verdict_hash", "checked_by", "checked_at"] }
+          "then": { "required": ["evidence", "verdict", "checked_by", "checked_at"] }
         },
         {
           "if": { "properties": { "status": { "enum": ["proposed", "inferred"] } } },

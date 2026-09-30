@@ -153,6 +153,26 @@ describe("composeWalk", () => {
     expect(composed.warnings).toEqual([`group 02 "The redirectTo/navigate rabbit hole": no anchor matched the diff; claim ${c.id} is not_verified`]);
   });
 
+  test("only the first matching anchor backs a claim; later anchors warn", () => {
+    const first = WALK_INPUTS.story.groups[0]!.anchors![0]!;
+    const second = WALK_INPUTS.story.groups[3]!.anchors![0]!;
+    const missing = { file: first.file, excerpt: "no such line anywhere" };
+    const build = (extra: typeof first) => {
+      const groups = WALK_INPUTS.story.groups.map((g, i) => (i === 0 ? { ...g, files: [...g.files, extra.file], anchors: [first, extra] } : g));
+      return composeWalk(FETCHED_PR, { ...WALK_INPUTS, story: { ...WALK_INPUTS.story, groups } }, { now: NOW, author: AUTHOR });
+    };
+    const title = WALK_INPUTS.story.groups[0]!.title;
+    const used = build(second);
+    const claim = claimsFromYaml(used.files["claims.yaml"]!).find((x) => x.claim === WALK_INPUTS.story.groups[0]!.framing)!;
+    if (claim.evidence?.kind !== "code") throw new Error("expected code evidence");
+    expect(claim.evidence.excerpt).toBe(first.excerpt);
+    expect(used.warnings.filter((w) => w.includes("anchor 2"))).toEqual([
+      `group 01 "${title}": anchor 2 (${second.file}) not used; one claim uses one anchor, split the framing to back more lines`,
+    ]);
+    const unmatched = build(missing);
+    expect(unmatched.warnings).toContain(`group 01 "${title}": anchor 2 (${first.file}) did not match the diff`);
+  });
+
   test("a group with framing but no anchors is not_verified", () => {
     const groups = WALK_INPUTS.story.groups.map((g, i) => (i === 0 ? { ...g, anchors: undefined } : g));
     const inputs = { ...WALK_INPUTS, story: { ...WALK_INPUTS.story, groups } };
@@ -175,14 +195,14 @@ describe("composeWalk", () => {
   test("Met with a matching ref is a proposed code claim; other statuses are not_verified", () => {
     const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW, author: AUTHOR });
     const claims = claimsFromYaml(composed.files["claims.yaml"]!);
-    const met = claims.find((c) => c.claim === "Met: Portal boots with no global store")!;
+    const met = claims.find((c) => c.claim === "Portal boots with no global store")!;
     expect(met.status).toBe("proposed");
     expect(met.ttl_days).toBe(14);
     expect(met.evidence?.kind).toBe("code");
-    const partial = claims.find((c) => c.claim === "Partially met: No regression in the impersonation flow")!;
+    const partial = claims.find((c) => c.claim === "No regression in the impersonation flow")!;
     expect(partial.status).toBe("not_verified");
     expect(partial.owner).toBe("sam");
-    expect(claims.find((c) => c.claim.startsWith("Not met: "))?.status).toBe("not_verified");
+    expect(claims.find((c) => c.claim === "Shared layer stays backward-compatible for other consumers")?.status).toBe("not_verified");
     // The ticket-fit table still shows the agent's own evidence prose.
     expect(composed.files["index.md"]).toContain("index.tsx no longer creates a store");
   });
@@ -192,7 +212,7 @@ describe("composeWalk", () => {
     ticketFit.acceptance_criteria[0]!.refs = [{ file: "src/apps/portal/index.tsx", excerpt: "no such line anywhere" }];
     const composed = composeWalk(FETCHED_PR, { ...WALK_INPUTS, ticketFit }, { now: NOW, author: AUTHOR });
     const claims = claimsFromYaml(composed.files["claims.yaml"]!);
-    expect(claims.find((c) => c.claim.startsWith("Met: "))?.status).toBe("not_verified");
+    expect(claims.find((c) => c.claim === "Portal boots with no global store")?.status).toBe("not_verified");
     expect(composed.warnings.some((w) => w.startsWith('criterion "Portal boots with no global store"'))).toBe(true);
   });
 

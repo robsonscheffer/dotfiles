@@ -25,7 +25,7 @@
 
 `framing` is optional. When present it is one factual sentence a reader could be wrong about, and it becomes a claim. Reading directions ("Read this first", "Skim last") go in the group `lead`, which is never a claim. A group with no `framing` gets no claim.
 
-`anchors` is a list of `{ "file", "excerpt" }`. Copy a line from the diff that backs the framing; the file must be one of the group's `files`. The composer finds that line (added lines first, then removed lines) and writes a `proposed` code claim pointing at it. A missing anchor, or one that matches no line in the diff, makes the claim `not_verified` with the PR author as owner, and `mate-doc walk` prints a warning. The composer never picks a line for you and never marks a claim `verified`.
+`anchors` is a list of `{ "file", "excerpt" }`. Copy a line from the diff that backs the framing; the file must be one of the group's `files`. The composer finds that line (added lines first, then removed lines) and writes a `proposed` code claim pointing at it. Only the first matching anchor backs a claim; each later anchor adds a warning. A missing anchor, or one that matches no line in the diff, makes the claim `not_verified` with the PR author as owner, and `mate-doc walk` prints a warning. The composer never picks a line for you and never marks a claim `verified`.
 
 `questions.json`: what the reviewer should ask.
 
@@ -49,7 +49,7 @@
 
 - `ticket-fit.json`: `{ "ticket_key", "ticket_quality": { "score": "good|adequate|thin|missing", "notes" }, "acceptance_criteria": [{ "criterion", "status": "Met|Partially Met|Not Met|Unplanned Deviation", "evidence", "refs" }], "scope_delta" }`
   - `criterion` is the ticket's own text, copied word for word. Put your findings in `evidence`; it fills the table's Evidence column and is not claim evidence.
-  - `refs: [{ "file", "excerpt" }]` backs a `Met` criterion with a line copied from the diff (any file in the diff). The claim reads `Met: <criterion>` and is `proposed`. Any other status, or a `Met` with no matching ref, is `not_verified`.
+  - `refs: [{ "file", "excerpt" }]` backs a `Met` criterion with a line copied from the diff (any file in the diff). The claim text is the criterion itself and is `proposed`. Any other status, or a `Met` with no matching ref, is `not_verified`.
 - `comment-triage.json`: `[{ "author", "author_kind": "bot|human", "human_authenticity": "genuine|bot-posing-as-human|uncertain", "summary", "resolved" }]`
 - `context.json`: `{ "mode": "qmd|grep", "items": [...] }`. Each item is either a bare string or `{ "path", "score", "snippet" }`. Renders as a "Related notes" section, one wikilink per item built from the note's file name only (no folder, no extension), plus its snippet when present.
 

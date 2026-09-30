@@ -36,7 +36,7 @@ Usage: mate-doc <command> [args]
   status [<path>]            level, freshness, open claims
   forget <folder>            stop serving a folder
   walk <pr-url> --inputs <d> build a PR walk (--fetch-only to fetch)
-  compare <prompt-file>      run a prompt with and without the core, side by side
+  compare <prompt-file>      run a prompt in three panes: yours, today's rules, a candidate
 `;
 
 function isCommand(s: string): s is Command {
