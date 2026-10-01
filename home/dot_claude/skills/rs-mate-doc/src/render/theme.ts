@@ -132,6 +132,7 @@ main :is(table, pre, figure.code-block, .tiles, .flow-diagram, .cards, .tab-pane
 @media (max-width: 900px) {
   .layout { flex-direction: column; align-items: stretch; }
   .side-col { position: static; width: 100%; order: -1; padding: 1.5rem 1.5rem 0; max-height: none; }
+  main table { display: block; overflow-x: auto; }
   .left-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
 }
 .rail { border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; background: var(--bg); }
@@ -278,7 +279,7 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor, .anchor:focus { opacity: 1
   font-size: 0.8rem;
 }
 .claim-evidence-missing { color: var(--badge-high-text); border-left-color: var(--badge-high-text); }
-.claim-excerpt { background: var(--code-bg); padding: 0.1rem 0.3rem; border-radius: 3px; }
+.claim-excerpt { background: var(--code-bg); padding: 0.1rem 0.3rem; border-radius: 3px; max-width: 100%; overflow-wrap: anywhere; white-space: pre-wrap; }
 .verdict-badge {
   text-transform: uppercase;
   font-size: 0.7rem;
@@ -388,7 +389,7 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor, .anchor:focus { opacity: 1
 .risk-card.risk-high { border-left-color: var(--badge-high-text); }
 .risk-card.risk-med { border-left-color: var(--badge-med-text); }
 .risk-card.risk-low { border-left-color: var(--badge-low-text); }
-.risk-field { display: flex; align-items: baseline; gap: 0.3rem; }
+.risk-field { display: flex; align-items: baseline; gap: 0.3rem; min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 .risk-field-label { color: var(--muted); font-size: 0.8rem; }
 .not-verified-list { list-style: none; padding: 0; }
 .not-verified-list li { border-bottom: 1px solid var(--border); padding: 0.4rem 0; }
