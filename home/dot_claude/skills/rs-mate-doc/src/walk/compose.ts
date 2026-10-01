@@ -9,7 +9,6 @@ import type { AcceptanceCriterion, ComposedWalk, ContextData, FetchedPr, Judgmen
 const MAX_DIFF_LINES = 80;
 const CODE_REF_TTL_DAYS = 14;
 const TICKET_TAG_RE = /[A-Z]+-\d+/g;
-const BOLD_RE = /\*\*(.+?)\*\*/g;
 
 interface ClaimBuild {
   claims: Claim[];
@@ -31,12 +30,6 @@ function escapeHtmlText(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-// Raw <details> content is never re-parsed by markdown-it, so **bold** has to be converted by
-// hand here - escape first (same order as rs-walk's render_prose), then let the surviving
-// ** markers become <strong>.
-function renderProseHtml(s: string): string {
-  return escapeHtmlText(s).replace(BOLD_RE, "<strong>$1</strong>");
-}
 
 function escapeTableCell(s: string): string {
   return s.replace(/\|/g, "\\|").replace(/\n/g, " ");
@@ -270,27 +263,28 @@ function renderCommentTriageSection(entries: WalkInputs["commentTriage"]): strin
   return lines.join("\n");
 }
 
-// The hidden judgment: a <details> reveal at the end, per the brief. No verdicts are recorded
-// here - this only renders whatever the judgment agent already decided; the ledger carries none
-// of it, since a verdict comes from the agent loop later (mate-doc verdict), not from composing
-// the walk.
+// The judgment stays sealed until the reader picks their own verdict, per the brief: their read
+// first, then the AI's. The ledger carries none of it; it is an opinion, not a claim.
+const JUDGMENT_SCALE = ["strong", "solid", "cautious", "concern"] as const;
+
 function renderJudgmentSection(j: JudgmentData): string {
-  const risksHtml = j.risks_summary.length > 0 ? j.risks_summary.map((r) => `<li>${renderProseHtml(r)}</li>`).join("\n") : "<li>None called out.</li>";
-  const gapsHtml = j.gaps.length > 0 ? j.gaps.map((g) => `<li>${renderProseHtml(g)}</li>`).join("\n") : "<li>None called out.</li>";
+  const bullets = (items: string[]) => (items.length > 0 ? items.map((s) => `- ${s}`) : ["- None called out."]);
   return [
     "## Judgment",
     "",
-    "<details>",
-    "<summary>Reveal the AI's judgment</summary>",
+    `:::sealed ${j.overall} ${JUDGMENT_SCALE.join(" ")}`,
+    `**Overall:** ${j.overall}`,
     "",
-    `<p><strong>Overall:</strong> ${escapeHtmlText(j.overall)}</p>`,
-    `<p>${renderProseHtml(j.fit)}</p>`,
-    "<p><strong>Risks:</strong></p>",
-    `<ul>${risksHtml}</ul>`,
-    "<p><strong>Gaps:</strong></p>",
-    `<ul>${gapsHtml}</ul>`,
+    j.fit,
     "",
-    "</details>",
+    "**Risks:**",
+    "",
+    ...bullets(j.risks_summary),
+    "",
+    "**Gaps:**",
+    "",
+    ...bullets(j.gaps),
+    ":::",
   ].join("\n");
 }
 

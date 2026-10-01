@@ -45,6 +45,8 @@ export function renderDirective(n: DirectiveNode, ctx: Ctx): string {
       return renderRail(n);
     case "reveal":
       return renderReveal(n, ctx);
+    case "sealed":
+      return renderSealed(n, ctx);
     case "checks":
       return renderChecks(n);
     case "timeline":
@@ -327,6 +329,33 @@ function renderReveal(n: DirectiveNode, ctx: Ctx): string {
   const label = n.args.length ? n.args.join(" ") : "Show more";
   const body = renderBlocks(n.children, ctx);
   return `<details class="reveal"><summary>${escapeHtml(label)}</summary><div class="reveal-body">${body}</div></details>`;
+}
+
+// ":::sealed <answer> <option> <option> ...": the body stays hidden until the reader picks an
+// option, so they commit to their own read before seeing the answer. With scripts off it is a
+// plain reveal.
+function renderSealed(n: DirectiveNode, ctx: Ctx): string {
+  const [answer = "", ...options] = n.args;
+  const body = renderBlocks(n.children, ctx);
+  const rootId = nextId(ctx, "sealed");
+  const buttons = options
+    .map((o) => `<button type="button" class="sealed-option" data-pick="${escapeAttr(o)}">${escapeHtml(o)}</button>`)
+    .join("");
+  return (
+    `<div class="sealed" id="${rootId}" data-answer="${escapeAttr(answer)}">` +
+    `<div class="sealed-gate" hidden><p class="sealed-ask">What is your read? Pick one to see the answer.</p>` +
+    `<div class="sealed-options">${buttons}</div></div>` +
+    `<p class="sealed-result" hidden></p>` +
+    `<details class="reveal sealed-body"><summary>Reveal</summary><div class="reveal-body">${body}</div></details>` +
+    `</div>` +
+    `<script>(function(){var root=document.getElementById(${JSON.stringify(rootId)});if(!root)return;` +
+    `var gate=root.querySelector(".sealed-gate"),body=root.querySelector(".sealed-body"),result=root.querySelector(".sealed-result");` +
+    `gate.hidden=false;body.hidden=true;` +
+    `root.querySelectorAll(".sealed-option").forEach(function(btn){btn.addEventListener("click",function(){` +
+    `var pick=btn.dataset.pick,answer=root.dataset.answer;` +
+    `result.textContent=pick===answer?"You picked "+pick+". Same read.":"You picked "+pick+". The answer is "+answer+".";` +
+    `gate.hidden=true;result.hidden=false;body.hidden=false;body.open=true;});});})();</script>`
+  );
 }
 
 const CHECK_TONES: Record<string, string> = { met: "good", partial: "warn", "not-met": "bad", "n/a": "neutral" };

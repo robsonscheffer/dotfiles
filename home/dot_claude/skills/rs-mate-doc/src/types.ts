@@ -57,6 +57,7 @@ export const DIRECTIVES = [
   "notverified",
   "rail",
   "reveal",
+  "sealed",
   "checks",
   "timeline",
   "progress",

@@ -61,6 +61,8 @@ function collectParagraphs(blocks: Block[], out: ParagraphInfo[]): void {
       const texts = collectText(block.children);
       const hasNumber = texts.some((t) => /\d/.test(t.value));
       out.push({ hasClaimRef, hasNumberOrCode: hasCode || hasNumber, texts, pos: block.pos });
+    } else if (block.type === "directive" && block.name === "sealed") {
+      continue; // an opinion held back from the reader, never a claim
     } else if (block.type === "listItem" || block.type === "blockquote" || block.type === "directive" || block.type === "error") {
       collectParagraphs(block.children, out);
     } else if (block.type === "list") {

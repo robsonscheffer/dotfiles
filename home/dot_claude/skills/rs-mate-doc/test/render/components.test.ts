@@ -288,6 +288,19 @@ describe("reveal", () => {
   });
 });
 
+describe("sealed", () => {
+  test("hides the body behind one button per option, with a plain reveal when scripts are off", () => {
+    const n = directive("sealed", { args: ["cautious", "strong", "solid", "cautious", "concern"], children: [para(text("Judgment body."))] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain('data-answer="cautious"');
+    expect(html.match(/class="sealed-option"/g)?.length).toBe(4);
+    expect(html).toContain('<div class="sealed-gate" hidden>');
+    expect(html).toContain('<details class="reveal sealed-body">');
+    expect(html).toContain("Judgment body.");
+    expect(html).toContain("<script>");
+  });
+});
+
 describe("checks", () => {
   test("maps each status to its badge tone", () => {
     const n = directive("checks", {

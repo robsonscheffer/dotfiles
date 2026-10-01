@@ -304,6 +304,9 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
 .reveal { border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 0.9rem; margin: 1rem 0; }
 .reveal > summary { cursor: pointer; font-weight: 600; }
 .reveal-body { margin-top: 0.6rem; }
+.sealed-gate, .sealed-result { margin: 1rem 0; }
+.sealed-options { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.sealed-option { font: inherit; padding: 0.3rem 0.9rem; border: 1px solid var(--border); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
 .checks { width: 100%; }
 .timeline { list-style: none; margin: 1rem 0; padding-left: 1.25rem; border-left: 2px solid var(--border); }
 .timeline-item { position: relative; margin: 0 0 1rem; }
@@ -399,9 +402,10 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .left-nav-disclosure summary { cursor: pointer; font-weight: 600; padding: 0.25rem 0; }
 @media print {
   .breadcrumbs, .left-nav, .prev-next, .side-col, .theme-toggle,
-  .notes-toolbar, .note-control, .claim-panel {
+  .notes-toolbar, .note-control, .claim-panel, .sealed-gate {
     display: none !important;
   }
+  .sealed-body[hidden] { display: block !important; }
   /* Print has no interaction, so a collapsed <details> (e.g. the walk lane's judgment reveal)
      must show its content and the toggle it would otherwise need loses its purpose. */
   details:not([open]) summary { display: none; }

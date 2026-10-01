@@ -30,6 +30,7 @@ Rollout is :badge[Blocked]{tone=bad} pending the flag flip.
 | `notverified` | the list of open claims | leave empty; it fills itself |
 | `rail` | a sticky side panel (a spec's status, a walk's PR summary) | one `Key: value` per line |
 | `reveal <label>` | content worth hiding until asked for | prose, behind a button; print shows it expanded |
+| `sealed <answer> <option>...` | an answer the reader should guess first (a walk's judgment) | prose; hidden until the reader picks an option, then shows their pick against the answer |
 | `checks` | acceptance criteria or a status check list | one `status \| item \| evidence` per line |
 | `timeline` | a sequence of dated events | one `date \| text` per line |
 | `progress <done/total> [label]` | how far a rollout or checklist has gotten | no body |

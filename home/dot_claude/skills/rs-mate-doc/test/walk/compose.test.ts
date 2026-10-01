@@ -64,7 +64,7 @@ describe("composeWalk", () => {
     }
   });
 
-  test("comment triage never appears before the judgment, and the judgment sits inside a <details>", () => {
+  test("comment triage never appears before the judgment, and the judgment is sealed", () => {
     const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW, author: AUTHOR });
     const md = composed.files["index.md"]!;
     const triageIdx = md.indexOf("## Prior discussion");
@@ -72,8 +72,8 @@ describe("composeWalk", () => {
     expect(triageIdx).toBeGreaterThan(-1);
     expect(judgmentIdx).toBeGreaterThan(triageIdx);
     const judgmentSection = md.slice(judgmentIdx);
-    expect(judgmentSection).toContain("<details>");
-    expect(judgmentSection.indexOf("<details>")).toBeLessThan(judgmentSection.indexOf("Overall"));
+    expect(judgmentSection).toContain(`:::sealed ${WALK_INPUTS.judgment.overall} strong solid cautious concern`);
+    expect(judgmentSection.indexOf(":::sealed")).toBeLessThan(judgmentSection.indexOf("Overall"));
   });
 
   test("the composed index.md parses with zero parse errors", () => {
