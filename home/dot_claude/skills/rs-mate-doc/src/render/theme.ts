@@ -120,11 +120,11 @@ main { overflow-wrap: break-word; }
 .toc a { color: var(--muted); text-decoration: none; }
 .toc a:hover { color: var(--accent); }
 /* Reading width: a text column of about 70 characters. Wide content (tables, code, diagrams,
-   tiles, cards, tabs, risks) opts back out to the full width main has available. */
-main :is(p, ul, ol, dl, blockquote, .callout, .doc-summary, .decide-owner, h1, h2, h3, h4, h5, h6) {
+   callouts, tiles, cards, tabs, risks) opts back out to the full width main has available. */
+main :is(p, ul, ol, dl, blockquote, .doc-summary, .decide-owner, h1, h2, h3, h4, h5, h6) {
   max-width: 70ch;
 }
-main :is(table, pre, figure.code-block, .tiles, .flow-diagram, .cards, .tab-panels, .risks) {
+main :is(table, pre, figure.code-block, .callout, .callout *, .tiles, .flow-diagram, .cards, .tab-panels, .risks) {
   max-width: none;
 }
 /* One breakpoint for the whole layout: side-col (rail + TOC) and the left-nav both react to it,

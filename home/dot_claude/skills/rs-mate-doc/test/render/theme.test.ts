@@ -46,6 +46,7 @@ describe("layout CSS", () => {
   test("the text column caps at 70ch, and wide content opts back out", () => {
     expect(THEME_CSS).toMatch(/max-width:\s*70ch/);
     expect(THEME_CSS).toMatch(/table[\s\S]{0,120}max-width:\s*none/);
+    expect(THEME_CSS).toMatch(/\.callout, \.callout \*[^{]*\{\s*max-width:\s*none/);
   });
 
   test("the narrow layout stretches main, long refs and badges do not force width", () => {
