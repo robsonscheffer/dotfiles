@@ -32,6 +32,11 @@ describe("claim markers and Claims list", () => {
     expect(html).not.toMatch(/class="claim-marker[^>]*title=/);
   });
 
+  test("backticks in claim text render as inline code", () => {
+    const html = page(["C1"], [makeClaim({ ...full, claim: "`isReached` is published." })]);
+    expect(html).toContain("<code>isReached</code> is published.");
+  });
+
   test("a 40-character sha shows as 7 characters with the full ref in the title", () => {
     const sha = "d7c3ba55" + "0".repeat(32);
     const long = makeClaim({ ...full, evidence: { kind: "code", ref: `acme/widgets@${sha}:src/label.ts:17`, excerpt: "x", needs: "git" } });

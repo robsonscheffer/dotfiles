@@ -51,8 +51,9 @@ export function renderNoteControl(slug: string, title: string): string {
 export function renderNotesToolbar(): string {
   return (
     `<div class="notes-toolbar" hidden>` +
-    `<button type="button" class="notes-copy-btn">Copy notes</button>` +
-    `<button type="button" class="notes-download-btn">Download notes JSON</button>` +
+    `<p class="notes-count">Notes (0)</p>` +
+    `<button type="button" class="notes-copy-btn" disabled>Copy notes</button>` +
+    `<button type="button" class="notes-download-btn" disabled>Download notes JSON</button>` +
     `</div>`
   );
 }
@@ -90,8 +91,18 @@ export function renderNotesScript(pagePath: string, headings: NoteHeading[]): st
     });
     textarea.addEventListener('input', function () {
       try { localStorage.setItem(storageKey(slug), textarea.value); } catch (e) {}
+      refresh();
     });
   });
+  var copyBtn = document.querySelector('.notes-copy-btn');
+  var downloadBtn = document.querySelector('.notes-download-btn');
+  var countEl = document.querySelector('.notes-count');
+  function refresh() {
+    var n = Object.keys(collectNotes()).length;
+    if (countEl) countEl.textContent = 'Notes (' + n + ')';
+    if (copyBtn) copyBtn.disabled = n === 0;
+    if (downloadBtn) downloadBtn.disabled = n === 0;
+  }
   function collectNotes() {
     var notes = {};
     controls.forEach(function (control) {
@@ -102,7 +113,7 @@ export function renderNotesScript(pagePath: string, headings: NoteHeading[]): st
     });
     return notes;
   }
-  var copyBtn = document.querySelector('.notes-copy-btn');
+  refresh();
   if (copyBtn) {
     copyBtn.addEventListener('click', function () {
       var notes = collectNotes();
@@ -113,9 +124,10 @@ export function renderNotesScript(pagePath: string, headings: NoteHeading[]): st
       });
       var markdown = parts.join('\\n').replace(/\\n+$/, '');
       try { navigator.clipboard.writeText(markdown); } catch (e) {}
+      copyBtn.textContent = 'Copied';
+      setTimeout(function () { copyBtn.textContent = 'Copy notes'; }, 1500);
     });
   }
-  var downloadBtn = document.querySelector('.notes-download-btn');
   if (downloadBtn) {
     downloadBtn.addEventListener('click', function () {
       var notes = collectNotes();

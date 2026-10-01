@@ -345,16 +345,17 @@ function renderSealed(n: DirectiveNode, ctx: Ctx): string {
     `<div class="sealed" id="${rootId}" data-answer="${escapeAttr(answer)}">` +
     `<div class="sealed-gate" hidden><p class="sealed-ask">What is your read? Pick one to see the answer.</p>` +
     `<div class="sealed-options">${buttons}</div></div>` +
-    `<p class="sealed-result" hidden></p>` +
+    `<p class="sealed-result" role="status" tabindex="-1" hidden></p>` +
     `<details class="reveal sealed-body"><summary>Reveal</summary><div class="reveal-body">${body}</div></details>` +
     `</div>` +
     `<script>(function(){var root=document.getElementById(${JSON.stringify(rootId)});if(!root)return;` +
     `var gate=root.querySelector(".sealed-gate"),body=root.querySelector(".sealed-body"),result=root.querySelector(".sealed-result");` +
-    `gate.hidden=false;body.hidden=true;` +
+    `var summary=body.querySelector("summary");gate.hidden=false;body.hidden=true;` +
     `root.querySelectorAll(".sealed-option").forEach(function(btn){btn.addEventListener("click",function(){` +
     `var pick=btn.dataset.pick,answer=root.dataset.answer;` +
-    `result.textContent=pick===answer?"You picked "+pick+". Same read.":"You picked "+pick+". The answer is "+answer+".";` +
-    `gate.hidden=true;result.hidden=false;body.hidden=false;body.open=true;});});})();</script>`
+    `var same=pick===answer,tag=document.createElement("span");tag.className="badge badge-"+(same?"good":"warn");tag.textContent=same?"Same read":"Different read";` +
+    `result.textContent="";result.appendChild(tag);result.appendChild(document.createTextNode(" You picked "+pick+"."+(same?"":" The answer is "+answer+".")));` +
+    `gate.hidden=true;result.hidden=false;summary.hidden=true;body.hidden=false;body.open=true;result.focus();});});})();</script>`
   );
 }
 

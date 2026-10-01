@@ -42,7 +42,7 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
   const summary = doc.frontmatter.summary ?? "";
   const banner = opts.banner ? renderBanner(opts.banner) : "";
   const notesToolbar = notesEnabled ? renderNotesToolbar() : "";
-  const header = `<header class="doc-header">${banner}<h1>${escapeHtml(title)}</h1>${summary ? `<p class="doc-summary">${escapeHtml(summary)}</p>` : ""}${notesToolbar}</header>`;
+  const header = `<header class="doc-header">${banner}<h1>${escapeHtml(title)}</h1>${summary ? `<p class="doc-summary">${escapeHtml(summary)}</p>` : ""}</header>`;
 
   const { rail, rest } = extractRail(doc.body);
   const railHtml = rail ? renderDirective(rail, ctx) : "";
@@ -60,9 +60,9 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
   const claimsHtml = renderClaimsList(doc.claimRefs.map((r) => r.id), ctx);
   const body = [preHtml, sectionsHtml, claimsHtml].filter((s) => s.length > 0).join("\n");
 
-  const toc = renderToc(doc.headings);
+  const toc = renderToc(doc.headings, claimsHtml.length > 0);
   const themeButton = `<button type="button" class="theme-toggle" aria-label="Toggle color theme">Theme</button>\n`;
-  const sideContent = railHtml + toc;
+  const sideContent = railHtml + toc + notesToolbar;
   const side = sideContent ? `<aside class="side-col">${themeButton}${sideContent}</aside>` : "";
   const nav = opts.nav ? renderNav(opts.nav) : "";
 

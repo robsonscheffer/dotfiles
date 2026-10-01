@@ -55,6 +55,22 @@ describe("layout CSS", () => {
     expect(cssBlock(THEME_CSS, ".layout {")).toContain("max-width: 1360px");
   });
 
+  test("the hidden attribute always wins over component display rules", () => {
+    expect(THEME_CSS).toMatch(/\[hidden\]\s*\{\s*display:\s*none\s*!important/);
+  });
+
+  test("the control border token has a value in every theme block and passes 3:1", () => {
+    expect(THEME_CSS.match(/--control-border:/g)?.length).toBe(4);
+    expect(contrast(varValue(cssBlock(THEME_CSS, ":root"), "--control-border"), "#ffffff")).toBeGreaterThanOrEqual(3);
+    expect(contrast(varValue(cssBlock(THEME_CSS, 'html[data-theme="dark"]'), "--control-border"), "#14161a")).toBeGreaterThanOrEqual(3);
+  });
+
+  test("light code-string and code-comment pass AA on the code background", () => {
+    const light = cssBlock(THEME_CSS, ":root");
+    expect(contrast(varValue(light, "--code-string"), "#f4f5f7")).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(varValue(light, "--code-comment"), "#f4f5f7")).toBeGreaterThanOrEqual(4.5);
+  });
+
   test("exactly one narrow breakpoint governs the whole layout", () => {
     const matches = THEME_CSS.match(/@media \(max-width: \d+px\)/g) ?? [];
     expect(matches).toEqual(["@media (max-width: 900px)"]);

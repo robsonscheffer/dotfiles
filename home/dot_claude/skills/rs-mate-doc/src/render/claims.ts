@@ -10,6 +10,10 @@ export interface ClaimRowOptions {
   variant?: "line" | "list";
 }
 
+function inlineCode(escaped: string): string {
+  return escaped.replace(/`([^`]+)`/g, "<code>$1</code>");
+}
+
 export function renderClaimRow(id: string, ctx: Ctx, opts: ClaimRowOptions = {}): string {
   const list = opts.variant === "list";
   const idAttr = list ? ` id="claim-${escapeAttr(id)}"` : "";
@@ -24,7 +28,7 @@ export function renderClaimRow(id: string, ctx: Ctx, opts: ClaimRowOptions = {})
   return (
     `<div class="claim-evidence${list ? " claim-row" : ""}"${idAttr}>` +
     `<span class="claim-id">${escapeHtml(claim.id)}</span>` +
-    `<span class="claim-text">${escapeHtml(claim.claim)}</span>` +
+    `<span class="claim-text">${inlineCode(escapeHtml(claim.claim))}</span>` +
     `<span class="claim-status claim-status-${escapeAttr(claim.status)}">${escapeHtml(claim.status)}</span>` +
     (claim.verdict
       ? `<span class="verdict-badge verdict-${escapeAttr(claim.verdict)}">${escapeHtml(claim.verdict)}</span>`

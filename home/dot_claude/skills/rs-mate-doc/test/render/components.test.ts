@@ -299,6 +299,15 @@ describe("sealed", () => {
     expect(html).toContain("Judgment body.");
     expect(html).toContain("<script>");
   });
+
+  test("the result is a focusable status region and focus moves to it after a pick", () => {
+    const n = directive("sealed", { args: ["cautious", "strong", "cautious"], children: [para(text("Body."))] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain('<p class="sealed-result" role="status" tabindex="-1" hidden>');
+    expect(html).toContain("result.focus()");
+    expect(html).toContain("summary.hidden=true");
+    expect(html).toContain("badge-");
+  });
 });
 
 describe("checks", () => {

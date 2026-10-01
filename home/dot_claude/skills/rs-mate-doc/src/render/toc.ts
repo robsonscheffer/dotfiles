@@ -31,9 +31,10 @@ function renderTocTree(nodes: TocNode[]): string {
   return `<ul>${items}</ul>`;
 }
 
-export function renderToc(headings: HeadingRef[]): string {
+export function renderToc(headings: HeadingRef[], hasClaims = false): string {
   const tree = buildTocTree(headings);
   if (tree.length === 0) return "";
+  if (hasClaims) tree.push({ text: "Claims", id: "mate-doc-claims", children: [] });
   return `<nav class="toc" aria-label="Table of contents"><details open><summary>Contents</summary>${renderTocTree(tree)}</details></nav>`;
 }
 
