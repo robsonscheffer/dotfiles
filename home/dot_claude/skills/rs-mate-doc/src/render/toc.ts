@@ -34,5 +34,11 @@ function renderTocTree(nodes: TocNode[]): string {
 export function renderToc(headings: HeadingRef[]): string {
   const tree = buildTocTree(headings);
   if (tree.length === 0) return "";
-  return `<nav class="toc" aria-label="Table of contents">${renderTocTree(tree)}</nav>`;
+  return `<nav class="toc" aria-label="Table of contents"><details open><summary>Contents</summary>${renderTocTree(tree)}</details></nav>`;
 }
+
+// The TOC renders open so it works without scripts; narrow screens collapse it.
+export const TOC_SCRIPT = `(function(){
+  var d = document.querySelector('.toc details');
+  if (d && window.matchMedia('(max-width: 900px)').matches) d.open = false;
+})();`;

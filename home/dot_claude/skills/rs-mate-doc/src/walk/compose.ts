@@ -4,7 +4,7 @@
 // ledger instead of a standalone HTML document, and rendered later by mate-doc's own renderer.
 import type { Claim, ClaimId } from "../types.ts";
 import { findAnchorLine, renderDiffFence } from "./diff.ts";
-import type { AcceptanceCriterion, ComposedWalk, ContextData, FetchedPr, JudgmentData, QuestionItem, RiskItem, StoryData, StoryGroup, TicketFit, WalkAnchor, WalkInputs } from "./types.ts";
+import type { AcceptanceCriterion, AcStatus, ComposedWalk, ContextData, FetchedPr, JudgmentData, QuestionItem, RiskItem, StoryData, StoryGroup, TicketFit, WalkAnchor, WalkInputs } from "./types.ts";
 
 const MAX_DIFF_LINES = 80;
 const CODE_REF_TTL_DAYS = 14;
@@ -167,7 +167,7 @@ function renderTicketFitSection(pr: FetchedPr, ticketFit: TicketFit | undefined,
     lines.push("| Criterion | Status | Evidence |", "|---|---|---|");
     for (const ac of ticketFit.acceptance_criteria) {
       const id = buildAcClaim(pr, ac, build);
-      lines.push(`| ${escapeTableCell(ac.criterion)} {${id}} | ${ac.status} | ${escapeTableCell(ac.evidence)} |`);
+      lines.push(`| ${escapeTableCell(ac.criterion)} {${id}} | ${statusBadge(ac.status)} | ${escapeTableCell(ac.evidence)} |`);
     }
     lines.push("");
   } else {
@@ -176,6 +176,12 @@ function renderTicketFitSection(pr: FetchedPr, ticketFit: TicketFit | undefined,
 
   if (ticketFit.scope_delta) lines.push(`Scope delta: ${ticketFit.scope_delta}`, "");
   return lines.join("\n").trimEnd();
+}
+
+const STATUS_TONES: Record<AcStatus, string> = { Met: "good", "Partially Met": "warn", "Not Met": "bad", "Unplanned Deviation": "warn" };
+
+function statusBadge(status: AcStatus): string {
+  return `:badge[${status}]{tone=${STATUS_TONES[status] ?? "neutral"}}`;
 }
 
 function buildAcClaim(pr: FetchedPr, ac: AcceptanceCriterion, build: ClaimBuild): ClaimId {

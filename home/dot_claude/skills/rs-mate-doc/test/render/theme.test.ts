@@ -48,6 +48,13 @@ describe("layout CSS", () => {
     expect(THEME_CSS).toMatch(/table[\s\S]{0,120}max-width:\s*none/);
   });
 
+  test("the narrow layout stretches main, long refs and badges do not force width", () => {
+    expect(cssBlock(THEME_CSS, "@media (max-width: 900px)")).toMatch(/\.layout \{[^}]*align-items: stretch/);
+    expect(cssBlock(THEME_CSS, ".claim-source {")).toContain("min-width: 0");
+    expect(cssBlock(THEME_CSS, ".badge {")).toContain("white-space: nowrap");
+    expect(cssBlock(THEME_CSS, ".layout {")).toContain("max-width: 1360px");
+  });
+
   test("exactly one narrow breakpoint governs the whole layout", () => {
     const matches = THEME_CSS.match(/@media \(max-width: \d+px\)/g) ?? [];
     expect(matches).toEqual(["@media (max-width: 900px)"]);

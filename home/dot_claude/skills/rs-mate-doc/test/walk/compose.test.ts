@@ -209,6 +209,12 @@ describe("composeWalk", () => {
     expect(composed.files["index.md"]).toContain("index.tsx no longer creates a store");
   });
 
+  test("ticket-fit statuses render as badges", () => {
+    const md = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW, author: AUTHOR }).files["index.md"]!;
+    expect(md).toContain(":badge[Met]{tone=good}");
+    expect(md).toContain(":badge[Partially Met]{tone=warn}");
+  });
+
   test("Met with refs that do not match is not_verified and warns", () => {
     const ticketFit = structuredClone(WALK_INPUTS.ticketFit!);
     ticketFit.acceptance_criteria[0]!.refs = [{ file: "src/apps/portal/index.tsx", excerpt: "no such line anywhere" }];

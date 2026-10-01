@@ -77,6 +77,8 @@ describe("page shell", () => {
     expect(html).toContain('href="#sub"');
     expect(html).toContain('href="#next"');
     expect(html).toContain('<h2 id="intro">Intro<a class="anchor" href="#intro"');
+    expect(html).toContain("<details open><summary>Contents</summary>");
+    expect(html).toContain("(max-width: 900px)");
   });
 
   test("folder mode renders left nav, breadcrumbs, and prev/next", () => {

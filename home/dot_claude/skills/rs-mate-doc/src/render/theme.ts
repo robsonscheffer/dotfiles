@@ -103,9 +103,11 @@ body {
   line-height: 1.55;
 }
 main, .left-nav, .toc { padding: 1.5rem; }
-.layout { display: flex; align-items: flex-start; gap: 1rem; }
+main { overflow-wrap: break-word; }
+.layout { display: flex; align-items: flex-start; gap: 1rem; max-width: 1360px; margin-inline: auto; }
 .layout main { flex: 1 1 auto; min-width: 0; }
 .side-col { flex: 0 0 220px; position: sticky; top: 0; align-self: flex-start; display: flex; flex-direction: column; gap: 1rem; }
+.toc summary { cursor: pointer; font-weight: 600; margin-bottom: 0.4rem; }
 .toc ul { list-style: none; padding-left: 1rem; margin: 0; }
 .toc > ul { padding-left: 0; }
 .toc a { color: var(--muted); text-decoration: none; }
@@ -121,7 +123,7 @@ main :is(table, pre, figure.code-block, .tiles, .flow-diagram, .cards, .tab-pane
 /* One breakpoint for the whole layout: side-col (rail + TOC) and the left-nav both react to it,
    below 900px, everything narrower than that stacks single-column above the main content. */
 @media (max-width: 900px) {
-  .layout { flex-direction: column; }
+  .layout { flex-direction: column; align-items: stretch; }
   .side-col { position: static; width: 100%; order: -1; }
   .left-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
 }
@@ -259,6 +261,13 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
   gap: 0.5rem;
   align-items: center;
 }
+.claim-source {
+  flex: 1 1 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8rem;
+}
 .claim-evidence-missing { color: var(--badge-high-text); border-left-color: var(--badge-high-text); }
 .claim-excerpt { background: var(--code-bg); padding: 0.1rem 0.3rem; border-radius: 3px; }
 .verdict-badge {
@@ -284,6 +293,7 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
   padding: 0.05rem 0.55rem;
   border-radius: 999px;
   border: 1px solid var(--border);
+  white-space: nowrap;
 }
 .badge-good { background: var(--badge-low); border-color: var(--badge-low); color: #fff; }
 .badge-warn { background: var(--badge-med); border-color: var(--badge-med); color: #fff; }
@@ -293,6 +303,7 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
 .flow-diagram { max-width: 100%; height: auto; margin: 1rem 0; }
 .steps { padding-left: 0; list-style: none; }
 .step { display: flex; align-items: baseline; gap: 0.75rem; margin: 0.75rem 0; }
+.step-body { min-width: 0; overflow-wrap: anywhere; }
 .step-number {
   flex: 0 0 auto;
   width: 1.6rem;
@@ -370,7 +381,7 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor { opacity: 1; }
 .not-verified-list li { border-bottom: 1px solid var(--border); padding: 0.4rem 0; }
 .claim-owner { color: var(--muted); }
 table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-th, td { border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left; word-break: break-word; }
+th, td { border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left; overflow-wrap: break-word; vertical-align: top; }
 pre { background: var(--code-bg); border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.45; }
 figure.code-block { margin: 1rem 0; }
 figure.code-block figcaption { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.25rem; }

@@ -7,7 +7,7 @@ import { extractRail, renderDirective } from "./directives.ts";
 import { renderNav } from "./nav.ts";
 import { renderNoteControl, renderNotesScript, renderNotesToolbar, type NoteHeading } from "./notes.ts";
 import { THEME_CSS, THEME_TOGGLE_SCRIPT } from "./theme.ts";
-import { renderToc } from "./toc.ts";
+import { renderToc, TOC_SCRIPT } from "./toc.ts";
 import { escapeHtml, plainTextOf } from "./util.ts";
 
 interface Section {
@@ -67,6 +67,7 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
 
   const themeAttr = opts.theme === "light" || opts.theme === "dark" ? ` data-theme="${opts.theme}"` : "";
   const liveReload = opts.liveReload ? renderLiveReloadScript(opts.liveReload) : "";
+  const tocScript = toc ? `<script>${TOC_SCRIPT}</script>\n` : "";
   const claimScript = claimsHtml ? `<script>${CLAIM_PANEL_SCRIPT}</script>\n` : "";
   const notesScript = notesEnabled ? `<script>${renderNotesScript(doc.path, noteHeadings)}</script>\n` : "";
 
@@ -87,6 +88,7 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
     side +
     `</div>\n` +
     `<script>${THEME_TOGGLE_SCRIPT}</script>\n` +
+    tocScript +
     claimScript +
     notesScript +
     liveReload +
