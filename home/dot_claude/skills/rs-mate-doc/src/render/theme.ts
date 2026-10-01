@@ -134,6 +134,8 @@ main :is(table, pre, figure.code-block, .callout, .callout *, .steps, .steps *, 
   .side-col { flex: none; position: static; width: 100%; order: -1; padding: 1.5rem 1.5rem 0; max-height: none; overflow: visible; }
   .side-col .rail-list { grid-template-columns: max-content minmax(0, 1fr); align-items: baseline; gap: 0.3rem 1rem; }
   .side-col .rail-value { margin: 0; }
+  .risk-card .risk-field { flex-direction: column; gap: 0.1rem; }
+  .risk-card .risk-field-label { flex: none; }
   main table { display: block; overflow-x: auto; }
   .left-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
 }
@@ -393,7 +395,7 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor, .anchor:focus { opacity: 1
 .risk-card.risk-med { border-left-color: var(--badge-med-text); }
 .risk-card.risk-low { border-left-color: var(--badge-low-text); }
 .risk-field { display: flex; align-items: baseline; gap: 0.3rem; min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
-.risk-field-label { color: var(--muted); font-size: 0.8rem; }
+.risk-field-label { flex: 0 0 6.5rem; white-space: nowrap; color: var(--muted); font-size: 0.8rem; }
 .not-verified-list { list-style: none; padding: 0; }
 .not-verified-list li { border-bottom: 1px solid var(--border); padding: 0.4rem 0; }
 .claim-owner { color: var(--muted); }

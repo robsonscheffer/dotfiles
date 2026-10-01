@@ -59,7 +59,9 @@ describe("layout CSS", () => {
   test("the narrow layout stretches main, long refs and badges do not force width", () => {
     expect(cssBlock(THEME_CSS, "@media (max-width: 900px)")).toMatch(/\.layout \{[^}]*align-items: stretch/);
     expect(cssBlock(THEME_CSS, "@media (max-width: 900px)")).toContain("main table { display: block; overflow-x: auto; }");
-    expect(cssBlock(THEME_CSS, ".risk-field {")).toContain("min-width: 0");
+    expect(cssBlock(THEME_CSS, "\n.risk-field {")).toContain("min-width: 0");
+    expect(cssBlock(THEME_CSS, "\n.risk-field-label {")).toContain("white-space: nowrap");
+    expect(cssBlock(THEME_CSS, "@media (max-width: 900px)")).toContain(".risk-card .risk-field { flex-direction: column;");
     expect(cssBlock(THEME_CSS, ".claim-source {")).toContain("min-width: 0");
     expect(cssBlock(THEME_CSS, ".badge {")).toContain("white-space: nowrap");
     expect(cssBlock(THEME_CSS, ".layout {")).not.toContain("max-width");
