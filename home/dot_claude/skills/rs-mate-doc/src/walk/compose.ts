@@ -189,7 +189,8 @@ function buildAcClaim(pr: FetchedPr, ac: AcceptanceCriterion, build: ClaimBuild)
   const id = nextClaimId(build);
   const text = ac.criterion;
   const refs = ac.refs ?? [];
-  const claim: Claim = ac.status === "Met" ? buildProposedClaim(pr, id, text, refs, `criterion "${ac.criterion}"`, "ref", build.warnings) : { id, claim: text, status: "not_verified", owner: pr.meta.author.login };
+  const base: Claim = ac.status === "Met" ? buildProposedClaim(pr, id, text, refs, `criterion "${ac.criterion}"`, "ref", build.warnings) : { id, claim: text, status: "not_verified", owner: pr.meta.author.login };
+  const claim: Claim = { ...base, role: "criterion" };
   if (ac.status === "Met" && refs.length > 0 && claim.status === "not_verified") {
     build.warnings.push(`criterion "${ac.criterion}": no ref matched the diff; claim ${id} is not_verified`);
   }
@@ -316,6 +317,7 @@ function renderClaimBlock(claim: Claim): string {
   if (claim.checked_at) lines.push(`    checked_at: ${claim.checked_at}`);
   if (claim.ttl_days !== undefined) lines.push(`    ttl_days: ${claim.ttl_days}`);
   if (claim.owner) lines.push(`    owner: ${yamlBlockScalar(claim.owner)}`);
+  if (claim.role) lines.push(`    role: ${claim.role}`);
   return lines.join("\n");
 }
 

@@ -125,6 +125,9 @@ export async function gate(target: string, env: Env): Promise<GateResult> {
       continue;
     }
 
+    // A ticket criterion the verifier disputes is a finding about the PR, shown on the page, not a doc defect.
+    if (claim.verdict !== "supports" && claim.role === "criterion") continue;
+
     if (claim.verdict !== "supports") {
       claimReasons.push({
         kind: "verdict-not-supports",

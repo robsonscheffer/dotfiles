@@ -50,6 +50,7 @@
 - `ticket-fit.json`: `{ "ticket_key", "ticket_quality": { "score": "good|adequate|thin|missing", "notes" }, "acceptance_criteria": [{ "criterion", "status": "Met|Partially Met|Not Met|Unplanned Deviation", "evidence", "refs" }], "scope_delta" }`
   - `criterion` is the ticket's own text, copied word for word. Put your findings in `evidence`; it fills the table's Evidence column and is not claim evidence.
   - `refs: [{ "file", "excerpt" }]` backs a `Met` criterion with a line copied from the diff (any file in the diff). The claim text is the criterion itself and is `proposed`. Any other status, or a `Met` with no matching ref, is `not_verified`.
+  - Every criterion claim gets `role: criterion`. A verdict other than `supports` on one is a review finding: it shows on the claim marker in the table and does not fail the gate.
 - `comment-triage.json`: `[{ "author", "author_kind": "bot|human", "human_authenticity": "genuine|bot-posing-as-human|uncertain", "summary", "resolved" }]`
 - `context.json`: `{ "mode": "qmd|grep", "items": [...] }`. Each item is either a bare string or `{ "path", "score", "snippet" }`. Renders as a "Related notes" section, one wikilink per item built from the note's file name only (no folder, no extension), plus its snippet when present.
 

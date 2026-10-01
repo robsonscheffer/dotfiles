@@ -266,6 +266,7 @@ export interface Claim {
   verdict_hash?: string; // claimHash of the claim and evidence the verdict judged
   ttl_days?: number;
   owner?: string; // required when not_verified: who to ask
+  role?: "criterion"; // a ticket's own acceptance criterion: a disputed verdict is a review finding
 }
 
 export interface Ledger {

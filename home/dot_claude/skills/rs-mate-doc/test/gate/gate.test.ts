@@ -241,6 +241,15 @@ describe("gate: a verdict that does not support", () => {
     expect(result.reasons.some((r) => r.claim === "C1" && r.kind === "verdict-not-supports")).toBe(true);
     expectFileLine(result.reasons);
   });
+
+  test("a disputed ticket criterion is a finding, not a gate failure", async () => {
+    const dir = await tempDir();
+    await writePage(dir);
+    await writeClaimsYaml(dir, [{ ...CLEAN_CLAIM, verdict: "overstates", role: "criterion" }]);
+    const env = fakeEnv({ fetch: async () => ({ status: 200, body: "Self-serve pricing starts at $40/month." }) });
+    const result = await gate(dir, env);
+    expect(result.reasons.some((r) => r.claim === "C1")).toBe(false);
+  });
 });
 
 describe("gate: folder mode lints every page, not only the primary one", () => {

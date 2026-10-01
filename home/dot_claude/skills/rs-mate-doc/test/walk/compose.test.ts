@@ -203,6 +203,8 @@ describe("composeWalk", () => {
     expect(partial.status).toBe("not_verified");
     expect(partial.owner).toBe("sam");
     expect(claims.find((c) => c.claim === "Shared layer stays backward-compatible for other consumers")?.status).toBe("not_verified");
+    expect(met.role).toBe("criterion");
+    expect(partial.role).toBe("criterion");
     // The ticket-fit table still shows the agent's own evidence prose.
     expect(composed.files["index.md"]).toContain("index.tsx no longer creates a store");
   });
