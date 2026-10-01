@@ -37,15 +37,6 @@ exports[`timeline renders one item per date | text line, in order 1`] = `"<ol cl
 exports[`progress renders an accessible progress bar from done/total 1`] = `"<div class="progress" role="progressbar" aria-valuenow="7" aria-valuemin="0" aria-valuemax="12" aria-label="Refund automation rollout"><div class="progress-track"><div class="progress-fill" style="width:58%"></div></div><span class="progress-label">Refund automation rollout (7/12)</span></div>"`;
 
 exports[`rail renders a plain key: value line 1`] = `"<aside class="rail" aria-label="Summary"><dl class="rail-list"><dt class="rail-key">Branch</dt><dd class="rail-value">refactor/portal-storeless</dd></dl></aside>"`;
+exports[`diff code fence styles added and removed lines with a file header from title 1`] = `"<figure class="code-block diff"><div class="diff-file">src/orders.ts</div><pre><code><span class="diff-add"><span class="diff-num diff-num-old"></span><span class="diff-num diff-num-new"></span><span class="diff-sign">+</span>added line</span><span class="diff-del"><span class="diff-num diff-num-old"></span><span class="diff-num diff-num-new"></span><span class="diff-sign">-</span>removed line</span><span class="diff-ctx"><span class="diff-num diff-num-old"></span><span class="diff-num diff-num-new"></span><span class="diff-sign"> </span>context line</span></code></pre></figure>"`;
 
-exports[`diff code fence styles added and removed lines with a file title 1`] = `
-"<figure class="code-block diff"><figcaption>src/orders.ts</figcaption><pre><code><span class="diff-add">+added line</span>
-<span class="diff-del">-removed line</span>
-<span class="diff-ctx"> context line</span></code></pre></figure>"
-`;
-
-exports[`diff code fence file= and start= together number added, removed, and context lines from start 1`] = `
-"<figure class="code-block diff"><div class="diff-file">src/analytics/label.ts</div><pre><code><span class="diff-add"><span class="diff-num diff-num-new">40</span>+added</span>
-<span class="diff-del"><span class="diff-num diff-num-old">40</span>-removed</span>
-<span class="diff-ctx"><span class="diff-num diff-num-old">41</span><span class="diff-num diff-num-new">41</span> context</span></code></pre></figure>"
-`;
+exports[`diff code fence start= seeds both counters before the first hunk 1`] = `"<figure class="code-block diff"><div class="diff-file">src/a.ts</div><pre><code><span class="diff-add"><span class="diff-num diff-num-old"></span><span class="diff-num diff-num-new">40</span><span class="diff-sign">+</span>added</span><span class="diff-del"><span class="diff-num diff-num-old">40</span><span class="diff-num diff-num-new"></span><span class="diff-sign">-</span>removed</span><span class="diff-ctx"><span class="diff-num diff-num-old">41</span><span class="diff-num diff-num-new">41</span><span class="diff-sign"> </span>context</span></code></pre></figure>"`;

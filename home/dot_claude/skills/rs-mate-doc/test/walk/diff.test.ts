@@ -3,7 +3,7 @@
 // head commit compose.ts anchors every code claim to. findAnchorLine has to say which image
 // (added -> head, removed -> base) its excerpt belongs to.
 import { describe, expect, test } from "bun:test";
-import { findAnchorLine } from "../../src/walk/diff.ts";
+import { findAnchorLine, renderDiffFence } from "../../src/walk/diff.ts";
 
 const MODIFY_DIFF = [
   "diff --git a/src/widget.ts b/src/widget.ts",
@@ -97,5 +97,21 @@ describe("findAnchorLine", () => {
   test("the match does not leak into the next file's section", () => {
     const diff = [SEARCH_DIFF.trimEnd(), "diff --git a/src/next.ts b/src/next.ts", "@@ -1,1 +1,1 @@", "+only in next", ""].join("\n");
     expect(findAnchorLine(diff, "src/search.ts", "only in next").found).toBe(false);
+  });
+});
+
+describe("renderDiffFence", () => {
+  const diff = ["diff --git a/src/w.ts b/src/w.ts", "@@ -1,1 +1,3 @@", "+one", "+two", "+three", ""].join("\n");
+
+  test("uses file= meta and keeps the truncation note outside the fence", () => {
+    const out = renderDiffFence("src/w.ts", diff, 2);
+    expect(out.startsWith("```diff file=src/w.ts\n")).toBe(true);
+    const fenceEnd = out.lastIndexOf("```");
+    expect(out.slice(0, fenceEnd)).not.toContain("not shown");
+    expect(out.slice(fenceEnd + 3)).toBe("\n\n_2 more lines not shown._");
+  });
+
+  test("no note when under the cap", () => {
+    expect(renderDiffFence("src/w.ts", diff, 80)).not.toContain("not shown");
   });
 });
