@@ -40,3 +40,27 @@ describe("composeWalk rail", () => {
     expect(html).toContain(`#${FETCHED_PR.meta.number}`);
   });
 });
+
+describe("composeWalk page top", () => {
+  const md = composeWalk(FETCHED_PR, WALK_INPUTS, { now: new Date("2026-09-25T00:00:00Z"), author: "agent:claude" }).files["index.md"]!;
+
+  test("the title is only in the frontmatter: no body H1 and no header block", () => {
+    expect(md).not.toMatch(/^# /m);
+    expect(md).not.toContain("[View on GitHub]");
+  });
+
+  test("the rail carries repo, base, and change size", () => {
+    const rail = md.slice(md.indexOf(":::rail"), md.indexOf(":::\n", md.indexOf(":::rail") + 7));
+    expect(rail).toContain(`Repo: ${FETCHED_PR.repo}`);
+    expect(rail).toContain(`Base: ${FETCHED_PR.meta.baseRefName}`);
+    expect(rail).toContain(`Changes: +${FETCHED_PR.meta.additions} / -${FETCHED_PR.meta.deletions}, ${FETCHED_PR.meta.changedFiles} files`);
+  });
+
+  test("the lead appears once, without emphasis markers in the summary", () => {
+    const withLead = { ...WALK_INPUTS, story: { ...WALK_INPUTS.story, lead: "**Facts**, not `warnings`" } };
+    const out = composeWalk(FETCHED_PR, withLead, { now: new Date("2026-09-25T00:00:00Z"), author: "agent:claude" }).files["index.md"]!;
+    expect(out).toContain('summary: "Facts, not warnings"');
+    expect(out.split("not `warnings`").length - 1).toBe(0);
+    expect(out).not.toContain("**Facts**");
+  });
+});

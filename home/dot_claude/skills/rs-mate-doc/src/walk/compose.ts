@@ -42,6 +42,10 @@ function extractTicketTags(title: string, ticketKey: string | undefined): string
   return tags;
 }
 
+function stripEmphasis(text: string): string {
+  return text.replace(/\*\*|__|`/g, "");
+}
+
 // `kind: walk`, `pr`, and `verdict` are the home index's fields (src/index/collect.ts): kind
 // picks the entry's filter bucket, pr labels it, verdict stays empty until the walk closes.
 function renderFrontmatter(pr: FetchedPr, inputs: WalkInputs, updated: string): string {
@@ -53,7 +57,7 @@ function renderFrontmatter(pr: FetchedPr, inputs: WalkInputs, updated: string): 
     "kind: walk",
     "status: draft",
     "notes: true",
-    `summary: ${yamlString(inputs.story.lead ?? pr.meta.title)}`,
+    `summary: ${yamlString(stripEmphasis(inputs.story.lead ?? pr.meta.title))}`,
   ];
   if (tags.length > 0) lines.push(`tags: [${tags.map(yamlString).join(", ")}]`);
   lines.push(`sources: [${yamlString(pr.meta.url)}]`);
@@ -64,15 +68,18 @@ function renderFrontmatter(pr: FetchedPr, inputs: WalkInputs, updated: string): 
   return lines.join("\n");
 }
 
-// The sticky rail panel (WRN lane, render/directives.ts's :::rail): a compact PR summary that
-// stays visible while scrolling, separate from the fuller header prose below it.
+// The sticky rail panel (render/directives.ts's :::rail): a compact PR summary that stays
+// visible while scrolling.
 function renderRailSection(pr: FetchedPr, inputs: WalkInputs, ticketFit: TicketFit | undefined): string {
   const m = pr.meta;
   const lines = [
     ":::rail",
     `Author: ${m.author.login}`,
     `PR: [#${m.number}](${m.url})`,
+    `Repo: ${pr.repo}`,
     `Branch: ${m.headRefName}`,
+    `Base: ${m.baseRefName}`,
+    `Changes: +${m.additions} / -${m.deletions}, ${m.changedFiles} files`,
   ];
   if (ticketFit) lines.push(`Ticket: ${ticketFit.ticket_key}`);
   lines.push(`Comments: ${inputs.commentTriage?.length ?? 0}`);
@@ -81,22 +88,8 @@ function renderRailSection(pr: FetchedPr, inputs: WalkInputs, ticketFit: TicketF
   return lines.join("\n");
 }
 
-function renderHeader(pr: FetchedPr): string {
-  const m = pr.meta;
-  return [
-    `# #${m.number}: ${m.title}`,
-    "",
-    `Repo: ${pr.repo}`,
-    `Author: ${m.author.login}`,
-    `Branch: ${m.headRefName} into ${m.baseRefName}`,
-    `Changes: +${m.additions} / -${m.deletions} across ${m.changedFiles} files`,
-    `[View on GitHub](${m.url})`,
-  ].join("\n");
-}
-
 function renderStorySection(story: StoryData): string {
   const lines = ["## The story", ""];
-  if (story.lead) lines.push(`**${story.lead}**`, "");
   for (const beat of story.story) lines.push(beat, "");
   return lines.join("\n").trimEnd();
 }
@@ -338,7 +331,7 @@ export function composeWalk(pr: FetchedPr, inputs: WalkInputs, opts: ComposeOpti
   const checkedAt = now.toISOString().slice(0, 10);
   const build: ClaimBuild = { claims: [], nextId: 1, warnings: [] };
 
-  const parts: string[] = [renderRailSection(pr, inputs, inputs.ticketFit), renderHeader(pr), renderStorySection(inputs.story)];
+  const parts: string[] = [renderRailSection(pr, inputs, inputs.ticketFit), renderStorySection(inputs.story)];
 
   inputs.story.groups.forEach((group, gi) => {
     const claimId = buildGroupClaim(pr, group, gi + 1, build);

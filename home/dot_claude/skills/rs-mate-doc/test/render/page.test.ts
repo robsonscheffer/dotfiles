@@ -106,12 +106,13 @@ describe("page shell", () => {
       [para(text("Some sentence."), { type: "claimRef", id: "C99", pos: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } } })],
       { title: "Doc" },
     );
+    doc.claimRefs = [{ type: "claimRef", id: "C99", pos: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } } }];
     const html = render(doc, makeLedger([]), { theme: "auto" });
     expect(html).toContain("claim-missing");
-    expect(html).toContain("Missing claim C99");
+    expect(html).toContain("C99 is not in the ledger");
   });
 
-  test("claimRef renders its evidence line below the sentence", () => {
+  test("claimRef keeps the paragraph clean and puts its evidence in the Claims list", () => {
     const claim = makeClaim({
       id: "C7",
       claim: "Checkout clicks take their label from the nearest attribute.",
@@ -123,8 +124,11 @@ describe("page shell", () => {
     const doc = makeDoc([para(text("Labels come from the attribute."), { type: "claimRef", id: "C7", pos: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } } })], {
       title: "Doc",
     });
+    doc.claimRefs = [{ type: "claimRef", id: "C7", pos: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } } }];
     const html = render(doc, makeLedger([claim]), { theme: "auto" });
-    expect(html).toContain("claim-evidence");
+    const [main, list] = html.slice(html.indexOf("<main>")).split('id="mate-doc-claims"');
+    expect(main).not.toContain("claim-evidence");
+    expect(list).toContain("claim-evidence");
     expect(html).toContain("acme/web@main:src/label.ts:42");
     expect(html).toContain("2026-09-25");
     expect(html).toContain("verdict-supports");
@@ -149,6 +153,14 @@ describe("rail placement", () => {
     const mainMatch = /<main>(.*)<\/main>/s.exec(html);
     expect(mainMatch).not.toBeNull();
     expect(mainMatch![1]).not.toContain('class="rail"');
+  });
+
+  test("the theme button is the first child of the side column, or stays top-level without one", () => {
+    const withRail = render(makeDoc([directive("rail", { raw: ["Author: Sam"] })], { title: "Doc" }), null, { theme: "auto" });
+    expect(withRail).toContain('<aside class="side-col"><button type="button" class="theme-toggle"');
+    expect(withRail.split('class="theme-toggle"').length - 1).toBe(1);
+    const without = render(makeDoc([para(text("Plain."))], { title: "Doc" }), null, { theme: "auto" });
+    expect(without).toContain('<body class="no-nav">\n<button type="button" class="theme-toggle"');
   });
 
   test("no rail: no side-col wrapper appears without a TOC either", () => {

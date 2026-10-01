@@ -102,11 +102,13 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.55;
 }
-main, .left-nav, .toc { padding: 1.5rem; }
+main, .left-nav { padding: 1.5rem; }
+.toc { padding: 0 0.25rem; }
 main { overflow-wrap: break-word; }
 .layout { display: flex; align-items: flex-start; gap: 1rem; max-width: 1360px; margin-inline: auto; }
 .layout main { flex: 1 1 auto; min-width: 0; }
-.side-col { flex: 0 0 220px; position: sticky; top: 0; align-self: flex-start; display: flex; flex-direction: column; gap: 1rem; }
+.side-col { flex: 0 0 260px; position: sticky; top: 0; align-self: flex-start; display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem 1.5rem 1.5rem 0; max-height: 100vh; overflow-y: auto; }
+.side-col .theme-toggle { position: static; align-self: flex-end; }
 .toc summary { cursor: pointer; font-weight: 600; margin-bottom: 0.4rem; }
 .toc ul { list-style: none; padding-left: 1rem; margin: 0; }
 .toc > ul { padding-left: 0; }
@@ -124,13 +126,13 @@ main :is(table, pre, figure.code-block, .tiles, .flow-diagram, .cards, .tab-pane
    below 900px, everything narrower than that stacks single-column above the main content. */
 @media (max-width: 900px) {
   .layout { flex-direction: column; align-items: stretch; }
-  .side-col { position: static; width: 100%; order: -1; }
+  .side-col { position: static; width: 100%; order: -1; padding: 1.5rem 1.5rem 0; max-height: none; }
   .left-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
 }
-.rail { border: 1px solid var(--border); border-radius: 6px; padding: 1rem; }
-.rail-list { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 0.75rem; margin: 0; }
+.rail { border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; background: var(--bg); }
+.rail-list { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: baseline; gap: 0.4rem 1rem; margin: 0; }
 .rail-key { color: var(--muted); font-size: 0.85rem; }
-.rail-value { margin: 0; text-align: right; }
+.rail-value { margin: 0; text-align: left; min-width: 0; overflow-wrap: anywhere; font-size: 0.9rem; }
 .notes-toolbar { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
 .notes-copy-btn, .notes-download-btn {
   background: var(--callout-bg);

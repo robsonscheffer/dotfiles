@@ -2,8 +2,7 @@ import type { Block, BlockquoteNode, CodeBlockNode, ErrorNode, HeadingNode, List
 import type { Ctx } from "./ctx.ts";
 import { renderDirective } from "./directives.ts";
 import { highlightCode } from "./highlight.ts";
-import { renderClaimRow } from "./claims.ts";
-import { collectClaimRefs, renderInline } from "./inline.ts";
+import { renderInline } from "./inline.ts";
 import { escapeAttr, escapeHtml } from "./util.ts";
 
 export function renderBlocks(nodes: Block[], ctx: Ctx): string {
@@ -43,10 +42,7 @@ function renderHeading(n: HeadingNode, ctx: Ctx): string {
 }
 
 function renderParagraph(n: ParagraphNode, ctx: Ctx): string {
-  const html = renderInline(n.children, ctx);
-  const refs = collectClaimRefs(n.children);
-  const evidence = refs.map((r) => renderClaimRow(r.id, ctx)).join("");
-  return `<p>${html}</p>${evidence}`;
+  return `<p>${renderInline(n.children, ctx)}</p>`;
 }
 
 function renderList(n: ListNode, ctx: Ctx): string {

@@ -61,8 +61,9 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
   const body = [preHtml, sectionsHtml, claimsHtml].filter((s) => s.length > 0).join("\n");
 
   const toc = renderToc(doc.headings);
+  const themeButton = `<button type="button" class="theme-toggle" aria-label="Toggle color theme">Theme</button>\n`;
   const sideContent = railHtml + toc;
-  const side = sideContent ? `<aside class="side-col">${sideContent}</aside>` : "";
+  const side = sideContent ? `<aside class="side-col">${themeButton}${sideContent}</aside>` : "";
   const nav = opts.nav ? renderNav(opts.nav) : "";
 
   const themeAttr = opts.theme === "light" || opts.theme === "dark" ? ` data-theme="${opts.theme}"` : "";
@@ -81,7 +82,7 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
     `<style>${THEME_CSS}</style>\n` +
     `</head>\n` +
     `<body class="${opts.nav ? "has-nav" : "no-nav"}">\n` +
-    `<button type="button" class="theme-toggle" aria-label="Toggle color theme">Theme</button>\n` +
+    (side ? "" : themeButton) +
     nav +
     `<div class="layout">\n` +
     `<main>\n${header}\n${body}\n</main>\n` +
