@@ -282,11 +282,13 @@ end on a real PR. Say that plainly to the user before running it.
 3. Compose the walk: `mate-doc walk <url> --inputs <dir> --out <walk-dir>`.
 4. Lint it: `mate-doc lint <walk-dir>`. Fix the source and re-run on a failure before
    continuing.
-5. Verify the claims: `mate-doc verify <walk-dir>`, then `mate-doc gate <walk-dir>`. A fresh agent
-   judges each claim from evidence mate-doc fetches itself; you do not record verdicts. Claims that
-   are MCP or need a human `supports` go to Robson, who runs `mate-doc verdict` at his own terminal.
-   Fix any other gate failure at the source and re-run before opening.
-6. Open it for reading: `mate-doc open <walk-dir>`.
+5. Verify the claims: `mate-doc verify <walk-dir>`. A fresh agent judges each claim from evidence
+   mate-doc fetches itself; you do not record verdicts. A failing verdict stays on the page as a
+   red claim marker with its reason, which is where the reader meets it.
+6. Open it for reading: `mate-doc open <walk-dir>`. Don't wait for `mate-doc gate` to pass and
+   don't ask Robson for verdicts first; a walk is read, never approved or published. The message
+   is the URL plus one line from `mate-doc gate` (claims, verified, open). Questions wait for
+   step 7.
 7. After the user has read the walk and written notes, ask (AskUserQuestion) the same "Ready to
    submit?" question as Step 7: Approve, Request changes, Comment only, or Skip for now. Export
    the reader's notes from the open walk page (its own **Download notes JSON** control) to a

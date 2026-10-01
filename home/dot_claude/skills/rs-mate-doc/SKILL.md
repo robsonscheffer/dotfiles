@@ -91,7 +91,7 @@ MCP claims, and any `supports` a person must give, go to Robson: he runs `mate-d
 
 ## PR walks
 
-`mate-doc walk` fetches a PR and composes a review doc from your analysis. `references/walk.md` has the input formats, anchors and refs. After composing, run `mate-doc lint`, `mate-doc verify <walk-dir>`, `mate-doc gate`, then `mate-doc open <walk-dir>`.
+`mate-doc walk` fetches a PR and composes a review doc from your analysis. `references/walk.md` has the input formats, anchors and refs. After composing, run `mate-doc lint` and `mate-doc verify <walk-dir>`, then `mate-doc open <walk-dir>` without waiting for the gate to pass. Report the gate's summary line with the URL.
 
 ```
 mate-doc walk <pr-url> --fetch-only --out <dir>

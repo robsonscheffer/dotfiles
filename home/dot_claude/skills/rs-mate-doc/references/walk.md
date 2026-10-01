@@ -56,7 +56,7 @@
 
 ## Output
 
-`--out <walk-dir>` gets `index.md` and `claims.yaml`. The ledger starts with `author:`, the actor that ran the compose, and holds only `proposed` and `not_verified` claims. Run `mate-doc lint` on it, then `mate-doc verify <walk-dir>`, which asks a fresh verifier agent about each `proposed` claim. Claims it cannot settle need a human `mate-doc verdict`. Do not record verdicts on your own claims. Once `mate-doc gate <walk-dir>` passes, `mate-doc open` it for Robson.
+`--out <walk-dir>` gets `index.md` and `claims.yaml`. The ledger starts with `author:`, the actor that ran the compose, and holds only `proposed` and `not_verified` claims. Run `mate-doc lint` on it, then `mate-doc verify <walk-dir>`, which asks a fresh verifier agent about each `proposed` claim. Do not record verdicts on your own claims. Then `mate-doc open` it for Robson without waiting for `mate-doc gate` to pass: a failing verdict shows on its claim marker with the reason, and a walk is read, not approved. Report the gate's one summary line with the URL, and leave any verdict Robson owes for after he has read it.
 
 ## Submit
 
