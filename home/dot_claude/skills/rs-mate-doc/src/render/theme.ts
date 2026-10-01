@@ -131,14 +131,17 @@ main :is(table, pre, figure.code-block, .tiles, .flow-diagram, .cards, .tab-pane
    below 900px, everything narrower than that stacks single-column above the main content. */
 @media (max-width: 900px) {
   .layout { flex-direction: column; align-items: stretch; }
-  .side-col { position: static; width: 100%; order: -1; padding: 1.5rem 1.5rem 0; max-height: none; }
+  .side-col { flex: none; position: static; width: 100%; order: -1; padding: 1.5rem 1.5rem 0; max-height: none; overflow: visible; }
+  .side-col .rail-list { grid-template-columns: max-content minmax(0, 1fr); align-items: baseline; gap: 0.3rem 1rem; }
+  .side-col .rail-value { margin: 0; }
   main table { display: block; overflow-x: auto; }
   .left-nav { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
 }
 .rail { border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem 1rem; background: var(--bg); }
-.rail-list { display: grid; grid-template-columns: max-content minmax(0, 1fr); align-items: baseline; gap: 0.4rem 1rem; margin: 0; }
-.rail-key { color: var(--muted); font-size: 0.85rem; }
-.rail-value { margin: 0; text-align: left; min-width: 0; overflow-wrap: anywhere; font-size: 0.9rem; }
+.rail-list { display: grid; grid-template-columns: minmax(0, 1fr); margin: 0; }
+.rail-key { color: var(--muted); font-size: 0.8rem; }
+.rail-value { margin: 0 0 0.6rem; min-width: 0; overflow-wrap: break-word; font-size: 0.9rem; }
+.rail-value:last-child { margin-bottom: 0; }
 .notes-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 .notes-count { flex: 1 1 100%; margin: 0; font-weight: 600; }
 .notes-copy-btn:disabled, .notes-download-btn:disabled { opacity: 0.5; cursor: default; }
