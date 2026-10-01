@@ -287,7 +287,7 @@ end on a real PR. Say that plainly to the user before running it.
    mate-doc fetches itself; you do not record verdicts. A failing verdict stays on the page as a
    red claim marker with its reason, which is where the reader meets it.
 6. Open it for reading: `mate-doc open <walk-dir>`. Don't wait for `mate-doc gate` to pass and
-   don't ask Robson for verdicts first; a walk is read, never approved or published. The message
+   don't ask the user for verdicts first; a walk is read, never approved or published. The message
    is the URL plus one line from `mate-doc gate` (claims, verified, open). Questions wait for
    step 7.
 7. After the user has read the walk and written notes, ask (AskUserQuestion) the same "Ready to

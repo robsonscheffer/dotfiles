@@ -56,7 +56,7 @@
 
 ## Output
 
-`--out <walk-dir>` gets `index.md` and `claims.yaml`. The ledger starts with `author:`, the actor that ran the compose, and holds only `proposed` and `not_verified` claims. Run `mate-doc lint` on it, then `mate-doc verify <walk-dir>`, which asks a fresh verifier agent about each `proposed` claim. Do not record verdicts on your own claims. Then `mate-doc open` it for Robson without waiting for `mate-doc gate` to pass: a failing verdict shows on its claim marker with the reason, and a walk is read, not approved. Report the gate's one summary line with the URL, and leave any verdict Robson owes for after he has read it.
+`--out <walk-dir>` gets `index.md` and `claims.yaml`. The ledger starts with `author:`, the actor that ran the compose, and holds only `proposed` and `not_verified` claims. Run `mate-doc lint` on it, then `mate-doc verify <walk-dir>`, which asks a fresh verifier agent about each `proposed` claim. Do not record verdicts on your own claims. Then `mate-doc open` it for the user without waiting for `mate-doc gate` to pass: a failing verdict shows on its claim marker with the reason, and a walk is read, not approved. Report the gate's one summary line with the URL, and leave any verdict the user owes for after they have read it.
 
 ## Submit
 
@@ -66,7 +66,7 @@ body is the file at `--body-file` plus, when given, `--notes-file` - a JSON obje
 rendered as one bullet per section and appended after the body text.
 
 Without `--yes` this only prints what would be posted and the exact `gh` command, and posts nothing. Posting a
-review is outward-facing, so always show that dry run to Robson and get a yes before adding `--yes`. A `gh`
+review is outward-facing, so always show that dry run to the user and get a yes before adding `--yes`. A `gh`
 failure with `--yes` prints `gh`'s error, exits non-zero, and leaves the walk's frontmatter untouched.
 
 ## Close
