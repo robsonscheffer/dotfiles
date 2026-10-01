@@ -4,6 +4,7 @@
 #   2. dependencies installed
 #   3. mate-doc linked onto PATH (~/.local/bin)
 #   4. config written if missing (~/.config/mate-doc/config.yaml)
+#   5. walk.close_hook set to the default hook when the config has none
 set -euo pipefail
 
 self="$(readlink -f "${BASH_SOURCE[0]}")"
@@ -57,6 +58,15 @@ CONF
   echo "setup: wrote $config_dir/config.yaml"
 else
   echo "setup: config exists, left as is"
+fi
+
+close_hook="$root/bin/walk-close-hook"
+if grep -qE '^walk:' "$config_dir/config.yaml"; then
+  echo "setup: walk config exists, left as is"
+else
+  printf '%s\n' "# Runs after \`mate-doc walk close\`. Replace with your own script for extra bookkeeping." \
+    "walk:" "  close_hook: \"$close_hook\"" >> "$config_dir/config.yaml"
+  echo "setup: set walk.close_hook to $close_hook"
 fi
 
 echo "setup: done"

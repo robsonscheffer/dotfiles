@@ -82,6 +82,8 @@ walk:
   close_hook: "~/bin/my-walk-bookkeeping.sh"
 ```
 
-The hook is personal bookkeeping (a learning note, a log line, a re-index, a commit) - it never ships in this
-repo. A failing hook prints its output and exits non-zero, but the frontmatter change stays either way. No hook
+`mate-doc setup` sets `close_hook` to `bin/walk-close-hook` when the config has no `walk:` key. That default
+commits only the walk folder when it sits in a git repo and is not ignored, then runs `qmd update` if `qmd` is
+installed. Anything personal (a learning note, a log line) goes in your own hook, which never ships in this repo;
+call the default from it to keep both. A failing hook prints its output and exits non-zero, but the frontmatter change stays either way. No hook
 configured is not an error.
