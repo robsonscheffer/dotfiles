@@ -120,11 +120,11 @@ main { overflow-wrap: break-word; }
 .toc a { color: var(--muted); text-decoration: none; }
 .toc a:hover { color: var(--accent); }
 /* Reading width: a text column of about 70 characters. Wide content (tables, code, diagrams,
-   callouts, tiles, cards, tabs, risks) opts back out to the full width main has available. */
+   callouts, question steps, tiles, cards, tabs, risks) opts back out to the full width main has available. */
 main :is(p, ul, ol, dl, blockquote, .doc-summary, .decide-owner, h1, h2, h3, h4, h5, h6) {
   max-width: 70ch;
 }
-main :is(table, pre, figure.code-block, .callout, .callout *, .tiles, .flow-diagram, .cards, .tab-panels, .risks) {
+main :is(table, pre, figure.code-block, .callout, .callout *, .steps, .steps *, .tiles, .flow-diagram, .cards, .tab-panels, .risks) {
   max-width: none;
 }
 /* One breakpoint for the whole layout: side-col (rail + TOC) and the left-nav both react to it,
@@ -316,7 +316,7 @@ h4:hover .anchor, h5:hover .anchor, h6:hover .anchor, .anchor:focus { opacity: 1
 .flow-diagram { max-width: 100%; height: auto; margin: 1rem 0; }
 .steps { padding-left: 0; list-style: none; }
 .step { display: flex; align-items: baseline; gap: 0.75rem; margin: 0.75rem 0; }
-.step-body { min-width: 0; overflow-wrap: anywhere; }
+.step-body { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .step-number {
   flex: 0 0 auto;
   width: 1.6rem;
@@ -415,10 +415,10 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
   border-radius: 6px 6px 0 0;
   overflow-wrap: anywhere;
 }
-figure.diff pre { margin: 0; border: 1px solid var(--border); border-radius: 0 0 6px 6px; padding-left: 0; }
+figure.diff pre { margin: 0; border: 1px solid var(--border); border-radius: 0 0 6px 6px; padding-left: 0; padding-right: 0; }
 figure.diff:not(:has(.diff-file)) pre { border-radius: 6px; }
-figure.diff pre code { display: block; min-width: 100%; width: max-content; padding-right: 1rem; }
-.diff code > span { display: block; min-height: 1.45em; white-space: pre; }
+figure.diff pre code { display: block; min-width: 100%; width: max-content; }
+.diff code > span { display: block; min-height: 1.45em; white-space: pre; padding-right: 1rem; }
 .diff .diff-add { color: var(--badge-low-text); background: var(--diff-add-bg); }
 .diff .diff-del { color: var(--badge-high-text); background: var(--diff-del-bg); }
 .diff .diff-ctx { color: var(--fg); }
