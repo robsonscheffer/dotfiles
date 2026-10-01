@@ -91,17 +91,17 @@ MCP claims, and any `supports` a person must give, go to the user: they run `mat
 
 ## PR walks
 
-`mate-doc walk` fetches a PR and composes a review doc from your analysis. `references/walk.md` has the input formats, anchors and refs. After composing, run `mate-doc lint` and `mate-doc verify <walk-dir>`, then `mate-doc open <walk-dir>` without waiting for the gate to pass. Report the gate's summary line with the URL.
+A walk is a review doc you read instead of the GitHub diff. `/rs-walk` points here.
 
-```
-mate-doc walk <pr-url> --fetch-only --out <dir>
-mate-doc walk <pr-url> --inputs <dir> --out <walk-dir>
-```
-
-Once the human has read the walk, `mate-doc walk submit <walk-dir> --approve|--request-changes|--comment` posts
-the review to GitHub, and `mate-doc walk close <walk-dir> --verdict <v>` records the outcome. Submit always
-dry-runs first: without `--yes` it prints the exact body and `gh` command and posts nothing. Show the human that
-output and get a yes before re-running with `--yes` - posting a review is outward-facing.
+1. Fetch: `mate-doc walk <pr-url> --fetch-only --out <dir>`.
+2. Ticket: take a key from the PR title, else a labeled `ticket:`/`jira:` field in `body.txt`. Fetch it with whatever ticket tool the session has. No key or no access: skip Agent 5.
+3. Context, optional: search the user's own notes for the title words and changed file names; write hits to `<dir>/context.json`.
+4. Dispatch the agents in `references/walk-agents.md`, in parallel, with its isolation rule. JSON shapes: `references/walk.md`.
+5. Compose: `mate-doc walk <pr-url> --inputs <dir> --out <walk-dir>`. `<walk-dir>` sits next to the user's earlier walks; ask once if there are none. A compose warning about an anchor or ref means that agent picked a line not in the diff: send it back with the warning.
+6. `mate-doc lint <walk-dir>`, fix errors at the source; then `mate-doc verify <walk-dir>`.
+7. `mate-doc open <walk-dir>` without waiting for the gate. Send the URL and the one summary line from `mate-doc gate`. Ask nothing else yet.
+8. After the user has read it: ask Approve, Request changes, Comment only, or Skip. Run `mate-doc walk submit <walk-dir> --approve|--request-changes|--comment --notes-file <notes>` without `--yes`, show the dry run, and add `--yes` only after an explicit yes: posting a review is outward-facing. Notes come from the page's **Download notes JSON** control.
+9. `mate-doc walk close <walk-dir> --verdict <v> --notes-file <notes>` records the outcome and runs the user's `walk.close_hook`, if set.
 
 Code refs cite the PR's head commit SHA (`<repo>@<sha>:<file>:<line>`), so `mate-doc audit` can resolve them with `git` or `gh`, and carry a `ttl_days` since the head can move.
 
