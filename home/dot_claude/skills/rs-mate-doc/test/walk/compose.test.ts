@@ -318,6 +318,13 @@ describe("composeWalk", () => {
     }
   });
 
+  test("a related note stored as a folder's index.md is named after its folder", () => {
+    const inputs = { ...WALK_INPUTS, context: { mode: "qmd" as const, items: ["walks/pr-42/index.md"] } };
+    const md = composeWalk(FETCHED_PR, inputs, { now: NOW, author: AUTHOR }).files["index.md"]!;
+    expect(md).toContain("[[pr-42]]");
+    expect(md).not.toContain("[[index]]");
+  });
+
   test("omitting context renders no related-notes section", () => {
     const inputs = { ...WALK_INPUTS, context: undefined };
     const composed = composeWalk(FETCHED_PR, inputs, { now: NOW, author: AUTHOR });

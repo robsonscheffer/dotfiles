@@ -39,8 +39,10 @@ async function resolveWiki(folders: RememberedFolder[], target: string): Promise
     const files = await walk(folder.path);
     for (const file of files) {
       const base = file.slice(folder.path.length + 1).replace(/\.md$/, "");
-      const leaf = base.split(sep).pop() ?? base;
-      if (leaf.toLowerCase() === wanted || base.toLowerCase() === wanted) {
+      const segments = base.split(sep);
+      const leaf = segments.pop() ?? base;
+      const folderNote = leaf === "index" ? segments.pop()?.toLowerCase() : undefined;
+      if (leaf.toLowerCase() === wanted || base.toLowerCase() === wanted || folderNote === wanted) {
         return hrefFor(folder, file);
       }
     }

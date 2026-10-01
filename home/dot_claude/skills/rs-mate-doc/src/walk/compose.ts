@@ -201,8 +201,9 @@ function buildAcClaim(pr: FetchedPr, ac: AcceptanceCriterion, build: ClaimBuild)
 // Strips a context item's path down to the bare note name (no folder, no extension) so the
 // rendered link never leaks the vault layout the brief's lint rule already forbids in prose.
 function noteNameFromPath(path: string): string {
-  const base = path.split("/").pop() ?? path;
-  return base.replace(/\.[^./]+$/, "");
+  const parts = path.split("/").filter(Boolean);
+  const leaf = (parts.pop() ?? path).replace(/\.[^./]+$/, "");
+  return leaf === "index" && parts.length > 0 ? parts.pop()! : leaf;
 }
 
 // "Related notes" - the context step's qmd/grep hits, rendered as wikilinks per the brief. Not a
