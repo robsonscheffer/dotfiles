@@ -4,6 +4,10 @@ Full task, schema, and rules for each of Step 4's agents. SKILL.md's Step 4 list
 input each agent gets and the isolation rule governing `RAW_COMMENTS`/`TICKET_DATA` — read that
 first. This file is the content of the dispatch itself.
 
+On the mate-doc path, the JSON schemas live in `rs-mate-doc/references/walk.md` and win over the
+schemas below wherever they differ (`anchors`, `refs`, a factual `framing`, reading directions in
+`lead`). Keep the writing guidance from this file.
+
 ## Agent 1 — Story + reading map
 
 **Task:** Tell the story of this PR and decide the reading order.

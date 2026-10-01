@@ -275,8 +275,9 @@ end on a real PR. Say that plainly to the user before running it.
 1. Fetch the raw PR: `mate-doc walk <url> --fetch-only --out <dir>`. Writes `meta.json`,
    `body.txt`, `diff.patch`, `files.txt`, `comments.json` into `<dir>`.
 2. Dispatch the same agents Step 4 already defines, with the same inputs and the same isolation
-   rule, per the task/schema/rules in `AGENT-PROMPTS.md`. Don't copy or restate those prompts
-   here. Write each agent's JSON into `<dir>` under the filenames `mate-doc walk --inputs` reads:
+   rule. Writing guidance comes from `AGENT-PROMPTS.md`; every JSON schema comes from
+   `~/.claude/skills/rs-mate-doc/references/walk.md`, and it wins where the two differ. Pass both
+   paths in each agent's prompt. Don't copy or restate either file here. Write each agent's JSON into `<dir>` under the filenames `mate-doc walk --inputs` reads:
    `story.json`, `questions.json`, `risks.json`, `judgment.json`, and, when they ran,
    `ticket-fit.json` / `comment-triage.json` / `context.json`.
 3. Compose the walk: `mate-doc walk <url> --inputs <dir> --out <walk-dir>`.
