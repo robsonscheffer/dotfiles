@@ -54,7 +54,7 @@ describe("layout CSS", () => {
     expect(cssBlock(THEME_CSS, ".risk-field {")).toContain("min-width: 0");
     expect(cssBlock(THEME_CSS, ".claim-source {")).toContain("min-width: 0");
     expect(cssBlock(THEME_CSS, ".badge {")).toContain("white-space: nowrap");
-    expect(cssBlock(THEME_CSS, ".layout {")).toContain("max-width: 1360px");
+    expect(cssBlock(THEME_CSS, ".layout {")).not.toContain("max-width");
   });
 
   test("the hidden attribute always wins over component display rules", () => {

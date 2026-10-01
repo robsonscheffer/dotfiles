@@ -110,7 +110,7 @@ body {
 main, .left-nav { padding: 1.5rem; }
 .toc { padding: 0 0.25rem; }
 main { overflow-wrap: break-word; }
-.layout { display: flex; align-items: flex-start; gap: 1rem; max-width: 1360px; margin-inline: auto; }
+.layout { display: flex; align-items: flex-start; gap: 1rem; }
 .layout main { flex: 1 1 auto; min-width: 0; }
 .side-col { flex: 0 0 260px; position: sticky; top: 0; align-self: flex-start; display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem 1.5rem 1.5rem 0; max-height: 100vh; overflow-y: auto; }
 .side-col .theme-toggle { position: static; align-self: flex-end; }
