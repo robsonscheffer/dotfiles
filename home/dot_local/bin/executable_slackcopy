@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+# slackcopy: put rich text on the macOS clipboard (public.html + plain text)
+# so pasting into Slack desktop keeps bold, bullets, and clickable links.
+#
+# Usage: slackcopy [--html] [file]    (reads stdin when no file is given)
+#   --html  input is raw HTML instead of markdown
+[[ -n "${DEBUG:-}" ]] && set -o xtrace
+set -o errexit
+set -o errtrace
+set -o nounset
+set -o pipefail
+
+tmp=""
+
+cleanup() {
+  if [[ -n "${tmp}" ]]; then rm -rf "${tmp}"; fi
+}
+
+usage() {
+  printf 'Usage: slackcopy [--html] [file]\n' >&2
+}
+
+# Minimal markdown to HTML: headings (as bold paragraphs), bold, inline code,
+# bullet lists, [text](url) links, paragraphs.
+markdown_to_html() {
+  awk '
+    function esc(s) {
+      gsub(/&/, "\\&amp;", s)
+      gsub(/</, "\\&lt;", s)
+      gsub(/>/, "\\&gt;", s)
+      return s
+    }
+    function inline(s) {
+      s = esc(s)
+      while (match(s, /`[^`]+`/)) {
+        s = substr(s, 1, RSTART - 1) "<code>" substr(s, RSTART + 1, RLENGTH - 2) "</code>" substr(s, RSTART + RLENGTH)
+      }
+      while (match(s, /\*\*[^*]+\*\*/)) {
+        s = substr(s, 1, RSTART - 1) "<strong>" substr(s, RSTART + 2, RLENGTH - 4) "</strong>" substr(s, RSTART + RLENGTH)
+      }
+      while ((o = index(s, "[")) > 0) {
+        rest = substr(s, o + 1)
+        m = index(rest, "](")
+        if (m == 0) break
+        tail = substr(rest, m + 2)
+        e = index(tail, ")")
+        if (e == 0) break
+        s = substr(s, 1, o - 1) "<a href=\"" substr(tail, 1, e - 1) "\">" substr(rest, 1, m - 1) "</a>" substr(tail, e + 1)
+      }
+      return s
+    }
+    function close_list() {
+      if (in_list) { print "</ul>"; in_list = 0 }
+    }
+    BEGIN { in_list = 0 }
+    /^[[:space:]]*$/ { close_list(); next }
+    /^#+[[:space:]]+/ {
+      close_list()
+      sub(/^#+[[:space:]]+/, "")
+      print "<p><strong>" inline($0) "</strong></p>"
+      next
+    }
+    /^[[:space:]]*[-*][[:space:]]+/ {
+      if (!in_list) { print "<ul>"; in_list = 1 }
+      sub(/^[[:space:]]*[-*][[:space:]]+/, "")
+      print "<li>" inline($0) "</li>"
+      next
+    }
+    { close_list(); print "<p>" inline($0) "</p>" }
+    END { close_list() }
+  '
+}
+
+html_to_text() {
+  sed \
+    -e 's/<[^>]*>//g' \
+    -e 's/&nbsp;/ /g' \
+    -e 's/&lt;/</g' \
+    -e 's/&gt;/>/g' \
+    -e 's/&amp;/\&/g' |
+    grep --invert-match --regexp='^[[:space:]]*$' || true
+}
+
+write_pasteboard() {
+  local html_file="$1" text_file="$2"
+  osascript -l JavaScript - "${html_file}" "${text_file}" <<'JXA'
+ObjC.import('AppKit');
+ObjC.import('Foundation');
+function read(path) {
+  return $.NSString.stringWithContentsOfFileEncodingError(path, $.NSUTF8StringEncoding, $());
+}
+function run(argv) {
+  var pb = $.NSPasteboard.generalPasteboard;
+  pb.clearContents;
+  var okHtml = pb.setStringForType(read(argv[0]), 'public.html');
+  var okText = pb.setStringForType(read(argv[1]), 'public.utf8-plain-text');
+  if (!okHtml || !okText) { throw new Error('pasteboard write failed'); }
+}
+JXA
+}
+
+main() {
+  local is_html=0 input=""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --html) is_html=1 ;;
+      --help | -h) usage; exit 0 ;;
+      -*) usage; exit 2 ;;
+      *) input="$1" ;;
+    esac
+    shift
+  done
+
+  tmp="$(mktemp -d)"
+  trap cleanup EXIT
+
+  if [[ -n "${input}" ]]; then
+    cat -- "${input}" >"${tmp}/in"
+  else
+    cat >"${tmp}/in"
+  fi
+
+  if ((is_html)); then
+    cp "${tmp}/in" "${tmp}/body.html"
+    html_to_text <"${tmp}/in" >"${tmp}/plain.txt"
+  else
+    markdown_to_html <"${tmp}/in" >"${tmp}/body.html"
+    cp "${tmp}/in" "${tmp}/plain.txt"
+  fi
+
+  { printf '<meta charset="utf-8">\n'; cat "${tmp}/body.html"; } >"${tmp}/final.html"
+  write_pasteboard "${tmp}/final.html" "${tmp}/plain.txt"
+  printf 'slackcopy: copied (public.html + plain text)\n' >&2
+}
+
+main "$@"
