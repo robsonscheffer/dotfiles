@@ -32,7 +32,7 @@ Every evidence block has `kind` and `needs` (the capability used to re-check it:
 ```yaml
 evidence:
   kind: code
-  ref: robsonscheffer/dotfiles@main:home/dot_config/mise/config.toml:3
+  ref: acme/widgets@main:config/mise.toml:3
   excerpt: 'bun = "1.4.2"'
   needs: gh
 ```
@@ -40,7 +40,7 @@ evidence:
 - `ref` is `owner/repo@<rev>:<path>:<line>`. The repo is always explicit; audit never guesses from the current directory.
 - The check passes when `excerpt` appears within 3 lines of `<line>` at `<rev>`.
 - Audit uses a local checkout when `~/.config/mate-doc/config.yaml` maps the repo under `repos:`, otherwise `gh api`. `needs: gh` is the safe default for anything on GitHub.
-- Read the file at that revision before writing the claim and copy the excerpt exactly, including quotes. Prefer `git show <rev>:<path>` from inside a local checkout (run `git log -1 <rev>` first to confirm the rev exists there). Without a checkout, `gh api repos/<owner>/<repo>/contents/<path>?ref=<rev> --jq .content | base64 -d` works but asks Robson first: the skill does not pre-approve `gh api`, because the same command can write.
+- Read the file at that revision before writing the claim and copy the excerpt exactly, including quotes. Prefer `git show <rev>:<path>` from inside a local checkout (run `git log -1 <rev>` first to confirm the rev exists there). Without a checkout, `gh api repos/<owner>/<repo>/contents/<path>?ref=<rev> --jq .content | base64 -d` works but asks the user first: the skill does not pre-approve `gh api`, because the same command can write.
 
 ### link
 
@@ -111,7 +111,7 @@ Match it to how fast the fact can change:
 | `no-author` | set a real `author:` in the ledger (`mate-doc new` fills it) |
 | `verdict-not-independent` | the author or an agent gave the verdict: remove it and run `verify` |
 | `verdict-stale` | the claim or evidence changed after the verdict: re-run `verify` |
-| `mcp-needs-human` | Robson runs `mate-doc verdict ... --supports` at his terminal |
+| `mcp-needs-human` | The user runs `mate-doc verdict ... --supports` at their terminal |
 | `stale` | re-read the source, update excerpt or line, re-run `verify` |
 | `check-failed` | the excerpt moved or changed: find it again, or the fact is no longer true |
 | `capability-missing` | the machine cannot run that check; pick another evidence kind or downgrade |

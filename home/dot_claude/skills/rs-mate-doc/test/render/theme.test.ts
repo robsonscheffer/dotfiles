@@ -45,7 +45,42 @@ function varValue(block: string, name: string): string {
 describe("layout CSS", () => {
   test("the text column caps at 70ch, and wide content opts back out", () => {
     expect(THEME_CSS).toMatch(/max-width:\s*70ch/);
-    expect(THEME_CSS).toMatch(/table[\s\S]{0,120}max-width:\s*none/);
+    expect(THEME_CSS).toMatch(/table[\s\S]{0,200}max-width:\s*none/);
+    expect(THEME_CSS).toMatch(/\.callout, \.callout \*[^{]*\{\s*max-width:\s*none/);
+    expect(THEME_CSS).toMatch(/\.steps, \.steps \*[^{]*\{\s*max-width:\s*none/);
+  });
+
+  test("diff line tints run to the right edge of the diff box", () => {
+    expect(cssBlock(THEME_CSS, "figure.diff pre {")).toContain("padding-right: 0");
+    expect(cssBlock(THEME_CSS, "figure.diff pre code {")).not.toContain("padding-right");
+    expect(cssBlock(THEME_CSS, ".diff code > span {")).toContain("padding-right: 1rem");
+  });
+
+  test("the narrow layout stretches main, long refs and badges do not force width", () => {
+    expect(cssBlock(THEME_CSS, "@media (max-width: 900px)")).toMatch(/\.layout \{[^}]*align-items: stretch/);
+    expect(cssBlock(THEME_CSS, "@media (max-width: 900px)")).toContain("main table { display: block; overflow-x: auto; }");
+    expect(cssBlock(THEME_CSS, "\n.risk-field {")).toContain("min-width: 0");
+    expect(cssBlock(THEME_CSS, "\n.risk-field-label {")).toContain("white-space: nowrap");
+    expect(cssBlock(THEME_CSS, "@media (max-width: 900px)")).toContain(".risk-card .risk-field { flex-direction: column;");
+    expect(cssBlock(THEME_CSS, ".claim-source {")).toContain("min-width: 0");
+    expect(cssBlock(THEME_CSS, ".badge {")).toContain("white-space: nowrap");
+    expect(cssBlock(THEME_CSS, ".layout {")).not.toContain("max-width");
+  });
+
+  test("the hidden attribute always wins over component display rules", () => {
+    expect(THEME_CSS).toMatch(/\[hidden\]\s*\{\s*display:\s*none\s*!important/);
+  });
+
+  test("the control border token has a value in every theme block and passes 3:1", () => {
+    expect(THEME_CSS.match(/--control-border:/g)?.length).toBe(4);
+    expect(contrast(varValue(cssBlock(THEME_CSS, ":root"), "--control-border"), "#ffffff")).toBeGreaterThanOrEqual(3);
+    expect(contrast(varValue(cssBlock(THEME_CSS, 'html[data-theme="dark"]'), "--control-border"), "#14161a")).toBeGreaterThanOrEqual(3);
+  });
+
+  test("light code-string and code-comment pass AA on the code background", () => {
+    const light = cssBlock(THEME_CSS, ":root");
+    expect(contrast(varValue(light, "--code-string"), "#f4f5f7")).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(varValue(light, "--code-comment"), "#f4f5f7")).toBeGreaterThanOrEqual(4.5);
   });
 
   test("exactly one narrow breakpoint governs the whole layout", () => {

@@ -25,20 +25,20 @@ function extractFileLines(diff: string, filepath: string): string[] {
 }
 
 // Renders one file's diff as a fenced code block with the `diff` info string and a
-// `title=<path>` meta, capped at `maxLines` like render-diff.sh's default of 80.
+// `file=<path>` meta, capped at `maxLines` like render-diff.sh's default of 80.
 export function renderDiffFence(filepath: string, diff: string, maxLines = 80): string {
   const extracted = extractFileLines(diff, filepath);
   if (extracted.length === 0) {
-    return ["```diff title=" + filepath, `No diff found for ${filepath}.`, "```"].join("\n");
+    return ["```diff file=" + filepath, `No diff found for ${filepath}.`, "```"].join("\n");
   }
   let lines = extracted;
   let note = "";
   if (lines.length > maxLines) {
     const remaining = lines.length - maxLines;
     lines = lines.slice(0, maxLines);
-    note = `\n[... ${remaining} more lines not shown]`;
+    note = `\n\n_${remaining} more lines not shown._`;
   }
-  return ["```diff title=" + filepath, lines.join("\n") + note, "```"].join("\n");
+  return ["```diff file=" + filepath, lines.join("\n"), "```"].join("\n") + note;
 }
 
 // Which image (commit) an excerpt's line number applies to: "added" lines only exist at the

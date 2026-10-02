@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { exportNotesJson, exportNotesMarkdown, noteStorageKey } from "../../src/render/notes.ts";
+import { renderNotesScript, renderNotesToolbar, renderNoteControl, exportNotesJson, exportNotesMarkdown, noteStorageKey } from "../../src/render/notes.ts";
 
 describe("noteStorageKey", () => {
   test("builds the mate-doc-note key from page path and slug", () => {
@@ -32,5 +32,23 @@ describe("exportNotesMarkdown", () => {
 
   test("no notes at all yields an empty string", () => {
     expect(exportNotesMarkdown([{ slug: "a", title: "A" }], {})).toBe("");
+  });
+});
+
+describe("notes markup", () => {
+  test("controls and toolbar start hidden, and the toolbar buttons start disabled with a count", () => {
+    expect(renderNoteControl("a", "A")).toContain('data-note-slug="a" hidden');
+    expect(renderNoteControl("a", "A")).toContain('aria-label="Notes for A" hidden');
+    const toolbar = renderNotesToolbar();
+    expect(toolbar).toContain('class="notes-toolbar" hidden');
+    expect(toolbar).toContain("Notes (0)");
+    expect(toolbar.match(/disabled/g)?.length).toBe(2);
+  });
+
+  test("the script updates the count, enables the buttons, and confirms a copy", () => {
+    const script = renderNotesScript("p.md", [{ slug: "a", title: "A" }]);
+    expect(script).toContain("'Notes (' + n + ')'");
+    expect(script).toContain("copyBtn.disabled = n === 0");
+    expect(script).toContain("'Copied'");
   });
 });

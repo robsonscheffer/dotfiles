@@ -64,7 +64,7 @@ describe("composeWalk", () => {
     }
   });
 
-  test("comment triage never appears before the judgment, and the judgment sits inside a <details>", () => {
+  test("comment triage never appears before the judgment, and the judgment is sealed", () => {
     const composed = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW, author: AUTHOR });
     const md = composed.files["index.md"]!;
     const triageIdx = md.indexOf("## Prior discussion");
@@ -72,8 +72,8 @@ describe("composeWalk", () => {
     expect(triageIdx).toBeGreaterThan(-1);
     expect(judgmentIdx).toBeGreaterThan(triageIdx);
     const judgmentSection = md.slice(judgmentIdx);
-    expect(judgmentSection).toContain("<details>");
-    expect(judgmentSection.indexOf("<details>")).toBeLessThan(judgmentSection.indexOf("Overall"));
+    expect(judgmentSection).toContain(`:::sealed ${WALK_INPUTS.judgment.overall} strong solid cautious concern`);
+    expect(judgmentSection.indexOf(":::sealed")).toBeLessThan(judgmentSection.indexOf("Overall"));
   });
 
   test("the composed index.md parses with zero parse errors", () => {
@@ -203,8 +203,16 @@ describe("composeWalk", () => {
     expect(partial.status).toBe("not_verified");
     expect(partial.owner).toBe("sam");
     expect(claims.find((c) => c.claim === "Shared layer stays backward-compatible for other consumers")?.status).toBe("not_verified");
+    expect(met.role).toBe("criterion");
+    expect(partial.role).toBe("criterion");
     // The ticket-fit table still shows the agent's own evidence prose.
     expect(composed.files["index.md"]).toContain("index.tsx no longer creates a store");
+  });
+
+  test("ticket-fit statuses render as badges", () => {
+    const md = composeWalk(FETCHED_PR, WALK_INPUTS, { now: NOW, author: AUTHOR }).files["index.md"]!;
+    expect(md).toContain(":badge[Met]{tone=good}");
+    expect(md).toContain(":badge[Partially Met]{tone=warn}");
   });
 
   test("Met with refs that do not match is not_verified and warns", () => {
@@ -314,6 +322,13 @@ describe("composeWalk", () => {
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
+  });
+
+  test("a related note stored as a folder's index.md is named after its folder", () => {
+    const inputs = { ...WALK_INPUTS, context: { mode: "qmd" as const, items: ["walks/pr-42/index.md"] } };
+    const md = composeWalk(FETCHED_PR, inputs, { now: NOW, author: AUTHOR }).files["index.md"]!;
+    expect(md).toContain("[[pr-42]]");
+    expect(md).not.toContain("[[index]]");
   });
 
   test("omitting context renders no related-notes section", () => {

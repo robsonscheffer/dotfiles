@@ -77,6 +77,9 @@ describe("page shell", () => {
     expect(html).toContain('href="#sub"');
     expect(html).toContain('href="#next"');
     expect(html).toContain('<h2 id="intro">Intro<a class="anchor" href="#intro"');
+    expect(html).toContain("<details open><summary>Contents</summary>");
+    expect(html).toContain("(max-width: 900px)");
+    expect(html).not.toContain("mate-doc-claims");
   });
 
   test("folder mode renders left nav, breadcrumbs, and prev/next", () => {
@@ -104,12 +107,13 @@ describe("page shell", () => {
       [para(text("Some sentence."), { type: "claimRef", id: "C99", pos: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } } })],
       { title: "Doc" },
     );
+    doc.claimRefs = [{ type: "claimRef", id: "C99", pos: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } } }];
     const html = render(doc, makeLedger([]), { theme: "auto" });
     expect(html).toContain("claim-missing");
-    expect(html).toContain("Missing claim C99");
+    expect(html).toContain("C99 is not in the ledger");
   });
 
-  test("claimRef renders its evidence line below the sentence", () => {
+  test("claimRef keeps the paragraph clean and puts its evidence in the Claims list", () => {
     const claim = makeClaim({
       id: "C7",
       claim: "Checkout clicks take their label from the nearest attribute.",
@@ -121,8 +125,11 @@ describe("page shell", () => {
     const doc = makeDoc([para(text("Labels come from the attribute."), { type: "claimRef", id: "C7", pos: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } } })], {
       title: "Doc",
     });
+    doc.claimRefs = [{ type: "claimRef", id: "C7", pos: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } } }];
     const html = render(doc, makeLedger([claim]), { theme: "auto" });
-    expect(html).toContain("claim-evidence");
+    const [main, list] = html.slice(html.indexOf("<main>")).split('id="mate-doc-claims"');
+    expect(main).not.toContain("claim-evidence");
+    expect(list).toContain("claim-evidence");
     expect(html).toContain("acme/web@main:src/label.ts:42");
     expect(html).toContain("2026-09-25");
     expect(html).toContain("verdict-supports");
@@ -147,6 +154,32 @@ describe("rail placement", () => {
     const mainMatch = /<main>(.*)<\/main>/s.exec(html);
     expect(mainMatch).not.toBeNull();
     expect(mainMatch![1]).not.toContain('class="rail"');
+  });
+
+  test("the theme button is the first child of the side column, or stays top-level without one", () => {
+    const withRail = render(makeDoc([directive("rail", { raw: ["Author: Sam"] })], { title: "Doc" }), null, { theme: "auto" });
+    expect(withRail).toContain('<aside class="side-col"><button type="button" class="theme-toggle"');
+    expect(withRail.split('class="theme-toggle"').length - 1).toBe(1);
+    const without = render(makeDoc([para(text("Plain."))], { title: "Doc" }), null, { theme: "auto" });
+    expect(without).toContain('<body class="no-nav">\n<button type="button" class="theme-toggle"');
+  });
+
+  test("the TOC links to the Claims list when one renders", () => {
+    const ref = { type: "claimRef" as const, id: "C1" as const, pos: { start: { line: 1, column: 1 }, end: { line: 1, column: 1 } } };
+    const doc = makeDoc([heading(2, "intro", "Intro"), para(text("Text."), ref)], { title: "Doc" }, [
+      { level: 2, id: "intro", text: "Intro", pos: ref.pos },
+    ]);
+    doc.claimRefs = [ref];
+    const html = render(doc, makeLedger([]), { theme: "auto" });
+    expect(html).toContain('<li><a href="#mate-doc-claims">Claims</a></li>');
+  });
+
+  test("the notes toolbar renders in the side column, not in the header", () => {
+    const doc = makeDoc([directive("rail", { raw: ["Author: Sam"] }), para(text("Body."))], { title: "Doc", extra: { notes: true } });
+    const html = render(doc, null, { theme: "auto" });
+    const header = /<header class="doc-header">.*?<\/header>/s.exec(html)![0];
+    expect(header).not.toContain("notes-toolbar");
+    expect(html.slice(html.indexOf('<aside class="side-col">'))).toContain('class="notes-toolbar"');
   });
 
   test("no rail: no side-col wrapper appears without a TOC either", () => {

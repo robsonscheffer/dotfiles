@@ -4,12 +4,11 @@
 // ledger instead of a standalone HTML document, and rendered later by mate-doc's own renderer.
 import type { Claim, ClaimId } from "../types.ts";
 import { findAnchorLine, renderDiffFence } from "./diff.ts";
-import type { AcceptanceCriterion, ComposedWalk, ContextData, FetchedPr, JudgmentData, QuestionItem, RiskItem, StoryData, StoryGroup, TicketFit, WalkAnchor, WalkInputs } from "./types.ts";
+import type { AcceptanceCriterion, AcStatus, ComposedWalk, ContextData, FetchedPr, JudgmentData, QuestionItem, RiskItem, StoryData, StoryGroup, TicketFit, WalkAnchor, WalkInputs } from "./types.ts";
 
 const MAX_DIFF_LINES = 80;
 const CODE_REF_TTL_DAYS = 14;
 const TICKET_TAG_RE = /[A-Z]+-\d+/g;
-const BOLD_RE = /\*\*(.+?)\*\*/g;
 
 interface ClaimBuild {
   claims: Claim[];
@@ -31,12 +30,6 @@ function escapeHtmlText(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-// Raw <details> content is never re-parsed by markdown-it, so **bold** has to be converted by
-// hand here - escape first (same order as rs-walk's render_prose), then let the surviving
-// ** markers become <strong>.
-function renderProseHtml(s: string): string {
-  return escapeHtmlText(s).replace(BOLD_RE, "<strong>$1</strong>");
-}
 
 function escapeTableCell(s: string): string {
   return s.replace(/\|/g, "\\|").replace(/\n/g, " ");
@@ -47,6 +40,10 @@ function extractTicketTags(title: string, ticketKey: string | undefined): string
   const tags = Array.from(new Set(found));
   if (ticketKey && !tags.includes(ticketKey)) tags.push(ticketKey);
   return tags;
+}
+
+function stripEmphasis(text: string): string {
+  return text.replace(/\*\*|__|`/g, "");
 }
 
 // `kind: walk`, `pr`, and `verdict` are the home index's fields (src/index/collect.ts): kind
@@ -60,7 +57,7 @@ function renderFrontmatter(pr: FetchedPr, inputs: WalkInputs, updated: string): 
     "kind: walk",
     "status: draft",
     "notes: true",
-    `summary: ${yamlString(inputs.story.lead ?? pr.meta.title)}`,
+    `summary: ${yamlString(stripEmphasis(inputs.story.lead ?? pr.meta.title))}`,
   ];
   if (tags.length > 0) lines.push(`tags: [${tags.map(yamlString).join(", ")}]`);
   lines.push(`sources: [${yamlString(pr.meta.url)}]`);
@@ -71,15 +68,18 @@ function renderFrontmatter(pr: FetchedPr, inputs: WalkInputs, updated: string): 
   return lines.join("\n");
 }
 
-// The sticky rail panel (WRN lane, render/directives.ts's :::rail): a compact PR summary that
-// stays visible while scrolling, separate from the fuller header prose below it.
+// The sticky rail panel (render/directives.ts's :::rail): a compact PR summary that stays
+// visible while scrolling.
 function renderRailSection(pr: FetchedPr, inputs: WalkInputs, ticketFit: TicketFit | undefined): string {
   const m = pr.meta;
   const lines = [
     ":::rail",
     `Author: ${m.author.login}`,
     `PR: [#${m.number}](${m.url})`,
+    `Repo: ${pr.repo}`,
     `Branch: ${m.headRefName}`,
+    `Base: ${m.baseRefName}`,
+    `Changes: +${m.additions} / -${m.deletions}, ${m.changedFiles} files`,
   ];
   if (ticketFit) lines.push(`Ticket: ${ticketFit.ticket_key}`);
   lines.push(`Comments: ${inputs.commentTriage?.length ?? 0}`);
@@ -88,22 +88,8 @@ function renderRailSection(pr: FetchedPr, inputs: WalkInputs, ticketFit: TicketF
   return lines.join("\n");
 }
 
-function renderHeader(pr: FetchedPr): string {
-  const m = pr.meta;
-  return [
-    `# #${m.number}: ${m.title}`,
-    "",
-    `Repo: ${pr.repo}`,
-    `Author: ${m.author.login}`,
-    `Branch: ${m.headRefName} into ${m.baseRefName}`,
-    `Changes: +${m.additions} / -${m.deletions} across ${m.changedFiles} files`,
-    `[View on GitHub](${m.url})`,
-  ].join("\n");
-}
-
 function renderStorySection(story: StoryData): string {
   const lines = ["## The story", ""];
-  if (story.lead) lines.push(`**${story.lead}**`, "");
   for (const beat of story.story) lines.push(beat, "");
   return lines.join("\n").trimEnd();
 }
@@ -174,7 +160,7 @@ function renderTicketFitSection(pr: FetchedPr, ticketFit: TicketFit | undefined,
     lines.push("| Criterion | Status | Evidence |", "|---|---|---|");
     for (const ac of ticketFit.acceptance_criteria) {
       const id = buildAcClaim(pr, ac, build);
-      lines.push(`| ${escapeTableCell(ac.criterion)} {${id}} | ${ac.status} | ${escapeTableCell(ac.evidence)} |`);
+      lines.push(`| ${escapeTableCell(ac.criterion)} {${id}} | ${statusBadge(ac.status)} | ${escapeTableCell(ac.evidence)} |`);
     }
     lines.push("");
   } else {
@@ -185,11 +171,18 @@ function renderTicketFitSection(pr: FetchedPr, ticketFit: TicketFit | undefined,
   return lines.join("\n").trimEnd();
 }
 
+const STATUS_TONES: Record<AcStatus, string> = { Met: "good", "Partially Met": "warn", "Not Met": "bad", "Unplanned Deviation": "warn" };
+
+function statusBadge(status: AcStatus): string {
+  return `:badge[${status}]{tone=${STATUS_TONES[status] ?? "neutral"}}`;
+}
+
 function buildAcClaim(pr: FetchedPr, ac: AcceptanceCriterion, build: ClaimBuild): ClaimId {
   const id = nextClaimId(build);
   const text = ac.criterion;
   const refs = ac.refs ?? [];
-  const claim: Claim = ac.status === "Met" ? buildProposedClaim(pr, id, text, refs, `criterion "${ac.criterion}"`, "ref", build.warnings) : { id, claim: text, status: "not_verified", owner: pr.meta.author.login };
+  const base: Claim = ac.status === "Met" ? buildProposedClaim(pr, id, text, refs, `criterion "${ac.criterion}"`, "ref", build.warnings) : { id, claim: text, status: "not_verified", owner: pr.meta.author.login };
+  const claim: Claim = { ...base, role: "criterion" };
   if (ac.status === "Met" && refs.length > 0 && claim.status === "not_verified") {
     build.warnings.push(`criterion "${ac.criterion}": no ref matched the diff; claim ${id} is not_verified`);
   }
@@ -200,8 +193,9 @@ function buildAcClaim(pr: FetchedPr, ac: AcceptanceCriterion, build: ClaimBuild)
 // Strips a context item's path down to the bare note name (no folder, no extension) so the
 // rendered link never leaks the vault layout the brief's lint rule already forbids in prose.
 function noteNameFromPath(path: string): string {
-  const base = path.split("/").pop() ?? path;
-  return base.replace(/\.[^./]+$/, "");
+  const parts = path.split("/").filter(Boolean);
+  const leaf = (parts.pop() ?? path).replace(/\.[^./]+$/, "");
+  return leaf === "index" && parts.length > 0 ? parts.pop()! : leaf;
 }
 
 // "Related notes" - the context step's qmd/grep hits, rendered as wikilinks per the brief. Not a
@@ -268,27 +262,28 @@ function renderCommentTriageSection(entries: WalkInputs["commentTriage"]): strin
   return lines.join("\n");
 }
 
-// The hidden judgment: a <details> reveal at the end, per the brief. No verdicts are recorded
-// here - this only renders whatever the judgment agent already decided; the ledger carries none
-// of it, since a verdict comes from the agent loop later (mate-doc verdict), not from composing
-// the walk.
+// The judgment stays sealed until the reader picks their own verdict, per the brief: their read
+// first, then the AI's. The ledger carries none of it; it is an opinion, not a claim.
+const JUDGMENT_SCALE = ["strong", "solid", "cautious", "concern"] as const;
+
 function renderJudgmentSection(j: JudgmentData): string {
-  const risksHtml = j.risks_summary.length > 0 ? j.risks_summary.map((r) => `<li>${renderProseHtml(r)}</li>`).join("\n") : "<li>None called out.</li>";
-  const gapsHtml = j.gaps.length > 0 ? j.gaps.map((g) => `<li>${renderProseHtml(g)}</li>`).join("\n") : "<li>None called out.</li>";
+  const bullets = (items: string[]) => (items.length > 0 ? items.map((s) => `- ${s}`) : ["- None called out."]);
   return [
     "## Judgment",
     "",
-    "<details>",
-    "<summary>Reveal the AI's judgment</summary>",
+    `:::sealed ${j.overall} ${JUDGMENT_SCALE.join(" ")}`,
+    `**Overall:** ${j.overall}`,
     "",
-    `<p><strong>Overall:</strong> ${escapeHtmlText(j.overall)}</p>`,
-    `<p>${renderProseHtml(j.fit)}</p>`,
-    "<p><strong>Risks:</strong></p>",
-    `<ul>${risksHtml}</ul>`,
-    "<p><strong>Gaps:</strong></p>",
-    `<ul>${gapsHtml}</ul>`,
+    j.fit,
     "",
-    "</details>",
+    "**Risks:**",
+    "",
+    ...bullets(j.risks_summary),
+    "",
+    "**Gaps:**",
+    "",
+    ...bullets(j.gaps),
+    ":::",
   ].join("\n");
 }
 
@@ -316,6 +311,7 @@ function renderClaimBlock(claim: Claim): string {
   if (claim.checked_at) lines.push(`    checked_at: ${claim.checked_at}`);
   if (claim.ttl_days !== undefined) lines.push(`    ttl_days: ${claim.ttl_days}`);
   if (claim.owner) lines.push(`    owner: ${yamlBlockScalar(claim.owner)}`);
+  if (claim.role) lines.push(`    role: ${claim.role}`);
   return lines.join("\n");
 }
 
@@ -335,7 +331,7 @@ export function composeWalk(pr: FetchedPr, inputs: WalkInputs, opts: ComposeOpti
   const checkedAt = now.toISOString().slice(0, 10);
   const build: ClaimBuild = { claims: [], nextId: 1, warnings: [] };
 
-  const parts: string[] = [renderRailSection(pr, inputs, inputs.ticketFit), renderHeader(pr), renderStorySection(inputs.story)];
+  const parts: string[] = [renderRailSection(pr, inputs, inputs.ticketFit), renderStorySection(inputs.story)];
 
   inputs.story.groups.forEach((group, gi) => {
     const claimId = buildGroupClaim(pr, group, gi + 1, build);

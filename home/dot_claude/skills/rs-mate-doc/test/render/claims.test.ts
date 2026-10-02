@@ -32,6 +32,18 @@ describe("claim markers and Claims list", () => {
     expect(html).not.toMatch(/class="claim-marker[^>]*title=/);
   });
 
+  test("backticks in claim text render as inline code", () => {
+    const html = page(["C1"], [makeClaim({ ...full, claim: "`isReached` is published." })]);
+    expect(html).toContain("<code>isReached</code> is published.");
+  });
+
+  test("a 40-character sha shows as 7 characters with the full ref in the title", () => {
+    const sha = "d7c3ba55" + "0".repeat(32);
+    const long = makeClaim({ ...full, evidence: { kind: "code", ref: `acme/widgets@${sha}:src/label.ts:17`, excerpt: "x", needs: "git" } });
+    const html = page(["C1"], [long]);
+    expect(html).toContain(`<span class="claim-source" title="acme/widgets@${sha}:src/label.ts:17">acme/widgets@d7c3ba5:src/label.ts:17</span>`);
+  });
+
   test("a marker in a table cell gets a full row in the Claims list", () => {
     const html = page(["C1"], [full], [table([[text("A")]], [[[text("cell"), claimRef("C1")]]]) as never]);
     const list = html.slice(html.indexOf('id="mate-doc-claims"'));

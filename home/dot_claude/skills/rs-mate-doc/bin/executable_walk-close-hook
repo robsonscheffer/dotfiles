@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Default walk.close_hook, wired by setup. Runs after `mate-doc walk close`.
+#   1. walk folder in a git repo and not ignored: commit only that folder
+#   2. qmd on PATH: re-index so the walk shows up in search
+# Anything personal (a log line, a learning note) belongs in your own hook instead.
+set -euo pipefail
+
+dir="${MATE_DOC_WALK_DIR:?MATE_DOC_WALK_DIR is not set}"
+pr="${MATE_DOC_PR:-}"
+verdict="${MATE_DOC_VERDICT:-closed}"
+
+if git -C "$dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if git -C "$dir" check-ignore -q "$dir"; then
+    echo "walk-close-hook: $dir is git-ignored, not committing"
+  else
+    git -C "$dir" add -- "$dir"
+    if git -C "$dir" diff --cached --quiet -- "$dir"; then
+      echo "walk-close-hook: nothing to commit"
+    else
+      git -C "$dir" commit -q -m "chore(walk): close pr-${pr:-unknown} as $verdict" -- "$dir"
+      echo "walk-close-hook: committed $dir"
+    fi
+  fi
+fi
+
+if command -v qmd >/dev/null 2>&1; then
+  qmd update >/dev/null 2>&1 && echo "walk-close-hook: qmd re-indexed" || echo "walk-close-hook: qmd update failed, skipped"
+fi

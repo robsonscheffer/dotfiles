@@ -42,6 +42,20 @@ describe("serve: link resolution", () => {
     expect(html).toContain(`<a href="/${entry.alias}/sub/nested">nested</a>`);
   });
 
+  test("resolves a wikilink to a folder's index.md by the folder name", async () => {
+    const stateDir = await mkTmpDir("mate-doc-wiki-folder-state-");
+    const served = await mkTmpDir("mate-doc-wiki-folder-served-");
+    await mkdir(join(served, "walks", "pr-42"), { recursive: true });
+    await writeFile(join(served, "walks", "pr-42", "index.md"), "---\ntitle: PR 42\n---\nbody");
+    await writeFile(join(served, "start.md"), "---\ntitle: Start\n---\nSee [[pr-42]].");
+
+    const entry = await addFolder(stateDir, served);
+    handle = await serve({ host: "127.0.0.1", port: 0, stateDir, parse: stubParse, render: stubRender, loadLedger: nullLedger });
+
+    const html = await (await fetch(`${handle.url}/${entry.alias}/start`)).text();
+    expect(html).toContain(`<a href="/${entry.alias}/walks/pr-42/index">pr-42</a>`);
+  });
+
   test("marks an unresolved wikilink visibly instead of silently dropping it", async () => {
     const stateDir = await mkTmpDir("mate-doc-wiki-unresolved-state-");
     const served = await mkTmpDir("mate-doc-wiki-unresolved-served-");

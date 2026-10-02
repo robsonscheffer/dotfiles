@@ -7,7 +7,7 @@ import { extractRail, renderDirective } from "./directives.ts";
 import { renderNav } from "./nav.ts";
 import { renderNoteControl, renderNotesScript, renderNotesToolbar, type NoteHeading } from "./notes.ts";
 import { THEME_CSS, THEME_TOGGLE_SCRIPT } from "./theme.ts";
-import { renderToc } from "./toc.ts";
+import { renderToc, TOC_SCRIPT } from "./toc.ts";
 import { escapeHtml, plainTextOf } from "./util.ts";
 
 interface Section {
@@ -42,7 +42,7 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
   const summary = doc.frontmatter.summary ?? "";
   const banner = opts.banner ? renderBanner(opts.banner) : "";
   const notesToolbar = notesEnabled ? renderNotesToolbar() : "";
-  const header = `<header class="doc-header">${banner}<h1>${escapeHtml(title)}</h1>${summary ? `<p class="doc-summary">${escapeHtml(summary)}</p>` : ""}${notesToolbar}</header>`;
+  const header = `<header class="doc-header">${banner}<h1>${escapeHtml(title)}</h1>${summary ? `<p class="doc-summary">${escapeHtml(summary)}</p>` : ""}</header>`;
 
   const { rail, rest } = extractRail(doc.body);
   const railHtml = rail ? renderDirective(rail, ctx) : "";
@@ -60,13 +60,15 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
   const claimsHtml = renderClaimsList(doc.claimRefs.map((r) => r.id), ctx);
   const body = [preHtml, sectionsHtml, claimsHtml].filter((s) => s.length > 0).join("\n");
 
-  const toc = renderToc(doc.headings);
-  const sideContent = railHtml + toc;
-  const side = sideContent ? `<aside class="side-col">${sideContent}</aside>` : "";
+  const toc = renderToc(doc.headings, claimsHtml.length > 0);
+  const themeButton = `<button type="button" class="theme-toggle" aria-label="Toggle color theme">Theme</button>\n`;
+  const sideContent = railHtml + toc + notesToolbar;
+  const side = sideContent ? `<aside class="side-col">${themeButton}${sideContent}</aside>` : "";
   const nav = opts.nav ? renderNav(opts.nav) : "";
 
   const themeAttr = opts.theme === "light" || opts.theme === "dark" ? ` data-theme="${opts.theme}"` : "";
   const liveReload = opts.liveReload ? renderLiveReloadScript(opts.liveReload) : "";
+  const tocScript = toc ? `<script>${TOC_SCRIPT}</script>\n` : "";
   const claimScript = claimsHtml ? `<script>${CLAIM_PANEL_SCRIPT}</script>\n` : "";
   const notesScript = notesEnabled ? `<script>${renderNotesScript(doc.path, noteHeadings)}</script>\n` : "";
 
@@ -80,13 +82,14 @@ export function render(doc: Doc, ledger: Ledger | null, opts: RenderOptions): st
     `<style>${THEME_CSS}</style>\n` +
     `</head>\n` +
     `<body class="${opts.nav ? "has-nav" : "no-nav"}">\n` +
-    `<button type="button" class="theme-toggle" aria-label="Toggle color theme">Theme</button>\n` +
+    (side ? "" : themeButton) +
     nav +
     `<div class="layout">\n` +
     `<main>\n${header}\n${body}\n</main>\n` +
     side +
     `</div>\n` +
     `<script>${THEME_TOGGLE_SCRIPT}</script>\n` +
+    tocScript +
     claimScript +
     notesScript +
     liveReload +

@@ -1,6 +1,6 @@
 ---
 name: rs-mate-doc
-description: Write markdown docs whose facts are checked, using the mate-doc CLI (new, lint, audit, verify, verdict, gate, build, open, status, walk, compare). Use whenever Robson asks for a doc, brief, guide, explainer, decision memo, or PR walk that other people will rely on, wants claims in a doc backed by code/links/queries, asks to audit or refresh an existing mate-doc folder (one with a claims.yaml), wants to preview markdown in the mate-doc viewer, wants to see what a core rules file (e.g. AGENTS.md) actually changes about an agent's answer, or mentions mate-doc, claims ledger, gate, or "official" docs. Prefer it over plain rs-doc when the facts must hold up; rs-doc still governs how the prose reads.
+description: Write markdown docs whose facts are checked, using the mate-doc CLI (new, lint, audit, verify, verdict, gate, build, open, status, walk, compare). Use whenever the user asks for a doc, brief, guide, explainer, decision memo, or PR walk that other people will rely on, wants claims in a doc backed by code/links/queries, asks to audit or refresh an existing mate-doc folder (one with a claims.yaml), wants to preview markdown in the mate-doc viewer, wants to see what a core rules file (e.g. AGENTS.md) actually changes about an agent's answer, or mentions mate-doc, claims ledger, gate, or "official" docs. Prefer it over plain rs-doc when the facts must hold up; rs-doc still governs how the prose reads.
 allowed-tools:
   - Read
   - Write
@@ -30,11 +30,11 @@ allowed-tools:
 
 ## Before anything
 
-Run `mate-doc --help`. If the command is missing or says bun is not found, run the setup script (`~/.local/bin/mate-doc setup`, or `bin/setup` in the rs-mate-doc skill folder of the dotfiles repo) and tell Robson what it did. Do not install bun another way: the dotfiles pin it in mise.
+Run `mate-doc --help`. If the command is missing or says bun is not found, run the setup script (`~/.local/bin/mate-doc setup`, or `bin/setup` in the rs-mate-doc skill folder of the dotfiles repo) and tell the user what it did. Do not install bun another way: the dotfiles pin it in mise.
 
 ## The line you do not cross
 
-`approve` and `publish` belong to a person. `approve` detects agent shells (`CLAUDECODE`) and refuses; `publish` needs a human at a prompt. Do not try to get around either one: no unsetting env vars, no piping `yes`, no editing `status: official`, `approved_by`, or `ledger_hash` into frontmatter by hand. The whole value of an official doc is that a named person looked at it. When a doc passes the gate, stop and hand over the exact command for Robson to run himself:
+`approve` and `publish` belong to a person. `approve` detects agent shells (`CLAUDECODE`) and refuses; `publish` needs a human at a prompt. Do not try to get around either one: no unsetting env vars, no piping `yes`, no editing `status: official`, `approved_by`, or `ledger_hash` into frontmatter by hand. The whole value of an official doc is that a named person looked at it. When a doc passes the gate, stop and hand over the exact command for the user to run themselves:
 
 ```
 mate-doc approve <path>
@@ -49,7 +49,7 @@ mate-doc new <folder> --shape plain|guide|brief   # skeleton full of TODOs
 mate-doc lint <folder>        # structure, style, safety; exit 1 on any error
 mate-doc audit <folder>       # runs the evidence checks, prints the verdict worklist
 mate-doc verify <folder>      # a fresh agent judges each claim from fetched evidence
-# MCP claims: Robson runs `mate-doc verdict <folder> <Cn> --supports` himself
+# MCP claims: the user runs `mate-doc verdict <folder> <Cn> --supports` themselves
 mate-doc gate <folder>        # pass/fail with reasons; the exit code is the contract
 mate-doc build <folder> --out <dir>   # self-contained offline HTML
 mate-doc open <folder-or-file>        # live viewer at http://127.0.0.1:52010
@@ -83,25 +83,25 @@ You do not judge your own claims. `mate-doc verify <folder>` fetches the evidenc
 
 For anything that did not pass, read its `verdict_reason`, fix the sentence or the evidence, and re-run `verify`. Editing a claim after its verdict makes it `verdict-stale`. `--overstates`, `--contradicts`, `--unrelated` and `--uncheckable` may be recorded with `mate-doc verdict`, but only make the gate stricter.
 
-MCP claims, and any `supports` a person must give, go to Robson: he runs `mate-doc verdict <folder> <Cn> --supports` at his own terminal. It refuses agents and refuses the ledger author. Picking a verdict to get green is the one move that makes the whole doc a lie; if unsure, leave the claim open.
+MCP claims, and any `supports` a person must give, go to the user: they run `mate-doc verdict <folder> <Cn> --supports` at their own terminal. It refuses agents and refuses the ledger author. Picking a verdict to get green is the one move that makes the whole doc a lie; if unsure, leave the claim open.
 
 ## Previewing
 
-`mate-doc open <path>` remembers the folder, starts a detached viewer on port 52010 if one is not running, and prints the URL. Any markdown folder works, including ones with no claims.yaml. Give Robson the URL it prints. If it reports the port is taken, set `MATE_DOC_PORT` to a free port and retry. Existing `.html` pages in a remembered folder are served as-is, and `mate-doc open <folder> --alias <name>` pins the URL prefix (`/artifacts/...` for the legacy artifact folder). `mdview <path>` is a wrapper for `mate-doc open`.
+`mate-doc open <path>` remembers the folder, starts a detached viewer on port 52010 if one is not running, and prints the URL. Any markdown folder works, including ones with no claims.yaml. Give the user the URL it prints. If it reports the port is taken, set `MATE_DOC_PORT` to a free port and retry. Existing `.html` pages in a remembered folder are served as-is, and `mate-doc open <folder> --alias <name>` pins the URL prefix (`/artifacts/...` for the legacy artifact folder). `mdview <path>` is a wrapper for `mate-doc open`.
 
 ## PR walks
 
-`mate-doc walk` fetches a PR and composes a review doc from your analysis. `references/walk.md` has the input formats, anchors and refs. After composing, run `mate-doc lint`, `mate-doc verify <walk-dir>`, `mate-doc gate`, then `mate-doc open <walk-dir>`.
+A walk is a review doc you read instead of the GitHub diff. `/rs-walk` points here.
 
-```
-mate-doc walk <pr-url> --fetch-only --out <dir>
-mate-doc walk <pr-url> --inputs <dir> --out <walk-dir>
-```
-
-Once the human has read the walk, `mate-doc walk submit <walk-dir> --approve|--request-changes|--comment` posts
-the review to GitHub, and `mate-doc walk close <walk-dir> --verdict <v>` records the outcome. Submit always
-dry-runs first: without `--yes` it prints the exact body and `gh` command and posts nothing. Show the human that
-output and get a yes before re-running with `--yes` - posting a review is outward-facing.
+1. Fetch: `mate-doc walk <pr-url> --fetch-only --out <dir>`.
+2. Ticket: take a key from the PR title, else a labeled `ticket:`/`jira:` field in `body.txt`. Fetch it with whatever ticket tool the session has. No key or no access: skip Agent 5.
+3. Context, optional: search the user's own notes for the title words and changed file names; write hits to `<dir>/context.json`.
+4. Dispatch the agents in `references/walk-agents.md`, in parallel, with its isolation rule. JSON shapes: `references/walk.md`.
+5. Compose: `mate-doc walk <pr-url> --inputs <dir> --out <walk-dir>`. `<walk-dir>` sits next to the user's earlier walks; ask once if there are none. A compose warning about an anchor or ref means that agent picked a line not in the diff: send it back with the warning.
+6. `mate-doc lint <walk-dir>`, fix errors at the source; then `mate-doc verify <walk-dir>`.
+7. `mate-doc open <walk-dir>` without waiting for the gate. Send the URL and the one summary line from `mate-doc gate`. Ask nothing else yet.
+8. After the user has read it: ask Approve, Request changes, Comment only, or Skip. Run `mate-doc walk submit <walk-dir> --approve|--request-changes|--comment --notes-file <notes>` without `--yes`, show the dry run, and add `--yes` only after an explicit yes: posting a review is outward-facing. Notes come from the page's **Download notes JSON** control.
+9. `mate-doc walk close <walk-dir> --verdict <v> --notes-file <notes>` records the outcome and runs the user's `walk.close_hook`, if set.
 
 Code refs cite the PR's head commit SHA (`<repo>@<sha>:<file>:<line>`), so `mate-doc audit` can resolve them with `git` or `gh`, and carry a `ttl_days` since the head can move.
 
@@ -134,4 +134,4 @@ Run folders: `system/`, `A/`, `A-base/`, `B/`, `index.md`, and `panes.json` when
 
 ## Reporting back
 
-When you finish, tell Robson: where the doc lives, the gate result with any remaining reasons, which claims are open and who owns them, the viewer URL, and the approve command for him to run. Keep it short; the doc carries the detail.
+When you finish, tell the user: where the doc lives, the gate result with any remaining reasons, which claims are open and who owns them, the viewer URL, and the approve command for them to run. Keep it short; the doc carries the detail.

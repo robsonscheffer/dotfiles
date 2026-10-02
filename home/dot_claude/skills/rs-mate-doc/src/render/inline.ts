@@ -94,10 +94,15 @@ export function excerptFor(ev: Evidence): string {
   }
 }
 
+// `repo@<40-char sha>:path:line` shows a 7-character sha; the full ref stays in the title.
+function shortRef(ref: string): string {
+  return ref.replace(/@([0-9a-f]{40}):/, (_, sha: string) => `@${sha.slice(0, 7)}:`);
+}
+
 export function sourceLinkFor(ev: Evidence): string {
   switch (ev.kind) {
     case "code":
-      return `<span class="claim-source">${escapeHtml(ev.ref)}</span>`;
+      return `<span class="claim-source" title="${escapeAttr(ev.ref)}">${escapeHtml(shortRef(ev.ref))}</span>`;
     case "query":
       return `<span class="claim-source">${escapeHtml(ev.sql)}</span>`;
     case "record":

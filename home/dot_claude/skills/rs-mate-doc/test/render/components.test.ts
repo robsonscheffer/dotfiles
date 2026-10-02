@@ -288,6 +288,28 @@ describe("reveal", () => {
   });
 });
 
+describe("sealed", () => {
+  test("hides the body behind one button per option, with a plain reveal when scripts are off", () => {
+    const n = directive("sealed", { args: ["cautious", "strong", "solid", "cautious", "concern"], children: [para(text("Judgment body."))] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain('data-answer="cautious"');
+    expect(html.match(/class="sealed-option"/g)?.length).toBe(4);
+    expect(html).toContain('<div class="sealed-gate" hidden>');
+    expect(html).toContain('<details class="reveal sealed-body">');
+    expect(html).toContain("Judgment body.");
+    expect(html).toContain("<script>");
+  });
+
+  test("the result is a focusable status region and focus moves to it after a pick", () => {
+    const n = directive("sealed", { args: ["cautious", "strong", "cautious"], children: [para(text("Body."))] });
+    const html = renderDirective(n, ctx());
+    expect(html).toContain('<p class="sealed-result" role="status" tabindex="-1" hidden>');
+    expect(html).toContain("result.focus()");
+    expect(html).toContain("summary.hidden=true");
+    expect(html).toContain("badge-");
+  });
+});
+
 describe("checks", () => {
   test("maps each status to its badge tone", () => {
     const n = directive("checks", {
@@ -403,38 +425,52 @@ describe("rail", () => {
 });
 
 describe("diff code fence", () => {
-  test("styles added and removed lines with a file title", () => {
+  test("styles added and removed lines with a file header from title", () => {
     const block = codeBlock("+added line\n-removed line\n context line", "diff", { title: "src/orders.ts" });
     const html = renderBlock(block, ctx());
-    expect(html).toContain("src/orders.ts");
+    expect(html).toContain('<div class="diff-file">src/orders.ts</div>');
+    expect(html).not.toContain("<figcaption>");
     expect(html).toContain("diff-add");
     expect(html).toContain("diff-del");
     expect(html).toMatchSnapshot();
   });
 
-  test("without file= or start=, no header or line numbers appear", () => {
-    const block = codeBlock("+added\n-removed\n context", "diff");
-    const html = renderBlock(block, ctx());
+  test("joins lines without newlines so rows are single-spaced", () => {
+    const html = renderBlock(codeBlock("+a\n-b\n c", "diff"), ctx());
+    const code = /<code>([\s\S]*)<\/code>/.exec(html)![1]!;
+    expect(code).not.toContain("\n");
+  });
+
+  test("without a header, blank gutters render for lines before any hunk", () => {
+    const html = renderBlock(codeBlock("+added\n-removed\n context", "diff"), ctx());
     expect(html).not.toContain("diff-file");
-    expect(html).not.toContain("diff-num");
+    expect(html).toContain('<span class="diff-num diff-num-old"></span>');
   });
 
-  test("file= alone renders a file header with no line numbers", () => {
-    const block = codeBlock("+added\n-removed\n context", "diff", { file: "src/analytics/label.ts" });
-    const html = renderBlock(block, ctx());
-    expect(html).toContain('<div class="diff-file">src/analytics/label.ts</div>');
-    expect(html).not.toContain("diff-num");
+  test("hunk headers get their own class", () => {
+    const html = renderBlock(codeBlock("@@ -10,2 +10,3 @@ class Foo\n ctx", "diff"), ctx());
+    expect(html).toContain('<span class="diff-hunk">');
+    expect(html).not.toContain('<span class="diff-ctx"><span class="diff-num diff-num-old"></span><span class="diff-num diff-num-new"></span><span class="diff-sign">@');
   });
 
-  test("file= and start= together number added, removed, and context lines from start", () => {
-    const block = codeBlock("+added\n-removed\n context", "diff", { file: "src/analytics/label.ts", start: "40" });
+  test("line numbers reset at each hunk and each side counts on its own", () => {
+    const block = codeBlock("@@ -10,2 +20,2 @@\n ctx\n-gone\n+new\n@@ -50,1 +60,1 @@\n ctx2", "diff", { file: "src/a.ts" });
     const html = renderBlock(block, ctx());
-    expect(html).toContain('<div class="diff-file">src/analytics/label.ts</div>');
-    // The added line is the pre-image's line 40 in the post-image; the removed line is the
-    // pre-image's line 40 too (they can't both hold that slot, so each side counts on its own).
+    expect(html).toContain('<span class="diff-num diff-num-old">10</span><span class="diff-num diff-num-new">20</span><span class="diff-sign"> </span>ctx');
+    expect(html).toContain('<span class="diff-num diff-num-old">11</span><span class="diff-num diff-num-new"></span><span class="diff-sign">-</span>gone');
+    expect(html).toContain('<span class="diff-num diff-num-old"></span><span class="diff-num diff-num-new">21</span><span class="diff-sign">+</span>new');
+    expect(html).toContain('<span class="diff-num diff-num-old">50</span><span class="diff-num diff-num-new">60</span><span class="diff-sign"> </span>ctx2');
+  });
+
+  test("the sign sits in its own span apart from the line text", () => {
+    const html = renderBlock(codeBlock("+x < y", "diff"), ctx());
+    expect(html).toContain('<span class="diff-sign">+</span>x &lt; y');
+  });
+
+  test("start= seeds both counters before the first hunk", () => {
+    const html = renderBlock(codeBlock("+added\n-removed\n context", "diff", { file: "src/a.ts", start: "40" }), ctx());
     expect(html).toContain('<span class="diff-num diff-num-new">40</span>');
     expect(html).toContain('<span class="diff-num diff-num-old">40</span>');
-    // The context line after both keeps old and new in step, one number ahead of each side.
     expect(html).toContain('<span class="diff-num diff-num-old">41</span><span class="diff-num diff-num-new">41</span>');
     expect(html).toMatchSnapshot();
   });

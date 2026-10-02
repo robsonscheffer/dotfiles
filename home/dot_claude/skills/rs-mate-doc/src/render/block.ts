@@ -2,8 +2,7 @@ import type { Block, BlockquoteNode, CodeBlockNode, ErrorNode, HeadingNode, List
 import type { Ctx } from "./ctx.ts";
 import { renderDirective } from "./directives.ts";
 import { highlightCode } from "./highlight.ts";
-import { renderClaimRow } from "./claims.ts";
-import { collectClaimRefs, renderInline } from "./inline.ts";
+import { renderInline } from "./inline.ts";
 import { escapeAttr, escapeHtml } from "./util.ts";
 
 export function renderBlocks(nodes: Block[], ctx: Ctx): string {
@@ -43,10 +42,7 @@ function renderHeading(n: HeadingNode, ctx: Ctx): string {
 }
 
 function renderParagraph(n: ParagraphNode, ctx: Ctx): string {
-  const html = renderInline(n.children, ctx);
-  const refs = collectClaimRefs(n.children);
-  const evidence = refs.map((r) => renderClaimRow(r.id, ctx)).join("");
-  return `<p>${html}</p>${evidence}`;
+  return `<p>${renderInline(n.children, ctx)}</p>`;
 }
 
 function renderList(n: ListNode, ctx: Ctx): string {
@@ -82,39 +78,47 @@ function renderCodeBlock(n: CodeBlockNode): string {
   return `<figure class="code-block">${caption}<pre><code class="hljs${langClass}">${html}</code></pre></figure>`;
 }
 
-// `file=<path>` becomes a file header above the code; `start=<line>` numbers added, removed,
-// and context lines, tracking the pre- and post-image line counters separately (a run of
-// context lines keeps both in step; a run of adds/dels only advances the side it touched).
+// `file=<path>` (or `title=<path>`) becomes a file header above the code. Each `@@ -a,b +c,d @@`
+// line resets the pre- and post-image counters, so every row gets an old and a new gutter cell;
+// a cell stays blank on the side the line does not exist.
+const HUNK_RE = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
+
 function renderDiffBlock(n: CodeBlockNode, caption: string): string {
-  const file = n.meta.file;
+  const file = n.meta.file ?? n.meta.title;
   const header = file ? `<div class="diff-file">${escapeHtml(file)}</div>` : "";
-  const startLine = n.meta.start ? Number.parseInt(n.meta.start, 10) : null;
-  let oldLine = startLine ?? 0;
-  let newLine = startLine ?? 0;
+  const start = n.meta.start ? Number.parseInt(n.meta.start, 10) : null;
+  let oldLine: number | null = start;
+  let newLine: number | null = start;
+  const cell = (side: "old" | "new", value: number | null) =>
+    `<span class="diff-num diff-num-${side}">${value ?? ""}</span>`;
   const lines = n.value
     .split("\n")
     .map((line) => {
-      let cls = "diff-ctx";
-      if (line.startsWith("+")) cls = "diff-add";
-      else if (line.startsWith("-")) cls = "diff-del";
-      let numHtml = "";
-      if (startLine !== null) {
-        if (cls === "diff-add") {
-          numHtml = `<span class="diff-num diff-num-new">${newLine}</span>`;
-          newLine++;
-        } else if (cls === "diff-del") {
-          numHtml = `<span class="diff-num diff-num-old">${oldLine}</span>`;
-          oldLine++;
-        } else {
-          numHtml = `<span class="diff-num diff-num-old">${oldLine}</span><span class="diff-num diff-num-new">${newLine}</span>`;
-          oldLine++;
-          newLine++;
-        }
+      const hunk = HUNK_RE.exec(line);
+      if (hunk) {
+        oldLine = Number(hunk[1]);
+        newLine = Number(hunk[2]);
+        return `<span class="diff-hunk">${cell("old", null)}${cell("new", null)}${escapeHtml(line)}</span>`;
       }
-      return `<span class="${cls}">${numHtml}${escapeHtml(line)}</span>`;
+      let cls = "diff-ctx";
+      let gutter: string;
+      if (line.startsWith("+")) {
+        cls = "diff-add";
+        gutter = cell("old", null) + cell("new", newLine);
+        if (newLine !== null) newLine++;
+      } else if (line.startsWith("-")) {
+        cls = "diff-del";
+        gutter = cell("old", oldLine) + cell("new", null);
+        if (oldLine !== null) oldLine++;
+      } else {
+        gutter = cell("old", oldLine) + cell("new", newLine);
+        if (oldLine !== null) oldLine++;
+        if (newLine !== null) newLine++;
+      }
+      return `<span class="${cls}">${gutter}<span class="diff-sign">${escapeHtml(line.slice(0, 1))}</span>${escapeHtml(line.slice(1))}</span>`;
     })
-    .join("\n");
-  return `<figure class="code-block diff">${caption}${header}<pre><code>${lines}</code></pre></figure>`;
+    .join("");
+  return `<figure class="code-block diff">${file ? "" : caption}${header}<pre><code>${lines}</code></pre></figure>`;
 }
 
 export function renderTable(n: TableNode, ctx: Ctx, badgeify = false): string {
