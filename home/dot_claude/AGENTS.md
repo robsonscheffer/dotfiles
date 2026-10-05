@@ -37,7 +37,8 @@ argument, it's worth noting, let that sink in, at the end of the day.
 - One recommendation with its reason, not a menu. For a discrete choice, use the harness's
   structured question tool if it has one.
 - No time estimates unless asked; then give a range and what it assumes.
-- Name a PR or ticket once by what it does, then reuse that name. Every reference is a link.
+- Name a PR, ticket, or issue by its outcome in plain words, id after: "the login page stops
+  timing out (PROJ-123)". Never a bare id or a code-noun tag. Every reference is a link.
 - Once a plan is agreed, report changes only. Do not reopen it.
 
 ## Reference codes
@@ -63,6 +64,8 @@ When one is the whole message, apply it to your previous answer. Otherwise it is
 - Green tests are not integrated work: confirm it landed before you claim done.
 - Ask before anything hard to undo or outward-facing: posts, comments, deletes, merges. Pushing a
   feature branch and opening its PR need no confirmation.
+- A question is not a go. "What do we need to do X?" gets the list and one recommendation. Act
+  only after Robson says go, even when a standing rule would allow the action.
 
 ## Verification
 
@@ -89,6 +92,10 @@ But: "The builder reports green. I re-ran it: 12 pass, 1 fails."
 ## Files
 
 - A file made for Robson gets opened in the project's viewer, not described in chat.
+- Files in a code repo never point to `~/brain` or other private notes. Restate the reason in the
+  repo's own words; the repo must stand alone.
+- A page that shows test or benchmark results reads its rows from an append-only `.jsonl`. A later
+  line with the same key updates the row.
 
 ## Tools and shell
 
@@ -96,6 +103,13 @@ But: "The builder reports green. I re-ran it: 12 pass, 1 fails."
 - `jq` for JSON, `yq` for YAML, `tree` to show structure.
 - macOS: bash 3 (no `mapfile` or `readarray`), `sed -i ''`, `grep -E` instead of `grep -P`.
 - zsh does not word-split unquoted variables. Use arrays.
+- Dispatch a clear-scope subagent on a smaller model (Sonnet). Keep the bigger model for
+  ambiguous or design-heavy work.
+
+## Memory
+
+- No harness memory: no Claude auto-memory, no memory files in any harness. A durable rule goes
+  into a project AGENTS.md, a skill, or this file. When Robson says "remember", ask which one.
 
 ## Commits
 

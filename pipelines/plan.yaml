@@ -10,7 +10,7 @@
 # No inline shell. Each stage is a reusable op.
 #
 # Usage:
-#   mate pipeline run plan --topic MATE-154
+#   mate pipeline run plan --topic PROJ-123
 
 id: plan
 description: "Planning phase — produce a TDD plan, embed it in the ticket, advance state to needs:build"
