@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# attic: park stale files instead of deleting them. One attic for the whole home folder.
+# A path keeps its place relative to $HOME (~/brain/wiki/x.md -> ~/.attic/brain/wiki/x.md).
+# Files untouched for 30 days are swept; touch or move back anything you still want.
+#
+#   attic put <path> "why"    move into ~/.attic, log the reason, start the 30-day clock
+#   attic list                what's there and how many days until the sweep takes it
+#   attic sweep               delete files untouched for 30+ days (launchd runs this daily)
+set -euo pipefail
+
+ATTIC="${ATTIC_DIR:-$HOME/.attic}"
+LOG="$ATTIC/.log"
+DAYS=30
+
+die() { echo "attic: $*" >&2; exit 1; }
+
+put() {
+  local src="${1:-}" why="${2:-}"
+  [[ -n "$src" && -n "$why" ]] || die 'usage: attic put <path> "why"'
+  [[ -e "$src" || -L "$src" ]] || die "no such path: $src"
+  local dir abs rel
+  dir="$(cd "$(dirname "$src")" && pwd -P)"
+  abs="$dir/$(basename "$src")"
+  case "$abs" in "$HOME"/*) ;; *) die "only paths inside $HOME" ;; esac
+  case "$abs" in "$ATTIC"|"$ATTIC"/*) die "already in the attic" ;; esac
+  if git -C "$dir" ls-files --error-unmatch -- "$(basename "$src")" >/dev/null 2>&1; then
+    die "$src is tracked by git; git rm it instead (history keeps it)"
+  fi
+  rel="${abs#"$HOME"/}"
+  [[ -e "$ATTIC/$rel" ]] && die "$ATTIC/$rel already exists"
+  mkdir -p "$ATTIC/$(dirname "$rel")"
+  mv "$abs" "$ATTIC/$rel"
+  # The 30-day clock starts at the move, not at the file's old mtime.
+  find "$ATTIC/$rel" -exec touch -h {} +
+  printf '%s\tput\t%s\t%s\n' "$(date +%F)" "$rel" "$why" >>"$LOG"
+  echo "attic: ~/$rel (swept after $DAYS days untouched)"
+}
+
+list() {
+  [[ -d "$ATTIC" ]] || { echo "attic: empty"; return; }
+  local now f age
+  now=$(date +%s)
+  find "$ATTIC" -type f ! -name .log ! -name .DS_Store | sort | while read -r f; do
+    age=$(( (now - $(stat -f %m "$f")) / 86400 ))
+    printf '%3sd left  %s\n' "$((DAYS - age))" "${f#"$ATTIC"/}"
+  done
+}
+
+sweep() {
+  [[ -d "$ATTIC" ]] || return 0
+  local f
+  find "$ATTIC" \( -type f -o -type l \) ! -name .log -mtime +"$DAYS" | while read -r f; do
+    rm -f "$f"
+    printf '%s\tswept\t%s\n' "$(date +%F)" "${f#"$ATTIC"/}" >>"$LOG"
+  done
+  find "$ATTIC" -mindepth 1 -type d -empty -delete
+}
+
+case "${1:-list}" in
+  put) shift; put "$@" ;;
+  list) list ;;
+  sweep) sweep ;;
+  *) die "unknown command: $1 (put | list | sweep)" ;;
+esac

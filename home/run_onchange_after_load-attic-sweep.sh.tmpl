@@ -1,0 +1,10 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/usr/bin/env bash
+# chezmoi run_onchange: (re)load the daily attic sweep when its plist changes.
+# plist hash: {{ include "Library/LaunchAgents/com.robsonscheffer.attic-sweep.plist.tmpl" | sha256sum }}
+set -euo pipefail
+label="com.robsonscheffer.attic-sweep"
+launchctl bootout "gui/$(id -u)/$label" 2>/dev/null || true
+launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/$label.plist"
+echo "attic-sweep: loaded $label"
+{{ end -}}
