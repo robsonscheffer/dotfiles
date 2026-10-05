@@ -26,7 +26,7 @@ mirror the **Handoffs** section of `~/brain/AGENTS.md`; if they ever disagree, t
    have open ones.
 3. When the user picks one, read it in full, set `status: picked-up` and add
    `picked_up: YYYY-MM-DD`, then retire it:
-   `~/brain/scripts/attic.sh put <path> "picked up"`. It stays readable in `~/brain/.attic/`
+   `attic put <path> "picked up"`. It stays readable in `~/.attic/`
    for 30 days.
 4. Continue the work from its `next` line.
 
@@ -69,7 +69,7 @@ After writing, move every `status: open` handoff in the same project folder whos
 is more than 14 days old to the attic:
 
 ```bash
-~/brain/scripts/attic.sh put <path> "stale open handoff (>14 days)"
+attic put <path> "stale open handoff (>14 days)"
 ```
 
 Report what you moved. The attic sweeps files untouched for 30 days, so a forgotten handoff can

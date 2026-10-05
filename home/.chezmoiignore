@@ -3,3 +3,7 @@
 # Claude Code user settings: carries work-internal plugin and marketplace
 # refs plus machine-local env. Hand-managed; never published to this repo.
 .claude/settings.json
+
+{{ if ne .chezmoi.os "darwin" }}
+Library
+{{ end }}
