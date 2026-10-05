@@ -12,8 +12,8 @@ mirror the **Handoffs** section of `~/brain/AGENTS.md`; if they ever disagree, t
 ~/brain/.scratch/handoffs/<project>/YYYY-MM-DD-<slug>.md
 ```
 
-- `<project>`: the git repo's directory name (`mate`, `dotfiles`, `dev-ops`). When the session
-  is in `~/brain` itself, use the area the work is about (`obah`, `mate`, `paperclip`), never
+- `<project>`: the git repo's directory name (`dotfiles`, `myapp`). When the session
+  is in `~/brain` itself, use the area the work is about (a product or a team), never
   `brain`. Outside any repo with no clear area: `general`. Lowercase kebab-case.
 - `<slug>`: short kebab-case topic, e.g. `live-agent-trace`.
 - Never `/tmp` or any OS temp dir; they're cleared.
@@ -39,13 +39,13 @@ Start the file with this frontmatter:
 
 ```yaml
 ---
-project: mate
+project: myapp
 topic: live-agent-trace
 created: 2026-09-25
 status: open                  # open | picked-up
-repo: ~/apps/Obah-tech/mate   # omit outside a repo
-branch: mate/MATE-294-live-agent-trace  # omit outside a repo
-next: "Rebase 294 onto 293, then re-run the trace test"
+repo: ~/apps/acme/myapp       # omit outside a repo
+branch: feat/PROJ-123-live-agent-trace  # omit outside a repo
+next: "Rebase onto main, then re-run the trace test"
 ---
 ```
 

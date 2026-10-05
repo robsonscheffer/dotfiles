@@ -4,7 +4,7 @@
 # emits the absolute path of the first match. Fails (exit 1) if no match.
 #
 # Usage:
-#   mate pipeline run op-locate-ticket --topic MATE-154
+#   mate pipeline run op-locate-ticket --topic PROJ-123
 #
 # Composition example:
 #   - id: locate
@@ -21,7 +21,7 @@ usage: mate pipeline run op-locate-ticket --topic <topic>
 topic: topic
 params:
   - name: topic
-    description: "Ticket id (e.g. MATE-154, PROJ-1234)"
+    description: "Ticket id (e.g. PROJ-123)"
     required: true
 
 stages:
