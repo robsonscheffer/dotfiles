@@ -16,7 +16,7 @@ macos-option-as-alt = left
 cursor-style = block
 cursor-style-blink = true
 
-font-size = 12
+font-size = 16
 font-family = "MesloLGS NF"
 font-thicken = true
 adjust-cell-height = 25%
