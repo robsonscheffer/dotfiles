@@ -24,6 +24,8 @@ __pycache__/
 # Machine-specific agent context (auto-generated per machine)
 AGENTS.local.md
 CLAUDE.local.md
+/.agents/
+/.codex/
 
 # Secrets (never commit)
 *.secrets
