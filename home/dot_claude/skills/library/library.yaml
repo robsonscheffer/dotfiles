@@ -40,6 +40,10 @@ library:
       description: Expert guidance for React Flow (@xyflow/react) — custom nodes/edges, handles, state management, layouting, TypeScript patterns, performance, and theming
       source: https://github.com/framara/react-flow-skill/blob/main/SKILL.md
 
+    - name: to-spec
+      description: Turn the current conversation into a spec and publish it to the project issue tracker, no interview, just synthesis
+      source: https://github.com/mattpocock/skills/blob/main/skills/engineering/to-spec/SKILL.md
+
     - name: write-skill
       description: Guides Claude Code skill creation — playbook patterns, scope decisions, and a required reviewer pass against REVIEW.md
       source: https://github.com/ivy/dotfiles/blob/main/home/dot_claude/skills/write-skill/SKILL.md.tmpl
