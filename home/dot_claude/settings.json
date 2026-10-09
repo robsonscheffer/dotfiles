@@ -44,7 +44,6 @@
     ],
     "deny": [
       "Bash(git clean:*)",
-      "Bash(git push --force:*)",
       "Bash(git push -f:*)",
       "Bash(git reset --hard:*)",
       "Bash(rm -fr:*)",
@@ -57,11 +56,7 @@
       "Read(./dist/**)",
       "Read(./node_modules/**)"
     ],
-    "ask": [
-      "Bash(rm *)",
-      "Bash(jj git push *)",
-      "Bash(git push *)"
-    ]
+    "ask": ["Bash(rm *)", "Bash(jj git push *)", "Bash(git push *)"]
   },
   "hooks": {
     "PostToolUse": [
