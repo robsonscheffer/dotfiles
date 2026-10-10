@@ -92,6 +92,9 @@ But: "The builder reports green. I re-ran it: 12 pass, 1 fails."
 ## Files
 
 - A file made for Robson gets opened in the project's viewer, not described in chat.
+- A file made for Robson outside a code repo lives in `~/brain`, placed as `~/brain/AGENTS.md`
+  says (working notes in `.scratch/YYYY-MM-DD-<topic>.md`). Never only in `/tmp` or a session
+  scratchpad.
 - Files in a code repo never point to `~/brain` or other private notes. Restate the reason in the
   repo's own words; the repo must stand alone.
 - A page that shows test or benchmark results reads its rows from an append-only `.jsonl`. A later

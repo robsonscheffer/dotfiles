@@ -39,6 +39,14 @@ find_worktrees() {
       [ -e "$d/.git" ] && echo "$d"
     done
   done
+  # Sibling-layout roots: worktrees sit as plain subdirectories of the root
+  # itself rather than under a .worktrees/ dir, or nested one level deeper.
+  for root in "${REPO_ROOTS[@]}"; do
+    [ -d "$root" ] || continue
+    find "$root" -mindepth 1 -maxdepth 2 -type d 2>/dev/null | while read -r d; do
+      [ -e "$d/.git" ] && echo "$d"
+    done
+  done
 }
 
 safe=(); judgment=(); leave=()
@@ -94,7 +102,7 @@ while IFS= read -r d; do
   else
     judgment+=("NO-PR      $size  $d  branch=$branch last_commit=$lastdate — no PR found, check manually")
   fi
-done < <(find_worktrees)
+done < <(find_worktrees | sort -u)
 
 section "Worktrees — SAFE TO REMOVE (merged or orphaned, clean tree)"
 if [ ${#safe[@]} -eq 0 ]; then echo "(none found)"; else printf '%s\n\n' "${safe[@]}"; fi
