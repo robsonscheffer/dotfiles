@@ -8,6 +8,7 @@ brew "oh-my-posh"
 
 # Editor
 brew "neovim"
+brew "duti"
 
 # Development
 brew "mise"

@@ -1,0 +1,13 @@
+{{ if eq .chezmoi.os "darwin" -}}
+#!/usr/bin/env bash
+# chezmoi run_onchange: open Markdown files in VS Code on double-click.
+# Xcode claims the Markdown type itself, so set the type, not only the .md extension.
+set -euo pipefail
+if ! command -v duti >/dev/null 2>&1; then
+  echo "default-apps: duti not installed, skipping (brew bundle installs it)"
+  exit 0
+fi
+duti -s com.microsoft.VSCode net.daringfireball.markdown all
+duti -s com.microsoft.VSCode .md all
+echo "default-apps: .md opens in $(duti -x md | head -1)"
+{{ end -}}
