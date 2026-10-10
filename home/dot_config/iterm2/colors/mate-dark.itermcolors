@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  mate dark — generated from mate DS tokens.yaml
+  Source palette: frame.bg=#1a160f  primary=#c0613a  text=#ebe4d9
+-->
+<dict>
+  <!-- ANSI 0: Black → nav (darkest bg) #150f08 -->
+  <key>Ansi 0 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.082</real>
+    <key>Green Component</key><real>0.059</real>
+    <key>Blue Component</key><real>0.031</real>
+  </dict>
+
+  <!-- ANSI 1: Red → error/Coral Red #d4412a -->
+  <key>Ansi 1 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.831</real>
+    <key>Green Component</key><real>0.255</real>
+    <key>Blue Component</key><real>0.165</real>
+  </dict>
+
+  <!-- ANSI 2: Green → success/Sage Green #4da870 -->
+  <key>Ansi 2 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.302</real>
+    <key>Green Component</key><real>0.659</real>
+    <key>Blue Component</key><real>0.439</real>
+  </dict>
+
+  <!-- ANSI 3: Yellow → warning/Amber #d4a827 -->
+  <key>Ansi 3 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.831</real>
+    <key>Green Component</key><real>0.659</real>
+    <key>Blue Component</key><real>0.153</real>
+  </dict>
+
+  <!-- ANSI 4: Blue → info/Steel Blue #4a82c7 -->
+  <key>Ansi 4 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.290</real>
+    <key>Green Component</key><real>0.510</real>
+    <key>Blue Component</key><real>0.780</real>
+  </dict>
+
+  <!-- ANSI 5: Magenta → derived dusty rose #b06070 (no DS token; warm rose analog) -->
+  <key>Ansi 5 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.690</real>
+    <key>Green Component</key><real>0.376</real>
+    <key>Blue Component</key><real>0.439</real>
+  </dict>
+
+  <!-- ANSI 6: Cyan → derived muted teal #4a8a80 (no DS token; cool complement) -->
+  <key>Ansi 6 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.290</real>
+    <key>Green Component</key><real>0.541</real>
+    <key>Blue Component</key><real>0.502</real>
+  </dict>
+
+  <!-- ANSI 7: White → muted/Warm Gray #9c8a72 -->
+  <key>Ansi 7 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.612</real>
+    <key>Green Component</key><real>0.541</real>
+    <key>Blue Component</key><real>0.447</real>
+  </dict>
+
+  <!-- ANSI 8: Bright Black → dim/Dark Tan #6e5e4a -->
+  <key>Ansi 8 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.431</real>
+    <key>Green Component</key><real>0.369</real>
+    <key>Blue Component</key><real>0.290</real>
+  </dict>
+
+  <!-- ANSI 9: Bright Red → lightened error #e06050 -->
+  <key>Ansi 9 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.878</real>
+    <key>Green Component</key><real>0.376</real>
+    <key>Blue Component</key><real>0.314</real>
+  </dict>
+
+  <!-- ANSI 10: Bright Green → lightened success #5ec882 -->
+  <key>Ansi 10 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.369</real>
+    <key>Green Component</key><real>0.784</real>
+    <key>Blue Component</key><real>0.510</real>
+  </dict>
+
+  <!-- ANSI 11: Bright Yellow → lightened warning #e8c040 -->
+  <key>Ansi 11 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.910</real>
+    <key>Green Component</key><real>0.753</real>
+    <key>Blue Component</key><real>0.251</real>
+  </dict>
+
+  <!-- ANSI 12: Bright Blue → lightened info #6aa0df -->
+  <key>Ansi 12 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.416</real>
+    <key>Green Component</key><real>0.627</real>
+    <key>Blue Component</key><real>0.875</real>
+  </dict>
+
+  <!-- ANSI 13: Bright Magenta → lightened dusty rose #c882a0 -->
+  <key>Ansi 13 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.784</real>
+    <key>Green Component</key><real>0.510</real>
+    <key>Blue Component</key><real>0.627</real>
+  </dict>
+
+  <!-- ANSI 14: Bright Cyan → lightened teal #62aaa0 -->
+  <key>Ansi 14 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.384</real>
+    <key>Green Component</key><real>0.667</real>
+    <key>Blue Component</key><real>0.627</real>
+  </dict>
+
+  <!-- ANSI 15: Bright White → text/Warm White #ebe4d9 -->
+  <key>Ansi 15 Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.922</real>
+    <key>Green Component</key><real>0.894</real>
+    <key>Blue Component</key><real>0.851</real>
+  </dict>
+
+  <!-- Background → frame.bg/Dark Parchment #1a160f -->
+  <key>Background Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.102</real>
+    <key>Green Component</key><real>0.086</real>
+    <key>Blue Component</key><real>0.059</real>
+  </dict>
+
+  <!-- Foreground → text/Warm White #ebe4d9 -->
+  <key>Foreground Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.922</real>
+    <key>Green Component</key><real>0.894</real>
+    <key>Blue Component</key><real>0.851</real>
+  </dict>
+
+  <!-- Bold → same as Foreground -->
+  <key>Bold Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.922</real>
+    <key>Green Component</key><real>0.894</real>
+    <key>Blue Component</key><real>0.851</real>
+  </dict>
+
+  <!-- Cursor → primary/Terracotta #c0613a -->
+  <key>Cursor Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.753</real>
+    <key>Green Component</key><real>0.380</real>
+    <key>Blue Component</key><real>0.227</real>
+  </dict>
+
+  <!-- Cursor Text → bg -->
+  <key>Cursor Text Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.102</real>
+    <key>Green Component</key><real>0.086</real>
+    <key>Blue Component</key><real>0.059</real>
+  </dict>
+
+  <!-- Selection → sidebar/Dark Oak #241e14 -->
+  <key>Selection Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.259</real>
+    <key>Green Component</key><real>0.200</real>
+    <key>Blue Component</key><real>0.118</real>
+  </dict>
+
+  <!-- Selected Text → Warm White -->
+  <key>Selected Text Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.922</real>
+    <key>Green Component</key><real>0.894</real>
+    <key>Blue Component</key><real>0.851</real>
+  </dict>
+
+  <!-- Link → info/Steel Blue #4a82c7 -->
+  <key>Link Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.290</real>
+    <key>Green Component</key><real>0.510</real>
+    <key>Blue Component</key><real>0.780</real>
+  </dict>
+
+  <!-- Badge → primary/Terracotta #c0613a -->
+  <key>Badge Color</key>
+  <dict>
+    <key>Alpha Component</key><real>0.5</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.753</real>
+    <key>Green Component</key><real>0.380</real>
+    <key>Blue Component</key><real>0.227</real>
+  </dict>
+
+  <!-- Tab Color → sidebar #241e14 -->
+  <key>Tab Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.141</real>
+    <key>Green Component</key><real>0.118</real>
+    <key>Blue Component</key><real>0.078</real>
+  </dict>
+
+  <!-- Underline → primary/Terracotta -->
+  <key>Underline Color</key>
+  <dict>
+    <key>Alpha Component</key><real>1</real>
+    <key>Color Space</key><string>sRGB</string>
+    <key>Red Component</key><real>0.753</real>
+    <key>Green Component</key><real>0.380</real>
+    <key>Blue Component</key><real>0.227</real>
+  </dict>
+</dict>
+</plist>
