@@ -40,8 +40,7 @@ find_worktrees() {
     done
   done
   # Sibling-layout roots: worktrees sit as plain subdirectories of the root
-  # itself (e.g. ~/apps/Obah-tech/mate-foo) rather than under a .worktrees/
-  # dir, or nested one level deeper (e.g. ~/worktrees/<org>/<repo>/<worktree>).
+  # itself rather than under a .worktrees/ dir, or nested one level deeper.
   for root in "${REPO_ROOTS[@]}"; do
     [ -d "$root" ] || continue
     find "$root" -mindepth 1 -maxdepth 2 -type d 2>/dev/null | while read -r d; do
