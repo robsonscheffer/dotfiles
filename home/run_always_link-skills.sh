@@ -1,13 +1,21 @@
 #!/usr/bin/env bash
 # chezmoi run_always: make every skill in ~/.claude/skills visible to the other harnesses.
 # ~/.claude/skills is the one real copy (dotfiles, Paperclip and mate install there).
-# ~/.agents/skills (pi, opencode) and ~/.codex/skills (Codex) hold only symlinks to it.
+# Other harnesses hold symlinks to it; existing local skills are never replaced.
 set -euo pipefail
 
 src="$HOME/.claude/skills"
 [[ -d "$src" ]] || { echo "link-skills: skipping, $src not found"; exit 0; }
 
-for dir in "$HOME/.agents/skills" "$HOME/.codex/skills"; do
+dirs=("$HOME/.agents/skills" "$HOME/.codex/skills" "$HOME/.hermes/skills")
+# Named Hermes profiles have independent skill directories. Discover installed
+# profiles rather than hardcoding a name or depending on the invoking profile.
+for profile in "$HOME/.hermes/profiles"/*; do
+  [[ -d "$profile" ]] || continue
+  dirs+=("$profile/skills")
+done
+
+for dir in "${dirs[@]}"; do
   [[ -d "$(dirname "$dir")" ]] || continue
   mkdir -p "$dir"
 
