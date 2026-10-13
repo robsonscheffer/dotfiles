@@ -17,6 +17,25 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/). Focused on Cl
 | `~/.claude/skills/*`           | 30 Claude Code skills                                   |
 | `~/.claude/hooks/*`            | 5 Claude Code hooks                                     |
 
+## Shared Agent Skills
+
+`~/.claude/skills` is the canonical installed copy. On each `chezmoi apply`,
+`home/run_always_link-skills.sh` links those skills into the installed harnesses:
+
+- `~/.agents/skills` (pi and OpenCode)
+- `~/.codex/skills` (Codex)
+- `~/.hermes/skills` (Hermes default profile)
+- `~/.hermes/profiles/<name>/skills` (each existing named Hermes profile)
+
+The script does not create uninstalled harnesses or new Hermes profiles. Existing
+real skill directories and links pointing elsewhere are preserved. Only dangling
+links into `~/.claude/skills` are removed. New Hermes profiles receive the shared
+skills on the next apply; no manual `skills.external_dirs` configuration is needed.
+Symlinks share the actual files: editing a linked skill changes the canonical copy.
+This shares skill documents, not Claude-specific tools, hooks or permissions.
+
+Run the isolated linker tests with `python -m unittest discover -s tests -v`.
+
 ## What's NOT Tracked
 
 - `~/.claude/settings.local.json` — machine-specific overrides
