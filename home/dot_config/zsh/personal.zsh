@@ -66,6 +66,16 @@ alias jcc='claude --permission-mode bypassPermissions --output-format stream-jso
 alias rs-claude-cost='~/.claude/skills/rs-claude-cost/bin/rs-claude-cost'
 
 tmpd() { cd "$(mktemp -d)"; }
+tdcc() {
+  local dir mcp
+  dir=$(mktemp -d -t tdcc)
+  mcp=$(mktemp -t tdcc-mcp)
+  chmod 600 "$mcp"
+  jq '{mcpServers}' ~/.claude.json > "$mcp"
+  (cd "$dir" && claude --setting-sources project --strict-mcp-config \
+    --mcp-config "$mcp" --permission-mode bypassPermissions "$@")
+  rm -f "$mcp"
+}
 markd() { cmux markdown open "$@"; }
 
 # 3-panel cmux layout: Agent (left), Console (top-right), Logs (bottom-right)
