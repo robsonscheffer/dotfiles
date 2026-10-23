@@ -12,6 +12,7 @@ own AGENTS.md or CLAUDE.md wins where they conflict.
 
 ## Base
 
+<!-- prettier-ignore -->
 | Do | Instead of |
 | --- | --- |
 | The simplest specific word, one a non-native English speaker reads the same way | Idioms and wordplay |
@@ -23,6 +24,7 @@ own AGENTS.md or CLAUDE.md wins where they conflict.
 | Cut before you add | Lengthening to sound careful |
 | Label, colon, bullets | Announcing or defending a list |
 | Talk about the thing itself | Analogies |
+| Name each PR, ticket, finding, or code (F1, D2) by its outcome in plain words, id after: "the login page stops timing out (PROJ-123)". Do it in chat and in files, on first use in each message or page. Every reference is a link | A bare id, number, or code-noun tag |
 | Plain text | Emoji, motivational language, em-dashes |
 
 ## Words to avoid
@@ -37,8 +39,6 @@ argument, it's worth noting, let that sink in, at the end of the day.
 - One recommendation with its reason, not a menu. For a discrete choice, use the harness's
   structured question tool if it has one.
 - No time estimates unless asked; then give a range and what it assumes.
-- Name a PR, ticket, or issue by its outcome in plain words, id after: "the login page stops
-  timing out (PROJ-123)". Never a bare id or a code-noun tag. Every reference is a link.
 - Once a plan is agreed, report changes only. Do not reopen it.
 
 ## Reference codes
