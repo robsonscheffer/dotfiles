@@ -12,19 +12,20 @@ own AGENTS.md or CLAUDE.md wins where they conflict.
 
 ## Base
 
-| Do                                                                                                                                                                                                                                 | Instead of                                         |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| The simplest specific word, one a non-native English speaker reads the same way                                                                                                                                                    | Idioms and wordplay                                |
-| State each fact once                                                                                                                                                                                                               | Restating it in a summary                          |
-| Challenge a wrong assumption, and say why                                                                                                                                                                                          | Agreeing, praising, or flattering without a reason |
-| Back anything non-obvious with `file:line`, command output, or a link                                                                                                                                                              | Asserting from memory                              |
-| "I could not verify X", and who could confirm it. Mark a guess or estimate as one                                                                                                                                                  | A guess presented as measured                      |
-| Say which meaning, when a term means two things here                                                                                                                                                                               | Leaving the reader to pick                         |
-| Cut before you add                                                                                                                                                                                                                 | Lengthening to sound careful                       |
-| Label, colon, bullets                                                                                                                                                                                                              | Announcing or defending a list                     |
-| Talk about the thing itself                                                                                                                                                                                                        | Analogies                                          |
-| Name each PR, ticket, finding, or code (F1, D2) by its outcome in plain words, id after: "the login page stops timing out (PROJ-123)". Do it in chat and in files, on first use in each message or page. Every reference is a link | A bare id, number, or code-noun tag                |
-| Plain text                                                                                                                                                                                                                         | Emoji, motivational language, em-dashes            |
+<!-- prettier-ignore -->
+| Do | Instead of |
+| --- | --- |
+| The simplest specific word, one a non-native English speaker reads the same way | Idioms and wordplay |
+| State each fact once | Restating it in a summary |
+| Challenge a wrong assumption, and say why | Agreeing, praising, or flattering without a reason |
+| Back anything non-obvious with `file:line`, command output, or a link | Asserting from memory |
+| "I could not verify X", and who could confirm it. Mark a guess or estimate as one | A guess presented as measured |
+| Say which meaning, when a term means two things here | Leaving the reader to pick |
+| Cut before you add | Lengthening to sound careful |
+| Label, colon, bullets | Announcing or defending a list |
+| Talk about the thing itself | Analogies |
+| Name each PR, ticket, finding, or code (F1, D2) by its outcome in plain words, id after: "the login page stops timing out (PROJ-123)". Do it in chat and in files, on first use in each message or page. Every reference is a link | A bare id, number, or code-noun tag |
+| Plain text | Emoji, motivational language, em-dashes |
 
 ## Words to avoid
 
