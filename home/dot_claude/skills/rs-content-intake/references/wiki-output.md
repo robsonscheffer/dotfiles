@@ -1,8 +1,10 @@
 # Changelog entry shape
 
-All weeks go on one Wiki page, `@<handle>: changelog` (`INTAKE_PAGE`), newest week on top. It is a
-quick capture of what the week produced, not a plan: the weekly plan picks from it. The entry and
-the draft are the same Markdown, in pt-BR (the content plan is in pt-BR).
+`@<handle>: changelog` (`INTAKE_PAGE`) is an index page. Each week is a child page,
+`@<handle>: changelog semana <n>`, and the index lists it at the top of its "## Semanas" section.
+It is a quick capture of what the week produced, not a plan: the weekly plan picks from it. The
+draft is Markdown in pt-BR (the content plan is in pt-BR). Its first line becomes the page's
+"Período" line and the index link; the rest is the page body.
 
 ```markdown
 ## Semana <n> (<dd/mm> a <dd/mm/yyyy>)
