@@ -1,6 +1,6 @@
 ---
 name: rs-content-intake
-description: Collect last week's work, notes and voice ideas into a "material da semana" draft for an Instagram content plan, filter it with a block and an allow list, and send it to the Wiki only after a person keeps it. Use when Robson asks for the weekly material, content intake, "o que rendeu post esta semana", or when the Saturday intake runs.
+description: Collect last week's work, notes and voice ideas into a short week entry for an Instagram content plan, filter it with a block and an allow list, and add it to the account's changelog page on the Wiki only after a person keeps it. Use when Robson asks for the weekly material, content intake, "o que rendeu post esta semana", or when the Saturday intake runs.
 argument-hint: "[days] [send]"
 ---
 
@@ -11,8 +11,8 @@ remember what happened. Two steps, and a person sits between them:
 
 1. **Draft** (local only): collect, group by topic, pick the best, write a Markdown draft in
    `~/brain/.scratch/`. Nothing leaves the Mac.
-2. **Send** (only after a person says so): post the kept draft to the Wiki page the weekly plan
-   reads.
+2. **Send** (only after a person says so): add the kept entry to the top of the changelog page
+   the weekly plan reads.
 
 Related: `rs-session-audit` reads the same week of Claude Code sessions to find skill gaps; this
 skill reads what those sessions produced (session reports, reports, handoffs, commits). Run the
@@ -30,11 +30,11 @@ audit first when both run on the same day, and drop any item it flags as tooling
    - **destaque**: the 3 to 5 best. A real number, a visible result, a mistake with a lesson, or a
      question people ask.
    - **manter**: usable later.
-   - **descartar**: nothing to show, internal only, or repeats a destaque. Say why in five words.
+   - **descartar**: nothing to show, internal only, or repeats a destaque. Left out of the entry.
 4. `class: review` items are titles only. Never add detail to them from the source files; a person
    decides first. `class: allow` items may carry their detail.
-5. Write the draft in the shape of `references/wiki-output.md` to
-   `~/brain/.scratch/YYYY-MM-DD-material-semana.md` and open it for the person.
+5. Write the entry in the shape and limits of `references/wiki-output.md` to
+   `~/brain/.scratch/YYYY-MM-DD-changelog-semana-<n>.md` and open it for the person.
 6. Stop. Report the counts (items in, blocked, destaques) and the file path.
 
 ## Step 2: send
@@ -44,9 +44,9 @@ Only when the person says send, and after they edited the draft:
 1. Re-read the draft from disk. The person's edits win.
 2. Check it again against the block list: `bash scripts/send.sh --check <draft>` exits 3 when a
    blocked word is in it. Remove the line and tell the person.
-3. `bash scripts/send.sh <draft>` creates or updates the Wiki page (see `references/wiki-output.md`
-   for the title and parent). It needs `OUTLINE_API_URL`, `OUTLINE_API_KEY` and
-   `INTAKE_PARENT_DOC` in the environment. Never print the key.
+3. `bash scripts/send.sh <draft>` reads the live page and inserts the entry above the newest week.
+   It refuses if that week is already there. It needs `OUTLINE_API_URL`, `OUTLINE_API_KEY` and
+   `INTAKE_PAGE` (the changelog page id) in the environment. Never print the key.
 4. Give the person the page link.
 
 ## Voice ideas

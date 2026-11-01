@@ -1,35 +1,26 @@
-# Draft and Wiki page shape
+# Changelog entry shape
 
-The draft and the Wiki page are the same Markdown, in pt-BR (the content plan is in pt-BR).
-
-Title: `@<handle>: material semana <n>` (n = ISO week of the collected days). Parent: the brand's
-`@<handle>: materiais` page (`INTAKE_PARENT_DOC`). The weekly plan skill reads the materials page
-and its children.
+All weeks go on one Wiki page, `@<handle>: changelog` (`INTAKE_PAGE`), newest week on top. It is a
+quick capture of what the week produced, not a plan: the weekly plan picks from it. The entry and
+the draft are the same Markdown, in pt-BR (the content plan is in pt-BR).
 
 ```markdown
-**Semana:** <n> (<dd/mm> a <dd/mm/yyyy>) · **Status:** rascunho · **Itens:** <in> lidos, <blocked> bloqueados
+## Semana <n> (<dd/mm> a <dd/mm/yyyy>)
 
-Para enviar: apague o que não serve, troque "revisar" por "manter" no que pode ir, e diga "send".
+**Destaques**
+- <what happened, one line> ([prova](link)) · <pilar>
 
-## Destaques
+**Também**
+- <one line> ([prova](link)) · <pilar>
 
-| Tema | O que aconteceu | Prova | Pilar sugerido |
-|------|-----------------|-------|----------------|
-| brasildb | ... | link or number | Dados públicos |
-
-## Por tema
-
-### <tema>
-
-| Item | Prova | Pilar | Veredito |
-|------|-------|-------|----------|
-| ... | ... | ... | manter / revisar / descartar: <why> |
-
-## Ideias por voz
-
-| Data | Ideia | Veredito |
-|------|-------|----------|
+**Revisar** (só título, entra na pauta só com o OK do Robson)
+- <title>
 ```
 
-Rules: dates `dd/mm/yyyy`; no em-dashes; a `review` item shows its title only; links to local
-files stay out of the Wiki version (write the file name in the draft, drop it before sending).
+Limits, to keep the noise down: 3 to 5 destaques, at most 5 "também", at most 5 "revisar".
+Merge items about the same thing into one line.
+
+Leave out: "descartar" items, voice notes that are not ideas, names of people who did not agree to
+appear, and links to local files (a Wiki reader cannot open them). Omit an empty section.
+
+`n` is the ISO week of the collected days. Dates `dd/mm/yyyy`. No em-dashes.

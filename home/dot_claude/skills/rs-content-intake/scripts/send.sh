@@ -1,58 +1,58 @@
 #!/usr/bin/env bash
-# send.sh: post a kept "material da semana" draft to the Wiki (Outline), or only check it.
+# send.sh: add a kept week entry to the changelog page on the Wiki (Outline), or only check it.
 set -euo pipefail
 
 usage() {
   cat <<'USAGE'
-Usage: send.sh --check DRAFT
-       send.sh --title TITLE DRAFT [--replace]
+Usage: send.sh --check ENTRY
+       send.sh ENTRY
 
---check   exit 3 if DRAFT contains a word from the block list, 0 otherwise. Sends nothing.
---title   create the page TITLE under $INTAKE_PARENT_DOC with DRAFT as its text. If a child page
-          with that title exists, it refuses (exit 7) unless --replace, which overwrites it:
-          only use --replace when nobody edited the page on the Wiki.
-Env: OUTLINE_API_URL (ends in /api), OUTLINE_API_KEY, INTAKE_PARENT_DOC,
+--check   exit 3 if ENTRY contains a word from the block list, 0 otherwise. Sends nothing.
+(none)    insert ENTRY at the top of the changelog page $INTAKE_PAGE, above the newest week.
+          ENTRY starts with its "## Semana <n>" heading; if the page already has that heading
+          it refuses (exit 7): edit the page on the Wiki instead.
+Env: OUTLINE_API_URL (ends in /api), OUTLINE_API_KEY, INTAKE_PAGE,
      LISTS (default ~/.config/rs-content-intake).
 USAGE
 }
 
-check=0 title='' replace=0 draft=''
+check=0 entry=''
 while [ $# -gt 0 ]; do
   case $1 in
     -h|--help) usage; exit 0 ;;
     --check) check=1 ;;
-    --title) title=${2:?}; shift ;;
-    --replace) replace=1 ;;
     -*) usage >&2; exit 2 ;;
-    *) draft=$1 ;;
+    *) entry=$1 ;;
   esac
   shift
 done
-[ -f "$draft" ] || { usage >&2; exit 2; }
+[ -f "$entry" ] || { usage >&2; exit 2; }
 
 LISTS=${LISTS:-$HOME/.config/rs-content-intake}
 block_re=$(grep -v -E '^\s*(#|$)' "$LISTS/block.txt" 2>/dev/null | sed 's/[][\.*^$+?(){}|/]/\\&/g' | paste -sd '|' - || true)
-if [ -n "$block_re" ] && grep -niE "$block_re" "$draft" >/dev/null; then
-  echo "send: $draft has a blocked word on line(s) $(grep -niE "$block_re" "$draft" | cut -d: -f1 | paste -sd, -)" >&2
+if [ -n "$block_re" ] && grep -niE "$block_re" "$entry" >/dev/null; then
+  echo "send: $entry has a blocked word on line(s) $(grep -niE "$block_re" "$entry" | cut -d: -f1 | paste -sd, -)" >&2
   exit 3
 fi
-[ "$check" = 1 ] && { echo "send: $draft passes the block list"; exit 0; }
+[ "$check" = 1 ] && { echo "send: $entry passes the block list"; exit 0; }
 
-[ -n "$title" ] || { usage >&2; exit 2; }
-: "${OUTLINE_API_URL:?}" "${OUTLINE_API_KEY:?}" "${INTAKE_PARENT_DOC:?}"
+heading=$(grep -m1 '^## ' "$entry" || true)
+[ -n "$heading" ] || { echo "send: $entry has no '## Semana <n>' heading" >&2; exit 2; }
+: "${OUTLINE_API_URL:?}" "${OUTLINE_API_KEY:?}" "${INTAKE_PAGE:?}"
 api() { curl -sf -X POST "$OUTLINE_API_URL/$1" -H "Authorization: Bearer $OUTLINE_API_KEY" \
   -H 'Content-Type: application/json' -d @-; }
 
-parent=$(jq -n --arg i "$INTAKE_PARENT_DOC" '{id:$i}' | api documents.info)
-col=$(jq -r .data.collectionId <<<"$parent")
-existing=$(jq -n --arg p "$INTAKE_PARENT_DOC" '{parentDocumentId:$p, limit:100}' | api documents.list |
-  jq -r --arg t "$title" '.data[] | select(.title == $t) | .id' | head -1)
-
-if [ -n "$existing" ]; then
-  [ "$replace" = 1 ] || { echo "send: page \"$title\" exists ($existing); edit it on the Wiki or pass --replace" >&2; exit 7; }
-  out=$(jq -n --arg i "$existing" --rawfile x "$draft" '{id:$i, text:$x, publish:true}' | api documents.update)
-else
-  out=$(jq -n --arg t "$title" --rawfile x "$draft" --arg c "$col" --arg p "$INTAKE_PARENT_DOC" \
-    '{title:$t, text:$x, collectionId:$c, parentDocumentId:$p, publish:true}' | api documents.create)
+# Always start from the live text: people edit the page between sends.
+live=$(jq -n --arg i "$INTAKE_PAGE" '{id:$i}' | api documents.info | jq -r .data.text)
+if grep -qxF "$heading" <<<"$live"; then
+  echo "send: the page already has \"$heading\"; edit it on the Wiki" >&2
+  exit 7
 fi
-echo "send: $(jq -r '.data.title + " " + .data.url' <<<"$out")"
+
+# New entry goes above the first "## " heading, below the page intro.
+text=$(awk -v f="$entry" '
+  !done && /^## / { while ((getline l < f) > 0) print l; print ""; done = 1 }
+  { print }
+  END { if (!done) { print ""; while ((getline l < f) > 0) print l } }' <<<"$live")
+out=$(jq -n --arg i "$INTAKE_PAGE" --arg x "$text" '{id:$i, text:$x, publish:true}' | api documents.update)
+echo "send: added \"$heading\" to $(jq -r '.data.title + " " + .data.url' <<<"$out")"
