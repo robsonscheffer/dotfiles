@@ -1,0 +1,23 @@
+# ~/.config/rs-side-project/config.yaml
+# Written on first run from the user's answers. Private: keep it out of any public repo.
+
+flow_doc: ""                 # optional: a page or file that explains your flow; it wins over the skill
+records_dir: ~/notes/prototypes
+handoffs_dir: ""             # optional: <handoffs_dir>/<name>/ holds a project's open handoffs
+retire_cmd: ""               # how to retire a handoff file; needed when handoffs_dir is set
+keep_handoffs: ""            # optional: which handoffs belong to other work, in words
+done_log: ""                 # optional: a file that gets one line per decision
+decision_weeks: 6            # the latest decision date, in weeks after intake
+
+prototype:
+  repo_owner: <github-user>  # where prototypes live
+  repos_dir: ~/code          # local clones, scanned by `check`
+
+status_pages: ""             # optional: where pages that describe a project live, and how to edit them
+
+invest:
+  owner: <team or company>   # who owns invested work
+  repo_pattern: <org>/<name> # the new repo's name
+  why_there: ""              # one line: why invested work lives there
+  how_to_start: ""           # the command or steps that open the work for whoever builds it
+  not_before: ""             # what a prototype never gets before an invest decision
