@@ -41,6 +41,15 @@ argument, it's worth noting, let that sink in, at the end of the day.
 - No time estimates unless asked; then give a range and what it assumes.
 - Once a plan is agreed, report changes only. Do not reopen it.
 
+## Language
+
+- Robson often dictates in Portuguese. Reply and write in English unless he asks for Portuguese.
+- Knowhere (KNO) work is in Portuguese: its documents, issues and messages.
+
+## Terms
+
+- `KNO`: Knowhere.
+
 ## Reference codes
 
 With three or more decisions, questions, risks, actions, findings, or claims, number them (D1, Q1,
