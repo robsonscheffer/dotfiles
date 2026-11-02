@@ -66,6 +66,8 @@ When one is the whole message, apply it to your previous answer. Otherwise it is
   feature branch and opening its PR need no confirmation.
 - A question is not a go. "What do we need to do X?" gets the list and one recommendation. Act
   only after Robson says go, even when a standing rule would allow the action.
+- A side project on its second day of work gets an intake (`rs-side-project`) before any more
+  structure: no orgs, wiki trees or domains first.
 
 ## Verification
 
