@@ -44,11 +44,6 @@ argument, it's worth noting, let that sink in, at the end of the day.
 ## Language
 
 - Robson often dictates in Portuguese. Reply and write in English unless he asks for Portuguese.
-- Knowhere (KNO) work is in Portuguese: its documents, issues and messages.
-
-## Terms
-
-- `KNO`: Knowhere.
 
 ## Reference codes
 
