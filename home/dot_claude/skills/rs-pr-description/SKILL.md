@@ -62,7 +62,7 @@ the commits, or the ticket? Always keep a sentence saying why something is absen
 
 **9. Gate, then land.** Reread as a reviewer who sees only the title and first three lines. Scan for
 em-dashes, filler, unearned checkboxes, and any "Generated with Claude Code" footer, which never belongs
-in a body Robson ships. Write with `--body-file`, never inline `--body`. Revisions: `Skill(draft-diff)`.
+in a body the user ships. Write with `--body-file`, never inline `--body`. Revisions: `Skill(draft-diff)`.
 
 ## Examples
 

@@ -1,6 +1,6 @@
 # The shape, worked end to end
 
-An illustrative body, built on the shape Robson approved section by section during calibration.
+An illustrative body, built on a shape approved section by section during calibration.
 Copy the shape, not the words. A table swap on an invoices page: the page moves onto a component
 that was already merged and unused.
 
@@ -57,7 +57,7 @@ as literal substrings. Where-to-look and Risk, when open, fold into Why.
 
 The browser checkboxes and the before image are the two things a draft cannot fill on its own.
 Tick a box only if this session actually opened that browser. Otherwise leave it unchecked and
-leave the screenshot row empty for Robson.
+leave the screenshot row empty for the author.
 
 ## Why it reads the way it does
 
