@@ -44,9 +44,20 @@ in Storybook.
 ## Links
 
 - Ticket: [SHOP-1412](https://example.atlassian.net/browse/SHOP-1412)
+
+<details>
+<summary>Notes for AI agents</summary>
+
+- `SortOrder` to `SortSpec` translation lives only in `useInvoiceRows`. The four fetch functions
+  below it still take `SortOrder` on purpose.
+- `LegacyTable` still has two other callers, so it stays in the tree.
+- Verify: `pnpm test DataGrid invoices`.
+
+</details>
 ```
 
-150 words. The ceiling for a standard slice is about 200.
+150 words outside the `<details>` block. The cap for a standard slice is 200. The agent notes add
+facts a follow-up agent would otherwise re-derive from the code, and a human never has to open them.
 
 ## Mapping to a repo template
 

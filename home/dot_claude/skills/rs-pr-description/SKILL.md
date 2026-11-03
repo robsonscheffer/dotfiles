@@ -54,13 +54,35 @@ changing the four functions below it, so this stays a swap instead of a data-pat
 behaviour, then the gap and where it got covered instead. Never an inventory, never "all specs pass".
 Tick a checklist box only from session evidence; leave screenshots you cannot produce as an empty row.
 
-**7. Size to the diff, not the effort spent.** Roughly 40 words trivial, 200 standard, 350 large. Earn
-Test on every sentence: does a reviewer with the diff open lose something they cannot recover from it,
-the commits, or the ticket? Always keep a sentence saying why something is absent.
+**7. Built for a human scan, with a hard word cap.** A reviewer reads the first line of each section
+and skims the rest. So each section opens with its point, paragraphs stay at three lines or fewer, and
+three or more parallel items become bullets. Caps, sized to the diff and not the effort spent: 40 words
+for a trivial change, 200 standard, 350 large. The cap is a limit, not a target. Over it, cut sentences;
+do not compress them. Earn test on every sentence: does a reviewer with the diff open lose something
+they cannot recover from it, the commits, or the ticket? Always keep a sentence saying why something is
+absent.
 
-**8. Voice.** Name the actor. Load-bearing words first on every line. No "not X, it's Y". Long explanation, then a short verdict. Then run prose through `Skill(rs-voice)`.
+**8. AI agent notes go in a collapsed section, last.** Context that helps an AI reviewer or a follow-up
+agent but slows a human goes in one `<details>` block after every template heading:
 
-**9. Gate, then land.** Reread as a reviewer who sees only the title and first three lines. Scan for
+```markdown
+<details>
+<summary>Notes for AI agents</summary>
+
+- ...
+
+</details>
+```
+
+Bullets only, 150 words at most, not counted in the cap above. It holds facts an agent would otherwise
+re-derive: invariants the change relies on, code left alone on purpose and why, the command that
+verifies it. Same sourcing as step 1: nothing about how the work went, no invented verification. Nothing
+a human reviewer needs goes only here. Omit the block when it would be empty.
+
+**9. Voice.** Name the actor. Load-bearing words first on every line. No "not X, it's Y". Long explanation, then a short verdict. Then run prose through `Skill(rs-voice)`.
+
+**10. Gate, then land.** Reread as a reviewer who sees only the title and first three lines. Count the
+words outside the `<details>` block against the cap. Scan for
 em-dashes, filler, unearned checkboxes, and any "Generated with Claude Code" footer, which never belongs
 in a body the user ships. Write with `--body-file`, never inline `--body`. Revisions: `Skill(draft-diff)`.
 
