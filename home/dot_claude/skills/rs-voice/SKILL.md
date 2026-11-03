@@ -1,6 +1,6 @@
 ---
 name: rs-voice
-description: Use when writing or editing prose Robson will publish under his name (articles, blog posts, README sections, PR descriptions, Notion docs, longer Slack messages, public-facing notes). Applies a specific voice: short declarative sentences, no em-dashes ever, plain English with engineering vernacular, Brazilian-English cadence, honest about failures, no marketing slop. Do not use for code, code comments, quick chat replies in conversation, or internal tool orchestration.
+description: Use when writing or editing prose Robson will publish under his name (articles, blog posts, README sections, Notion docs, longer Slack messages, public-facing notes). Applies a specific voice: short declarative sentences, no em-dashes ever, plain English with engineering vernacular, Brazilian-English cadence, honest about failures, no marketing slop. Do not use for PR descriptions (rs-pr-description covers those), code, code comments, quick chat replies in conversation, or internal tool orchestration.
 ---
 
 # Robson's Voice
