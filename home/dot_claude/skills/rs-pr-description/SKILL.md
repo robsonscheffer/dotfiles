@@ -79,12 +79,26 @@ re-derive: invariants the change relies on, code left alone on purpose and why, 
 verifies it. Same sourcing as step 1: nothing about how the work went, no invented verification. Nothing
 a human reviewer needs goes only here. Omit the block when it would be empty.
 
-**9. Voice.** Name the actor. Load-bearing words first on every line. No "not X, it's Y". Long explanation, then a short verdict. Then run prose through `Skill(rs-voice)`.
+**9. Voice: plain, short, honest.** Many reviewers read English as a second language. Write so they
+read each sentence the same way on the first pass.
+
+- Short declarative sentences. Periods over commas where they fit. First person "I" for choices.
+- Name the actor. Put the words that carry the meaning first on every line.
+- Concrete over abstract: the file, the function, the command. Name a tool by what it does on first
+  use, so a reader who has not met it learns it in one line.
+- Plain words over jargon or literary words. No metaphors a reader has to decode.
+- Hedge only where you are uncertain, and say what is uncertain. Name a gap or a failure directly.
+- Long explanation, then a short verdict. No "not X, it's Y".
+- No em-dashes. Use a comma, period, colon, or parentheses.
+- Banned: delve, dive in, journey, leverage, robust, seamless, really, very, truly, simply, just
+  (as filler), However, Furthermore, Moreover, In conclusion, arguably, "it might be the case that".
+- Code, commands, and quoted text stay verbatim. These rules apply to prose.
 
 **10. Gate, then land.** Reread as a reviewer who sees only the title and first three lines. Count the
-words outside the `<details>` block against the cap. Scan for
-em-dashes, filler, unearned checkboxes, and any "Generated with Claude Code" footer, which never belongs
-in a body the user ships. Write with `--body-file`, never inline `--body`. Revisions: `Skill(draft-diff)`.
+words outside the `<details>` block against the cap. Scan for em-dashes, the banned words, unearned
+checkboxes, and any "Generated with Claude Code" footer, which never belongs in a body the user ships.
+Write with `--body-file`, never inline `--body`. On a revision, show only what changed, not the full
+body again.
 
 ## Examples
 
