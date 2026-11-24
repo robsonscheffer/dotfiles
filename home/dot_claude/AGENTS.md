@@ -112,6 +112,7 @@ But: "The builder reports green. I re-ran it: 12 pass, 1 fails."
 - `jq` for JSON, `yq` for YAML, `tree` to show structure.
 - macOS: bash 3 (no `mapfile` or `readarray`), `sed -i ''`, `grep -E` instead of `grep -P`.
 - zsh does not word-split unquoted variables. Use arrays.
+- Skill scripts: bun and TypeScript (`scripts/*.ts`, tests in `test/`), not ad-hoc shell scripts.
 - Dispatch a clear-scope subagent on a smaller model (Sonnet). Keep the bigger model for
   ambiguous or design-heavy work.
 
