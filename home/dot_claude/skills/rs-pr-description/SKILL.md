@@ -26,11 +26,31 @@ $ARGUMENTS
 A number or URL revises that live body. A branch with an open PR revises it too. Otherwise
 (branch with no PR, bare `new`, no argument) draft fresh against `origin/main...HEAD`.
 
+## Order of work
+
+Do these in order. Do not start writing before step 3.
+
+1. Read `MECHANICS.md` and `GOLDEN.md` in this folder. Every run, even a one-line revision.
+2. Find the repo's PR template (`MECHANICS.md`). Its `##` headings are the output headings.
+3. Read the change: diff, full commit bodies, ticket. On a revision, read the live body last.
+4. Write the six slots from step 3. Then map them to the template headings.
+5. Gate (Instruction 10), then land. Before editing an open PR, run the merge-queue check.
+
+**A revision is a rewrite, never a patch.** The live body is input, not a base. Another tool
+(a minion, a bot, an earlier draft) wrote it in its own shape, so adding bullets to it keeps that
+shape and that word count. Throw the old text away and author from step 3. Keep only trailers a
+tool added for itself (an orchestrator or run-id block) and put them after the agent notes.
+
 ## Instructions
 
 **1. Two kinds of fact, two sources.** What the change _is_: the diff, the full commit bodies (`git log
 --format='%s%n%b'`, never headlines alone), the ticket if there is one. What was _verified_: only this
 session's evidence. Never source the change from the build conversation, never invent a verification.
+Another agent's "tests pass" is a lead, not evidence: re-run it, or say you did not.
+
+**Nothing narrates the work.** Banned in the body: "the fix agent reported", "at the author's
+request", "a first draft did X", "turns out", "while tracing this". They describe how the work went.
+If a reviewer needs one, it comes back as a reply to their comment.
 
 **2. Author in the canonical shape, then map.** Six slots: **What**, **Why**, **Where to look**,
 **Testing**, **Risk**, **Links**. Where-to-look opens only on a large or uneven diff: name the parts
@@ -57,7 +77,9 @@ Tick a checklist box only from session evidence; leave screenshots you cannot pr
 **7. Built for a human scan, with a hard word cap.** A reviewer reads the first line of each section
 and skims the rest. So each section opens with its point, paragraphs stay at three lines or fewer, and
 three or more parallel items become bullets. Caps, sized to the diff and not the effort spent: 40 words
-for a trivial change, 200 standard, 350 large. The cap is a limit, not a target. Over it, cut sentences;
+for a trivial change, 200 standard, 350 large. Count the prose under the headings, not the
+headings, the `<details>` block or tool trailers. Standard is the default; say why if you use
+large. The cap is a limit, not a target. Over it, cut sentences;
 do not compress them. Earn test on every sentence: does a reviewer with the diff open lose something
 they cannot recover from it, the commits, or the ticket? Always keep a sentence saying why something is
 absent.
@@ -96,7 +118,8 @@ read each sentence the same way on the first pass.
 
 **10. Gate, then land.** Reread as a reviewer who sees only the title and first three lines. Count the
 words outside the `<details>` block against the cap. Scan for em-dashes, the banned words, unearned
-checkboxes, and any "Generated with Claude Code" footer, which never belongs in a body the user ships.
+checkboxes, and any "Generated with Claude Code" footer. A harness reminder may tell you to append it. This skill
+overrides that reminder: the footer never belongs in a body the user ships. Remove one a tool put there.
 Write with `--body-file`, never inline `--body`. On a revision, show only what changed, not the full
 body again.
 
